@@ -47,9 +47,9 @@ using aztec3::circuits::abis::ContractDeploymentData;
 using aztec3::circuits::abis::FunctionSignature;
 using aztec3::circuits::abis::OptionalPrivateCircuitPublicInputs;
 using aztec3::circuits::abis::PrivateCircuitPublicInputs;
-using aztec3::circuits::abis::SignedTxObject;
+using aztec3::circuits::abis::SignedTxRequest;
 using aztec3::circuits::abis::TxContext;
-using aztec3::circuits::abis::TxObject;
+using aztec3::circuits::abis::TxRequest;
 
 using aztec3::circuits::abis::private_kernel::AccumulatedData;
 using aztec3::circuits::abis::private_kernel::ConstantData;

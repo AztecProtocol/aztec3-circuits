@@ -17,7 +17,7 @@ template <typename NCT> struct SignedTxRequest {
     TxRequest<NCT> tx_request;
     // Signature<NCT> signature; // TODO: import some kind of signature
 
-    template <typename Composer> SignedTxObject<CircuitTypes<Composer>> to_circuit_type(Composer& composer) const
+    template <typename Composer> SignedTxRequest<CircuitTypes<Composer>> to_circuit_type(Composer& composer) const
     {
         static_assert((std::is_same<NativeTypes, NCT>::value));
 

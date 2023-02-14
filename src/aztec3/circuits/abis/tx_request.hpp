@@ -12,7 +12,7 @@ using plonk::stdlib::witness_t;
 using plonk::stdlib::types::CircuitTypes;
 using plonk::stdlib::types::NativeTypes;
 
-template <typename NCT> struct TxObject {
+template <typename NCT> struct TxRequest {
     typedef typename NCT::address address;
     // typedef typename NCT::grumpkin_point grumpkin_point;
     typedef typename NCT::fr fr;
