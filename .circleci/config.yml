@@ -106,6 +106,17 @@ jobs:
           name: 'Build'
           command: cond_spot_run_build aztec3-circuits-wasm-linux-clang 64
 
+  wasm-linux-clang-assert:
+    docker:
+      - image: aztecprotocol/alpine-build-image
+    resource_class: small
+    steps:
+      - *checkout
+      - *setup_env
+      - run:
+          name: 'Build'
+          command: cond_spot_run_build aztec3-circuits-wasm-linux-clang-assert 1 a3-tests USE_WASM_TIME
+
   x86_64-linux-clang:
     docker:
       - image: aztecprotocol/alpine-build-image
