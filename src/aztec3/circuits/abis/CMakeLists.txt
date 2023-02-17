@@ -1,4 +1,5 @@
 barretenberg_module(
     aztec3_circuits_abis
-    barretenberg
+    stdlib_primitives
+    stdlib_pedersen
 )
