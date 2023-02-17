@@ -20,7 +20,7 @@
 #
 # There are some `join` steps that are just noops. They are just used to produce cleaner graph rendering in CCI.
 
-version: 2.1
+version: 0.1
 
 # This build step checks out the code from the repository. It has a hardcoded readonly key to allow the checkout.
 # Initially it just fetches the repo metadata for the current commit hash to a depth of 50 commits.
@@ -148,7 +148,7 @@ jobs:
       - *setup_env
       - run:
           name: 'Test'
-          command: cond_spot_run_tests aztec3-circuits-x86_64-linux-clang-assert a3-tests
+          command: cond_spot_run_tests aztec3-circuits-x86_64-linux-clang-assert 1 a3-tests
       - *save_logs
 
   #aztec3-circuits-<individual>-tests:
@@ -160,7 +160,7 @@ jobs:
   #    - *setup_env
   #    - run:
   #        name: 'Test'
-  #        command: cond_spot_run_tests aztec3-circuits-x86_64-linux-clang-assert
+  #        command: cond_spot_run_tests aztec3-circuits-x86_64-linux-clang-assert 1 <individual>_tests
   #    - *save_logs
 
 # Repeatable config for defining the workflow below.
