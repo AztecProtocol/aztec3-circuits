@@ -128,17 +128,6 @@ jobs:
           name: 'Build'
           command: cond_spot_run_build aztec3-circuits-x86_64-linux-clang-assert 64
 
-  x86_64-linux-gcc:
-    docker:
-      - image: aztecprotocol/alpine-build-image
-    resource_class: small
-    steps:
-      - *checkout
-      - *setup_env
-      - run:
-          name: 'Build'
-          command: cond_spot_run_build aztec3-circuits-x86_64-linux-gcc 64
-
   aztec3-circuits-tests:
     docker:
       - image: aztecprotocol/alpine-build-image
@@ -181,8 +170,6 @@ workflows:
       - x86_64-linux-clang:
           filters: *tag_filter
       - x86_64-linux-clang-assert:
-          filters: *tag_filter
-      - x86_64-linux-gcc:
           filters: *tag_filter
       - aztec3-circuits-tests: *a3_test
       #- aztec3-circuit-<individual>-tests: *a3_test
