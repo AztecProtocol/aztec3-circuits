@@ -11,4 +11,4 @@ RUN mkdir build && cd build && cmake -DTOOLCHAIN=wasm-linux-clang .. && cmake --
 
 FROM alpine:3.17
 COPY --from=builder /usr/src/aztec3-circuits/build/bin/aztec3.wasm /usr/src/aztec3-circuits/build/bin/aztec3.wasm
-COPY --from=builder /usr/src/aztec3-circuits/build/bin/*_tests /usr/src/aztec3-circuits/build/bin/
+#COPY --from=builder /usr/src/aztec3-circuits/build/bin/*_tests /usr/src/aztec3-circuits/build/bin/
