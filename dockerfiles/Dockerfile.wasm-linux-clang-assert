@@ -9,5 +9,5 @@ COPY . .
 # This ensures that we aren't using features that would be incompatible with WASM for Honk
 RUN mkdir build && cd build && cmake -DTOOLCHAIN=wasm-linux-clang .. && cmake --build . --parallel
 
-#FROM alpine:3.17
-#COPY --from=builder /usr/src/aztec3-circuits/build/bin/*_tests /usr/src/aztec3-circuits/build/bin/
+FROM alpine:3.17
+COPY --from=builder /usr/src/aztec3-circuits/build/bin/*_tests /usr/src/aztec3-circuits/build/bin/
