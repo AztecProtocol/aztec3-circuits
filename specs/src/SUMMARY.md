@@ -2,6 +2,10 @@
 
 [Introduction](intro.md)
 
+# Background Reading
+
+- [Recursive Verification](./background/recursion.md)
+
 # Contracts
 
 - [Overview](./architecture/contracts/contracts.md)
@@ -47,6 +51,7 @@
     - [Portal Contract](./examples/erc20/appendix/portal-contract.md)
 
 # Noir Stuff
+
 - [Intro](./noir-stuff/noir-stuff.md)
 - [Extremes](./noir-stuff/extremes/extremes.md)
   - [incrementation of private state _not_ owned by caller](./noir-stuff/extremes/incr-private-not-owned.md)

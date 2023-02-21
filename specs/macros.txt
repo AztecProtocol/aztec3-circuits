@@ -1,6 +1,7 @@
 \field:{\mathbb{F}}
 \group:{\mathbb{G}}
 \setup:{\textnormal{Setup}}
+\circuit:{\mathcal{C}}
 \prover:{\mathcal{P}}
 \verifier:{\mathcal{V}}
 \sec:{\lambda}
