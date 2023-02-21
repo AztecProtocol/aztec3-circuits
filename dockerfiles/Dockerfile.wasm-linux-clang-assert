@@ -10,4 +10,5 @@ COPY . .
 RUN mkdir build && cd build && cmake -DTOOLCHAIN=wasm-linux-clang .. && cmake --build . --parallel
 
 FROM alpine:3.17
+COPY --from=builder /usr/src/aztec3-circuits/barretenberg/cpp/srs_db /usr/src/aztec3-circuits/barretenberg/cpp/srs_db
 COPY --from=builder /usr/src/aztec3-circuits/build/bin/*_tests /usr/src/aztec3-circuits/build/bin/
