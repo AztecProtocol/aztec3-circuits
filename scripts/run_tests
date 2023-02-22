@@ -3,10 +3,11 @@ set -e
 
 NUM_TRANSCRIPTS=$1
 TESTS=$2
+WASM_MODE=$3
 shift
 shift
-if [ -n "$3" ]; then
-  WASM_MODE=$3
+
+if [ -n "$WASM_MODE" ]; then
   shift
 fi
 
