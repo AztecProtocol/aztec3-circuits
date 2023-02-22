@@ -27,7 +27,7 @@ if [ -z "$WASM_MODE" ]; then
   TEST_CMD="./bin/\$BIN $@"
   BUILD_DIR=/usr/src/aztec3-circuits/cpp/build
 else
-  TEST_CMD="wasmtime --dir .. bin/\$BIN $@"
+  TEST_CMD="~/.wasmtime/bin/wasmtime --dir .. bin/\$BIN $@"
   BUILD_DIR=/usr/src/aztec3-circuits/cpp/build-wasm
 fi
 
