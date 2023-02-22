@@ -10,8 +10,7 @@ shift
 shift
 shift
 
-echo "LOGIN CMD: $(aws ecr get-login --region us-east-2 --no-include-email)"
-$(aws ecr get-login --region us-east-2 --no-include-email)
+$(aws ecr get-login --debug --region us-east-2 --no-include-email)
 
 echo "LOGGED IN"
 
