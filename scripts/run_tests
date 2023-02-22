@@ -27,7 +27,7 @@ fi
 if [ -z "$WASM_MODE" ]; then
   TEST_CMD="./bin/\$BIN $@"
 else
-  TEST_CMD="wasmtime --dir .. bin/\$BIN $@"
+  TEST_CMD="~/.wasmtime/bin/wasmtime --dir .. bin/\$BIN $@"
 fi
 
 docker run --rm -t $IMAGE_URI /bin/sh -c "\
