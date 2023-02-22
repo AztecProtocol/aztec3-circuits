@@ -10,6 +10,6 @@ RUN mkdir build && cd build && cmake -DTOOLCHAIN=wasm-linux-clang .. && cmake --
 
 FROM ubuntu:kinetic
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y xz-utils curl
-RUN touch ~/.bashrc && curl https://wasmtime.dev/install.sh -sSf | bash /dev/stdin --version v3.0.1
+RUN curl https://wasmtime.dev/install.sh -sSf | bash /dev/stdin --version v3.0.1
 COPY --from=builder /usr/src/aztec3-circuits/barretenberg/cpp/srs_db /usr/src/aztec3-circuits/barretenberg/cpp/srs_db
 COPY --from=builder /usr/src/aztec3-circuits/build/bin/*_tests /usr/src/aztec3-circuits/build/bin/
