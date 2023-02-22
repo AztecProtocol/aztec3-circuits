@@ -1,7 +1,5 @@
 #!/bin/bash
-set -ex
-
-echo "RUNNING TESTS"
+set -e
 
 NUM_TRANSCRIPTS=$1
 TESTS=$2
@@ -14,13 +12,9 @@ fi
 
 $(aws ecr get-login --debug --region us-east-2 --no-include-email)
 
-echo "LOGGED IN"
-
 IMAGE_URI=278380418400.dkr.ecr.us-east-2.amazonaws.com/aztec3-circuits-x86_64-linux-clang-assert:cache-$COMMIT_HASH
 
 docker pull $IMAGE_URI
-
-echo "DOCKER PULLED"
 
 if [ -f "$TESTS" ]; then
   TESTS=$(cat $TESTS | tr '\n' ' ')
@@ -31,7 +25,6 @@ if [ -z "$WASM_MODE" ]; then
 else
   TEST_CMD="wasmtime --dir .. bin/\$BIN $@"
 fi
-echo "RUNNING...."
 
 docker run --rm -t $IMAGE_URI /bin/sh -c "\
   set -e; \
@@ -40,5 +33,3 @@ docker run --rm -t $IMAGE_URI /bin/sh -c "\
   ./download_ignition_lagrange.sh 24; \
   cd /usr/src/aztec3-circuits/build; \
   for BIN in $TESTS; do $TEST_CMD; done"
-
-echo "DONE."
