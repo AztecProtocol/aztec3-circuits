@@ -5,10 +5,12 @@ echo "RUNNING TESTS"
 
 NUM_TRANSCRIPTS=$1
 TESTS=$2
-WASM_MODE=$3
 shift
 shift
-shift
+if [ -n "$3" ]; then
+  WASM_MODE=$3
+  shift
+fi
 
 $(aws ecr get-login --debug --region us-east-2 --no-include-email)
 
