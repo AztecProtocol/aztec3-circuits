@@ -19,7 +19,7 @@ using namespace aztec3::circuits::kernel::private_kernel;
 extern "C" {
 
 /**
- * @brief Hashes a TX request
+ * @brief Hashes a TX request. This is a WASM-export that can be called from Typescript.
  *
  * @details given a `uint8_t*` buffer representing a full TX request,
  * read it into a `TxRequest` object, hash it to a `fr`,
