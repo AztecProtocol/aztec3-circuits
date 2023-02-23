@@ -54,10 +54,6 @@ template <typename NCT> struct TxRequest {
         inputs.push_back(tx_context.hash());
         inputs.push_back(chain_id);
 
-        for (const fr& input : inputs) {
-            info("TR input: ", input);
-        }
-
         return NCT::compress(inputs, GeneratorIndex::TX_REQUEST);
     }
     template <size_t SIZE> void spread_arr_into_vec(std::array<fr, SIZE> const& arr, std::vector<fr>& vec) const
