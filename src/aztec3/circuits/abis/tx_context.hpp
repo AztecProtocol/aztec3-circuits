@@ -79,7 +79,7 @@ template <typename NCT> struct TxContext {
         };
 
         for (const fr& input : inputs) {
-            info("CDD input: ", input);
+            info("TC input: ", input);
         }
 
         return NCT::compress(inputs, GeneratorIndex::TX_CONTEXT);
