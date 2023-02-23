@@ -95,6 +95,7 @@ TEST(private_kernel, hash_tx_request)
     std::vector<uint8_t> buf;
     write(buf, tx_request);
     uint8_t* output = (uint8_t*)malloc(sizeof(uint8_t) * 32);
+    // Make the c_bind call to the hash tx request
     private_kernel__hash_tx_request(buf.data(), output);
 
     NT::fr hash = NT::fr::serialize_from_buffer(output);
@@ -102,7 +103,7 @@ TEST(private_kernel, hash_tx_request)
     std::string got_hash = format(hash);
     std::string expected_hash = "0x0fb3576464a061dd1322b9d47a18f470d1a4405e076a20f86c87bfdcd59c789f";
 
-    info("Got hash: ", got_hash);
+    info("Via c_bind, got hash: ", got_hash);
     info("Expected hash: ", expected_hash);
     EXPECT_EQ(got_hash, expected_hash);
 }
