@@ -34,6 +34,7 @@ namespace aztec3::circuits::kernel::private_kernel {
 
 TEST(private_kernel, compute_signing_data)
 {
+    // Most of this is just setup (creating TxRequest to then be hashed)
     const NT::address escrow_contract_address = 12345;
 
     const NT::fr msg_sender_private_key = 123456789;
@@ -89,6 +90,8 @@ TEST(private_kernel, compute_signing_data)
             },
         .chain_id = 1,
     };
+
+    // Perform c_bind hash and check result
     std::vector<uint8_t> buf;
     write(buf, tx_request);
     uint8_t* output = (uint8_t*)malloc(sizeof(uint8_t) * 32);
