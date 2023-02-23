@@ -55,7 +55,7 @@ template <typename NCT> struct TxRequest {
         inputs.push_back(chain_id);
 
         for (const fr& input : inputs) {
-            info("CDD input: ", input);
+            info("TR input: ", input);
         }
 
         return NCT::compress(inputs, GeneratorIndex::TX_REQUEST);
