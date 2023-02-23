@@ -78,6 +78,10 @@ template <typename NCT> struct TxContext {
             contract_deployment_data.hash(), reference_block_num,
         };
 
+        for (const fr& input : inputs) {
+            info("CDD input: ", input);
+        }
+
         return NCT::compress(inputs, GeneratorIndex::TX_CONTEXT);
     }
 };

@@ -32,7 +32,7 @@ using aztec3::circuits::apps::test_apps::escrow::deposit;
 
 namespace aztec3::circuits::kernel::private_kernel {
 
-TEST(private_kernel, compute_signing_data)
+TEST(private_kernel, hash_tx_request)
 {
     // Most of this is just setup (creating TxRequest to then be hashed)
     const NT::address escrow_contract_address = 12345;
