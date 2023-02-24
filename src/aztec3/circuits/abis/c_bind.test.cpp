@@ -38,16 +38,17 @@ TEST(abis, hash_tx_request)
         .chain_id = engine.get_random_uint256(),
     };
 
-    // Perform c_bind hash and check result
+    // Write the tx request to a buffer and
+    // allocate an output buffer for cbind hash results
     std::vector<uint8_t> buf;
     write(buf, tx_request);
     uint8_t* output = (uint8_t*)malloc(sizeof(uint8_t) * 32);
-    // Make the c_bind call to the hash tx request
+    // Make the c_bind call to whash the tx request
     abis__hash_tx_request(buf.data(), output);
 
-    // Convert buffer to `fr` type hash
+    // Convert buffer to `fr` for comparison to in-test calculated hash
     NT::fr got_hash = NT::fr::serialize_from_buffer(output);
-    // Confirm that it equals the hash of the tx request
+    // Confirm cbind output == hash of tx request
     EXPECT_EQ(got_hash, tx_request.hash());
 }
 
