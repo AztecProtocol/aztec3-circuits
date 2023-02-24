@@ -12,6 +12,7 @@
 #include <aztec3/circuits/apps/function_execution_context.hpp>
 #include <aztec3/circuits/apps/test_apps/escrow/deposit.hpp>
 
+#include <numeric/random/engine.hpp>
 #include <common/test.hpp>
 #include <gtest/gtest.h>
 
@@ -32,14 +33,17 @@ using aztec3::circuits::apps::test_apps::escrow::deposit;
 
 namespace aztec3::circuits::kernel::private_kernel {
 
+namespace {
+auto& engine = numeric::random::get_debug_engine();
+}
+
 TEST(private_kernel, hash_tx_request)
 {
     // Most of this is just setup (creating TxRequest to then be hashed)
-    const NT::address escrow_contract_address = 12345;
+    const NT::address escrow_contract_address = engine.get_random_uint256();
 
-    const NT::fr msg_sender_private_key = 123456789;
-    const NT::address msg_sender =
-        NT::fr(uint256_t(0x01071e9a23e0f7edULL, 0x5d77b35d1830fa3eULL, 0xc6ba3660bb1f0c0bULL, 0x2ef9f7f09867fd6eULL));
+    const NT::fr msg_sender_private_key = engine.get_random_uint256();
+    const NT::address msg_sender = NT::fr(engine.get_random_uint256());
     const NT::address tx_origin = msg_sender;
 
     Composer deposit_composer = Composer("../barretenberg/cpp/srs_db/ignition");
@@ -67,9 +71,9 @@ TEST(private_kernel, hash_tx_request)
 
     FunctionExecutionContext deposit_ctx(deposit_composer, deposit_oracle_wrapper);
 
-    auto amount = NT::fr(5);
-    auto asset_id = NT::fr(1);
-    auto memo = NT::fr(999);
+    auto amount = engine.get_random_uint256();
+    auto asset_id = engine.get_random_uint256();
+    auto memo = engine.get_random_uint256();
 
     OptionalPrivateCircuitPublicInputs<NT> opt_deposit_public_inputs = deposit(deposit_ctx, amount, asset_id, memo);
     PrivateCircuitPublicInputs<NT> deposit_public_inputs = opt_deposit_public_inputs.remove_optionality();
@@ -98,14 +102,10 @@ TEST(private_kernel, hash_tx_request)
     // Make the c_bind call to the hash tx request
     private_kernel__hash_tx_request(buf.data(), output);
 
-    NT::fr hash = NT::fr::serialize_from_buffer(output);
-
-    std::string got_hash = format(hash);
-    std::string expected_hash = "0x0fb3576464a061dd1322b9d47a18f470d1a4405e076a20f86c87bfdcd59c789f";
-
-    info("Via c_bind, got hash: ", got_hash);
-    info("Expected hash: ", expected_hash);
-    EXPECT_EQ(got_hash, expected_hash);
+    // Convert buffer to `fr` type hash
+    NT::fr got_hash = NT::fr::serialize_from_buffer(output);
+    // Confirm that it equals the hash of the tx request
+    EXPECT_EQ(got_hash, tx_request.hash());
 }
 
 } // namespace aztec3::circuits::kernel::private_kernel
