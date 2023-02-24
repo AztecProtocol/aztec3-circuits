@@ -7,7 +7,6 @@
 
 namespace {
 
-using aztec3::circuits::abis::ContractDeploymentData;
 using aztec3::circuits::abis::FunctionSignature;
 using aztec3::circuits::abis::TxContext;
 using aztec3::circuits::abis::TxRequest;
