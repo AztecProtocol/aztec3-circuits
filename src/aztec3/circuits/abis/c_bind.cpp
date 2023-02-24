@@ -4,10 +4,9 @@
 #include <stdlib/types/native_types.hpp>
 
 namespace {
+using aztec3::circuits::abis::TxRequest;
 using NT = plonk::stdlib::types::NativeTypes;
-}
-
-using namespace aztec3::circuits::abis;
+} // namespace
 
 #define WASM_EXPORT __attribute__((visibility("default")))
 
