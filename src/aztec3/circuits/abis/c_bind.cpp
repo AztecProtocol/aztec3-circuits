@@ -1,18 +1,13 @@
 #include "c_bind.h"
-#include "private_kernel_circuit.hpp"
-#include <aztec3/circuits/abis/tx_request.hpp>
+#include "tx_request.hpp"
 
-#include <common/streams.hpp>
-#include <common/mem.hpp>
-#include <common/container.hpp>
-#include <cstdint>
-#include <ecc/curves/grumpkin/grumpkin.hpp>
-#include <crypto/pedersen_commitment/pedersen.hpp>
-#include <sstream>
+#include <stdlib/types/native_types.hpp>
 
-using namespace barretenberg;
+namespace {
+using NT = plonk::stdlib::types::NativeTypes;
+}
+
 using namespace aztec3::circuits::abis;
-using namespace aztec3::circuits::kernel::private_kernel;
 
 #define WASM_EXPORT __attribute__((visibility("default")))
 
@@ -28,7 +23,7 @@ extern "C" {
  * @param tx_request_buf buffer of bytes containing all data needed to construct a TX request via `read()`
  * @param output buffer that will contain the output which will be the hashed `TxRequest`
  */
-WASM_EXPORT void private_kernel__hash_tx_request(uint8_t const* tx_request_buf, uint8_t* output)
+WASM_EXPORT void abis__hash_tx_request(uint8_t const* tx_request_buf, uint8_t* output)
 {
     TxRequest<NT> tx_request;
     read(tx_request_buf, tx_request);

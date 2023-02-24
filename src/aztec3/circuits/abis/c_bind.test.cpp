@@ -1,0 +1,54 @@
+#include "c_bind.h"
+
+#include "tx_request.hpp"
+
+#include <numeric/random/engine.hpp>
+#include <gtest/gtest.h>
+
+namespace {
+
+using aztec3::circuits::abis::ContractDeploymentData;
+using aztec3::circuits::abis::FunctionSignature;
+using aztec3::circuits::abis::TxContext;
+using aztec3::circuits::abis::TxRequest;
+
+using NT = plonk::stdlib::types::NativeTypes;
+auto& engine = numeric::random::get_debug_engine();
+
+} // namespace
+
+namespace aztec3::circuits::abis {
+
+TEST(abis, hash_tx_request)
+{
+    // randomize function args for tx request
+    std::array<fr, ARGS_LENGTH> args;
+    for (size_t i = 0; i < ARGS_LENGTH; i++) {
+        args[i] = fr(engine.get_random_uint256());
+    }
+
+    // Construct mostly empty TxRequest with some randomized fields
+    TxRequest<NT> tx_request = TxRequest<NT>{
+        .from = engine.get_random_uint256(),
+        .to = engine.get_random_uint256(),
+        .function_signature = FunctionSignature<NT>(),
+        .args = args,
+        .nonce = engine.get_random_uint256(),
+        .tx_context = TxContext<NT>(),
+        .chain_id = engine.get_random_uint256(),
+    };
+
+    // Perform c_bind hash and check result
+    std::vector<uint8_t> buf;
+    write(buf, tx_request);
+    uint8_t* output = (uint8_t*)malloc(sizeof(uint8_t) * 32);
+    // Make the c_bind call to the hash tx request
+    abis__hash_tx_request(buf.data(), output);
+
+    // Convert buffer to `fr` type hash
+    NT::fr got_hash = NT::fr::serialize_from_buffer(output);
+    // Confirm that it equals the hash of the tx request
+    EXPECT_EQ(got_hash, tx_request.hash());
+}
+
+} // namespace aztec3::circuits::abis
