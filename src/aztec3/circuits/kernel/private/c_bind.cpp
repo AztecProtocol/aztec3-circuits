@@ -32,6 +32,6 @@ WASM_EXPORT void private_kernel__hash_tx_request(uint8_t const* tx_request_buf, 
 {
     TxRequest<NT> tx_request;
     read(tx_request_buf, tx_request);
-    barretenberg::fr::serialize_to_buffer(tx_request.hash(), output);
+    NT::fr::serialize_to_buffer(tx_request.hash(), output);
 }
 }
