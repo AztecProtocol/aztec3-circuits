@@ -6,14 +6,8 @@
 #include <gtest/gtest.h>
 
 namespace {
-
-using aztec3::circuits::abis::FunctionSignature;
-using aztec3::circuits::abis::TxContext;
-using aztec3::circuits::abis::TxRequest;
-
 using NT = plonk::stdlib::types::NativeTypes;
 auto& engine = numeric::random::get_debug_engine();
-
 } // namespace
 
 namespace aztec3::circuits::abis {
@@ -41,8 +35,8 @@ TEST(abis, hash_tx_request)
     // allocate an output buffer for cbind hash results
     std::vector<uint8_t> buf;
     write(buf, tx_request);
-    uint8_t* output = (uint8_t*)malloc(sizeof(uint8_t) * 32);
-    // Make the c_bind call to whash the tx request
+    uint8_t* output = (uint8_t*)malloc(32 * sizeof(uint8_t));
+    // Make the c_bind call to hash the tx request
     abis__hash_tx_request(buf.data(), output);
 
     // Convert buffer to `fr` for comparison to in-test calculated hash
