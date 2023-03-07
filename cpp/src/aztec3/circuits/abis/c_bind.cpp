@@ -10,7 +10,7 @@ using aztec3::GeneratorIndex;
 using aztec3::circuits::abis::TxRequest;
 using NT = plonk::stdlib::types::NativeTypes;
 
-// 31 bytes since field is really 254
+// 31 bytes since field is really only 254 bits
 const size_t FR_USABLE_BYTES = sizeof(NT::fr) - 1;
 
 /**
