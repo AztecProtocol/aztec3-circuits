@@ -11,7 +11,9 @@ using NT = plonk::stdlib::types::NativeTypes;
 auto& engine = numeric::random::get_debug_engine();
 
 /**
- * @details Convert a bytes buffer to a hex string.
+ * @brief Convert a bytes buffer to a hex string.
+ *
+ * @details convert each byte to two hex characters
  *
  * @param bytes buffer of bytes to be converted to hex string
  * @param first_n_bytes only include the first n bytes of `bytes` in the conversion
