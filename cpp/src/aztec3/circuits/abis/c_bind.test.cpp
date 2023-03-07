@@ -65,58 +65,32 @@ TEST(abis, hash_tx_request)
     EXPECT_EQ(got_hash, tx_request.hash());
 }
 
-TEST(abis, compute_function_selector_keccak256_transfer)
+TEST(abis, compute_function_selector_transfer)
 {
     const char* function_signature = "transfer(address,uint256)";
 
     // allocate an output buffer for cbind selector results
     uint8_t* output = (uint8_t*)malloc(4 * sizeof(uint8_t));
-    // Make the c_bind call to compute the function selector
-    abis__compute_function_selector_keccak256(function_signature, output);
+    // Make the c_bind call to compute the function selector via keccak256
+    abis__compute_function_selector(function_signature, output);
 
     // get the selector as a hex string of 4 bytes and
     // compare against known good selector from solidity
     EXPECT_EQ(bytes_to_hex_str(output, 4), "a9059cbb");
 }
 
-TEST(abis, compute_function_selector_keccak256_transferFrom)
+TEST(abis, compute_function_selector_transferFrom)
 {
     const char* function_signature = "transferFrom(address,address,uint256)";
 
     // allocate an output buffer for cbind selector results
     uint8_t* output = (uint8_t*)malloc(4 * sizeof(uint8_t));
-    // Make the c_bind call to compute the function selector
-    abis__compute_function_selector_keccak256(function_signature, output);
+    // Make the c_bind call to compute the function selector via keccak256
+    abis__compute_function_selector(function_signature, output);
 
     // get the selector as a hex string of 4 bytes and
     // compare against known good selector from solidity
     EXPECT_EQ(bytes_to_hex_str(output, 4), "23b872dd");
-}
-
-TEST(abis, compute_function_selector_pedersen_transfer)
-{
-    const char* function_signature = "transfer(address,uint256)";
-
-    // allocate an output buffer for cbind selector results
-    uint8_t* output = (uint8_t*)malloc(4 * sizeof(uint8_t));
-    // Make the c_bind call to compute the function selector
-    abis__compute_function_selector_pedersen(function_signature, output);
-
-    // get the selector as a hex string of 4 bytes
-    EXPECT_EQ(bytes_to_hex_str(output, 4), "15eee575");
-}
-
-TEST(abis, compute_function_selector_pedersen_transferFrom)
-{
-    const char* function_signature = "transferFrom(address,address,uint256)";
-
-    // allocate an output buffer for cbind selector results
-    uint8_t* output = (uint8_t*)malloc(4 * sizeof(uint8_t));
-    // Make the c_bind call to compute the function selector
-    abis__compute_function_selector_pedersen(function_signature, output);
-
-    // get the selector as a hex string of 4 bytes
-    EXPECT_EQ(bytes_to_hex_str(output, 4), "06db4c02");
 }
 
 } // namespace aztec3::circuits::abis
