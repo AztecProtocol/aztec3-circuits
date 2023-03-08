@@ -28,8 +28,8 @@ fi
 
 docker run --rm -t $IMAGE_URI /bin/sh -c "\
   set -e; \
-  cd /usr/src/aztec3-circuits/barretenberg/cpp/srs_db; \
+  cd /usr/src/aztec3-circuits/cpp/barretenberg/cpp/srs_db; \
   ./download_ignition.sh $NUM_TRANSCRIPTS; \
   ./download_ignition_lagrange.sh 24; \
-  cd /usr/src/aztec3-circuits/build; \
+  cd /usr/src/aztec3-circuits/cpp/build; \
   for BIN in $TESTS; do $TEST_CMD; done"
