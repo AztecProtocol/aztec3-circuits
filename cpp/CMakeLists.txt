@@ -128,7 +128,6 @@ if(COVERAGE)
     )
 endif()
 
-
 include(cmake/build.cmake)
 include(GNUInstallDirs)
 include(cmake/arch.cmake)

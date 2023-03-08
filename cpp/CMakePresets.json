@@ -16,6 +16,9 @@
         "CC": "clang",
         "CXX": "clang++",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      },
+      "cacheVariables": {
+        "CMAKE_BBERG_PRESET": "default"
       }
     },
     {
@@ -28,6 +31,9 @@
         "CXX": "$env{BREW_PREFIX}/opt/llvm/bin/clang++",
         "LDFLAGS": "-L$env{BREW_PREFIX}/opt/libomp/lib",
         "CPPFLAGS": "-I$env{BREW_PREFIX}/opt/libomp/include"
+      },
+      "cacheVariables": {
+        "CMAKE_BBERG_PRESET": "homebrew"
       }
     },
     {
@@ -38,6 +44,9 @@
       "environment": {
         "CC": "clang-15",
         "CXX": "clang++-15"
+      },
+      "cacheVariables": {
+        "CMAKE_BBERG_PRESET": "clang15"
       }
     },
     {
@@ -48,6 +57,9 @@
       "environment": {
         "CC": "gcc",
         "CXX": "g++"
+      },
+      "cacheVariables": {
+        "CMAKE_BBERG_PRESET": "gcc"
       }
     },
     {
@@ -58,6 +70,9 @@
       "environment": {
         "CC": "gcc-10",
         "CXX": "g++-10"
+      },
+      "cacheVariables": {
+        "CMAKE_BBERG_PRESET": "gcc10"
       }
     },
     {
@@ -74,7 +89,8 @@
       "inherits": "default",
       "binaryDir": "build-fuzzing",
       "cacheVariables": {
-        "FUZZING": "ON"
+        "FUZZING": "ON",
+        "CMAKE_BBERG_PRESET": "fuzzing"
       }
     },
     {
@@ -85,7 +101,8 @@
       "binaryDir": "build-coverage",
       "cacheVariables": {
         "COVERAGE": "ON",
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_BBERG_PRESET": "coverage"
       }
     },
     {
@@ -109,7 +126,8 @@
         "CMAKE_FIND_ROOT_PATH_MODE_INCLUDE": "ONLY",
         "CMAKE_FIND_ROOT_PATH_MODE_PACKAGE": "ONLY",
         "CMAKE_C_COMPILER_WORKS": "ON",
-        "CMAKE_CXX_COMPILER_WORKS": "ON"
+        "CMAKE_CXX_COMPILER_WORKS": "ON",
+        "CMAKE_BBERG_PRESET": "wasm"
       }
     }
   ],
@@ -159,10 +177,7 @@
       "name": "wasm",
       "configurePreset": "wasm",
       "inheritConfigureEnvironment": true,
-      "jobs": 0,
-      "targets": [
-        "barretenberg.wasm"
-      ]
+      "jobs": 0
     }
   ],
   "testPresets": [
