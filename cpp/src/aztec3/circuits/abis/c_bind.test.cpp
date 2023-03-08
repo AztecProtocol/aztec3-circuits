@@ -61,6 +61,8 @@ TEST(abis, hash_tx_request)
 
     // Convert buffer to `fr` for comparison to in-test calculated hash
     NT::fr got_hash = NT::fr::serialize_from_buffer(output);
+    free(output);
+
     // Confirm cbind output == hash of tx request
     EXPECT_EQ(got_hash, tx_request.hash());
 }
@@ -77,6 +79,7 @@ TEST(abis, compute_function_selector_transfer)
     // get the selector as a hex string of 4 bytes and
     // compare against known good selector from solidity
     EXPECT_EQ(bytes_to_hex_str(output, 4), "a9059cbb");
+    free(output);
 }
 
 TEST(abis, compute_function_selector_transferFrom)
@@ -91,6 +94,7 @@ TEST(abis, compute_function_selector_transferFrom)
     // get the selector as a hex string of 4 bytes and
     // compare against known good selector from solidity
     EXPECT_EQ(bytes_to_hex_str(output, 4), "23b872dd");
+    free(output);
 }
 
 } // namespace aztec3::circuits::abis
