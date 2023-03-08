@@ -7,7 +7,6 @@ git submodule update --init --recursive
 # Clean.
 rm -rf ./build
 rm -rf ./build-wasm
-rm -rf ./src/wasi-sdk-*
 
 # Clean barretenberg.
 rm -rf ./barretenberg/cpp/build
@@ -66,10 +65,7 @@ cmake --preset $PRESET -DCMAKE_BUILD_TYPE=RelWithAssert
 cmake --build --preset $PRESET ${@/#/--target }
 
 # Install the webassembly toolchain.
-WASI_VERSION=12
-cd ./src
-curl -s -L https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-$WASI_VERSION/wasi-sdk-$WASI_VERSION.0-$OS.tar.gz | tar zxfv -
-cd ..
+(cd ./barretenberg/cpp/src && export WASI_VERSION=12 && curl -s -L https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-$WASI_VERSION/wasi-sdk-$WASI_VERSION.0-$OS.tar.gz | tar zxfv -)
 
 # Build WASM.
 cmake --preset wasm

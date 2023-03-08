@@ -17,9 +17,6 @@ project(
     LANGUAGES CXX C
 )
 
-# include barretenberg as ExternalProject
-include(cmake/barretenberg.cmake)
-
 option(DISABLE_ASM "Disable custom assembly" OFF)
 option(DISABLE_ADX "Disable ADX assembly variant" OFF)
 option(MULTITHREADING "Enable multi-threading" ON)
@@ -127,6 +124,10 @@ if(COVERAGE)
     VERBATIM
     )
 endif()
+
+# include barretenberg as ExternalProject
+# (needs WASM to be set already)
+include(cmake/barretenberg.cmake)
 
 include(cmake/build.cmake)
 include(GNUInstallDirs)
