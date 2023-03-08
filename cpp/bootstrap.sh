@@ -10,9 +10,9 @@ rm -rf ./build-wasm
 rm -rf ./src/wasi-sdk-*
 
 # Clean barretenberg.
-rm -rf ../barretenberg/cpp/build
-rm -rf ../barretenberg/cpp/build-wasm
-rm -rf ../barretenberg/cpp/src/wasi-sdk-*
+rm -rf ./barretenberg/cpp/build
+rm -rf ./barretenberg/cpp/build-wasm
+rm -rf ./barretenberg/cpp/src/wasi-sdk-*
 
 # Install formatting git hook.
 HOOKS_DIR=$(git rev-parse --git-path hooks)

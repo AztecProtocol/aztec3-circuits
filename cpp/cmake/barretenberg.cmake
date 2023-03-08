@@ -9,6 +9,13 @@
 
 include(ExternalProject)
 
+# Reference barretenberg artifacts (like library archives) via this dir:
+if (WASM)
+    set(BBERG_BUILD_DIR ${BBERG_DIR}/build-wasm)
+else()
+    set(BBERG_BUILD_DIR ${BBERG_DIR}/build)
+endif()
+
 if(NOT CMAKE_BBERG_PRESET)
     set(CMAKE_BBERG_PRESET default)
 endif()
@@ -25,7 +32,9 @@ ExternalProject_Add(Barretenberg
     UPDATE_COMMAND ""
     INSTALL_COMMAND ""
     CONFIGURE_COMMAND ${CMAKE_COMMAND} --preset ${CMAKE_BBERG_PRESET}
-    BUILD_COMMAND ${CMAKE_COMMAND} --build --preset ${CMAKE_BBERG_PRESET} --target barretenberg --target env)
+    BUILD_COMMAND ${CMAKE_COMMAND} --build --preset ${CMAKE_BBERG_PRESET} --target barretenberg --target env
+    # byproducts needed by ninja generator (not needed by make)
+    BUILD_BYPRODUCTS ${BBERG_BUILD_DIR}/lib/libbarretenberg.a ${BBERG_BUILD_DIR}/lib/libenv.a)
 
 include_directories(${BBERG_DIR}/src/aztec)
 
