@@ -8,4 +8,4 @@ COPY . .
 RUN cmake --preset wasm && cmake --build --preset wasm
 
 #FROM alpine:3.17
-#COPY --from=builder /usr/src/aztec3-circuits/cpp/build/bin/aztec3.wasm /usr/src/aztec3-circuits/cpp/build/bin/aztec3.wasm
+#COPY --from=builder /usr/src/aztec3-circuits/cpp/build-wasm/bin/aztec3.wasm /usr/src/aztec3-circuits/cpp/build-wasm/bin/aztec3.wasm
