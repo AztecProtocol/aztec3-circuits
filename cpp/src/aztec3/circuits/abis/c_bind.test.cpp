@@ -11,13 +11,13 @@ using NT = plonk::stdlib::types::NativeTypes;
 auto& engine = numeric::random::get_debug_engine();
 
 /**
- * @brief Convert a bytes buffer to a hex string.
+ * @brief Convert a bytes array to a hex string.
  *
  * @details convert each byte to two hex characters
  *
- * @param bytes buffer of bytes to be converted to hex string
- * @param first_n_bytes only include the first n bytes of `bytes` in the conversion
- * @return a string containing the hex representation of the first n bytes of the input buffer
+ * @tparam NUM_BYTES length of bytes array input
+ * @param bytes array of bytes to be converted to hex string
+ * @return a string containing the hex representation of the NUM_BYTES bytes of the input array
  */
 template <size_t NUM_BYTES> std::string bytes_to_hex_str(std::array<uint8_t, NUM_BYTES> bytes)
 {
@@ -28,10 +28,23 @@ template <size_t NUM_BYTES> std::string bytes_to_hex_str(std::array<uint8_t, NUM
     return stream.str();
 }
 
+/**
+ * @brief Convert a hex string to a bytes array
+ *
+ * @details convert each hex pair to a byte and return array of bytes
+ *
+ * @tparam NUM_BYTES length of bytes array output. May be different from length of hex string.
+ * @param hex_str the hex string to be converted to bytes. The number of bytes that will
+ * be inserted into the output array is `min(NUM_BYTES, ceil(hex_str.length()/2))`.
+ * @return an array containing the bytes representation of the hex string's character pairs.
+ */
 template <size_t NUM_BYTES> std::array<uint8_t, NUM_BYTES> hex_str_to_bytes(std::string& hex_str)
 {
+    // if NUM_BYTES is less than the bytes in the hex string, we want to cut the loop short
+    size_t const num_bytes_to_process = std::min<size_t>(NUM_BYTES, (size_t)ceil((double)hex_str.length() / 2));
+
     std::array<uint8_t, NUM_BYTES> bytes = { 0 };
-    for (size_t i = 0; i < hex_str.length(); i += 2) {
+    for (size_t i = 0; i < num_bytes_to_process * 2; i += 2) {
         std::string byteString = hex_str.substr(i, 2);
         uint8_t byte = (uint8_t)strtol(byteString.c_str(), NULL, 16);
         bytes[i / 2] = byte;
