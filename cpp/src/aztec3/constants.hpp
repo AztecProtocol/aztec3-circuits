@@ -52,6 +52,7 @@ enum GeneratorIndex {
     CONTRACT_DEPLOYMENT_DATA,
     TX_CONTEXT,
     TX_REQUEST,
+    FUNCTION_LEAF,
 };
 
 enum StorageSlotGeneratorIndex {

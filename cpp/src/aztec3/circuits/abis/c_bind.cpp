@@ -3,6 +3,7 @@
 
 #include <stdlib/types/native_types.hpp>
 #include <crypto/keccak/keccak.hpp>
+#include <common/serialize.hpp>
 
 namespace {
 using aztec3::GeneratorIndex;
@@ -56,5 +57,41 @@ WASM_EXPORT void abis__compute_function_selector(char const* func_sig_cstr, uint
     auto keccak_hash = ethash_keccak256((uint8_t*)func_sig_cstr, std::char_traits<char>::length(func_sig_cstr));
     // Get the first 4 bytes of the hash's 0th word and copy into output buffer
     memcpy(output, &keccak_hash.word64s[0], 4 * sizeof(uint8_t));
+}
+
+#define FUNC_SEL_BYTES 32
+#define VK_HASH_BYTES 32
+#define ACIR_HASH_BYTES 32
+#define FUNC_LEAF_PREIMAGE_BYTES FUNC_SEL_BYTES + 1 + VK_HASH_BYTES + ACIR_HASH_BYTES
+
+#define FUNC_SEL_OFFSET 0
+#define IS_PRIVATE_OFFSET FUNC_SEL_BYTES
+#define VK_HASH_OFFSET IS_PRIVATE_OFFSET + 1
+#define ACIR_HASH_OFFSET VK_HASH_OFFSET + ACIR_HASH_BYTES
+
+WASM_EXPORT void abis__compute_function_leaf(uint8_t const* function_selector_buf,
+                                             bool is_private,
+                                             uint8_t const* vk_hash_buf,
+                                             uint8_t const* acir_hash_buf,
+                                             uint8_t* output)
+{
+    // info("Sizeof fs_buf: ", sizeof(function_selector_buf));
+    // uint32_t size;
+    // serialize::read(function_selector_buf, size);
+    // info("Read sizeof fs_buf: ", size);
+
+    // TODO somehow ensure that function selector is 4 bytes and vk_hash is 32 (actually 31?)
+    std::vector<uint8_t> to_compress(FUNC_LEAF_PREIMAGE_BYTES, 0);
+    std::copy_n(function_selector_buf, FUNC_SEL_BYTES, to_compress.begin());
+    to_compress[IS_PRIVATE_OFFSET] = (uint8_t)is_private;
+    std::copy_n(vk_hash_buf, VK_HASH_BYTES, to_compress.begin() + VK_HASH_OFFSET);
+    std::copy_n(acir_hash_buf, ACIR_HASH_BYTES, to_compress.begin() + ACIR_HASH_OFFSET);
+
+    info("Function leaf preimage: ", to_compress);
+    NT::fr leaf = NT::compress(to_compress, GeneratorIndex::FUNCTION_LEAF);
+
+    info("HERE6 leaf: ", leaf);
+    NT::fr::serialize_to_buffer(leaf, output);
+    info("HERE7");
 }
 }
