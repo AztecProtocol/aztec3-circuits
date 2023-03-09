@@ -11,13 +11,13 @@ using NT = plonk::stdlib::types::NativeTypes;
 auto& engine = numeric::random::get_debug_engine();
 
 /**
- * @brief Convert a bytes buffer to a hex string.
+ * @brief Convert a bytes array to a hex string.
  *
  * @details convert each byte to two hex characters
  *
- * @param bytes buffer of bytes to be converted to hex string
- * @param first_n_bytes only include the first n bytes of `bytes` in the conversion
- * @return a string containing the hex representation of the first n bytes of the input buffer
+ * @tparam NUM_BYTES length of bytes array input
+ * @param bytes array of bytes to be converted to hex string
+ * @return a string containing the hex representation of the NUM_BYTES bytes of the input array
  */
 template <size_t NUM_BYTES> std::string bytes_to_hex_str(std::array<uint8_t, NUM_BYTES> bytes)
 {
