@@ -55,13 +55,14 @@ TEST(abis, hash_tx_request)
     // allocate an output buffer for cbind hash results
     std::vector<uint8_t> buf;
     write(buf, tx_request);
-    uint8_t* output = (uint8_t*)malloc(32 * sizeof(uint8_t));
+
+    // create an output buffer for cbind hash results
+    std::array<uint8_t, 32> output = { 0 };
     // Make the c_bind call to hash the tx request
-    abis__hash_tx_request(buf.data(), output);
+    abis__hash_tx_request(buf.data(), output.data());
 
     // Convert buffer to `fr` for comparison to in-test calculated hash
-    NT::fr got_hash = NT::fr::serialize_from_buffer(output);
-    free(output);
+    NT::fr got_hash = NT::fr::serialize_from_buffer(output.data());
 
     // Confirm cbind output == hash of tx request
     EXPECT_EQ(got_hash, tx_request.hash());
