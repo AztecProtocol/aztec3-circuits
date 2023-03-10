@@ -3,16 +3,19 @@ set -e
 
 NUM_TRANSCRIPTS=$1
 TESTS=$2
+WASM_MODE=$3
 shift
 shift
-if [ -n "$3" ]; then
-  WASM_MODE=$3
+if [ -n "$WASM_MODE" ]; then
   shift
+  ARCH=wasm
+else
+  ARCH=x86_64
 fi
 
 $(aws ecr get-login --region us-east-2 --no-include-email) 2> /dev/null
 
-IMAGE_URI=278380418400.dkr.ecr.us-east-2.amazonaws.com/aztec3-circuits-x86_64-linux-clang-assert:cache-$COMMIT_HASH
+IMAGE_URI=278380418400.dkr.ecr.us-east-2.amazonaws.com/aztec3-circuits-$ARCH-linux-clang-assert:cache-$COMMIT_HASH
 
 docker pull $IMAGE_URI
 
@@ -24,7 +27,7 @@ if [ -z "$WASM_MODE" ]; then
   TEST_CMD="./bin/\$BIN $@"
   BUILD_DIR=/usr/src/aztec3-circuits/cpp/build
 else
-  TEST_CMD="wasmtime --dir .. bin/\$BIN $@"
+  TEST_CMD="~/.wasmtime/bin/wasmtime --dir .. bin/\$BIN $@"
   BUILD_DIR=/usr/src/aztec3-circuits/cpp/build-wasm
 fi
 
