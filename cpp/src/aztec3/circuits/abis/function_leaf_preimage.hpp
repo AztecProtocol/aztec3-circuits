@@ -28,7 +28,6 @@ using std::is_same;
 template <typename NCT> struct FunctionLeafPreimage {
 
     typedef typename NCT::boolean boolean;
-    typedef typename NCT::uint8 uint8;
     typedef typename NCT::fr fr;
 
     fr function_selector;
