@@ -1,5 +1,8 @@
 #include "c_bind.h"
 #include "tx_request.hpp"
+#include "function_leaf_preimage.hpp"
+
+#include <aztec3/constants.hpp>
 
 #include <stdlib/types/native_types.hpp>
 #include <crypto/keccak/keccak.hpp>
@@ -7,6 +10,7 @@
 
 namespace {
 using aztec3::GeneratorIndex;
+using aztec3::circuits::abis::FunctionLeafPreimage;
 using aztec3::circuits::abis::TxRequest;
 using NT = plonk::stdlib::types::NativeTypes;
 } // namespace
@@ -57,43 +61,27 @@ WASM_EXPORT void abis__compute_function_selector(char const* func_sig_cstr, uint
     auto keccak_hash = ethash_keccak256(reinterpret_cast<uint8_t const*>(func_sig_cstr), strlen(func_sig_cstr));
     // get a pointer to the start of the hash bytes
     uint8_t const* hash_bytes = reinterpret_cast<uint8_t const*>(&keccak_hash.word64s[0]);
-    // get the first 4 bytes of the hash's 0th word and copy into output buffer
-    std::copy(hash_bytes, hash_bytes + 4, output);
+    // get the correct number of bytes from the hash and copy into output buffer
+    std::copy_n(hash_bytes, aztec3::FUNCTION_SELECTOR_NUM_BYTES, output);
 }
 
-#define FUNC_SEL_BYTES 32
-#define VK_HASH_BYTES 32
-#define ACIR_HASH_BYTES 32
-#define FUNC_LEAF_PREIMAGE_BYTES FUNC_SEL_BYTES + 1 + VK_HASH_BYTES + ACIR_HASH_BYTES
-
-#define FUNC_SEL_OFFSET 0
-#define IS_PRIVATE_OFFSET FUNC_SEL_BYTES
-#define VK_HASH_OFFSET IS_PRIVATE_OFFSET + 1
-#define ACIR_HASH_OFFSET VK_HASH_OFFSET + ACIR_HASH_BYTES
-
-WASM_EXPORT void abis__compute_function_leaf(uint8_t const* function_selector_buf,
-                                             bool is_private,
-                                             uint8_t const* vk_hash_buf,
-                                             uint8_t const* acir_hash_buf,
-                                             uint8_t* output)
+/**
+ * @brief Generates a function tree leaf from its preimage.
+ * This is a WASM-export that can be called from Typescript.
+ *
+ * @details given a `uint8_t const*` buffer representing a function leaf's prieimage,
+ * construct a FunctionLeafPreimage instance, hash, and return the serialized results
+ * in the `output` buffer.
+ *
+ * @param function_leaf_preimage_buf a buffer of bytes representing the function leaf's preimage
+ * contents (`function_selector`, `is_private`, `vk_hash`, and `acir_hash`)
+ * @param output buffer that will contain the output. The hashed and serialized function leaf.
+ */
+WASM_EXPORT void abis__compute_function_leaf(uint8_t const* function_leaf_preimage_buf, uint8_t* output)
 {
-    // info("Sizeof fs_buf: ", sizeof(function_selector_buf));
-    // uint32_t size;
-    // serialize::read(function_selector_buf, size);
-    // info("Read sizeof fs_buf: ", size);
-
-    // TODO somehow ensure that function selector is 4 bytes and vk_hash is 32 (actually 31?)
-    std::vector<uint8_t> to_compress(FUNC_LEAF_PREIMAGE_BYTES, 0);
-    std::copy_n(function_selector_buf, FUNC_SEL_BYTES, to_compress.begin());
-    to_compress[IS_PRIVATE_OFFSET] = (uint8_t)is_private;
-    std::copy_n(vk_hash_buf, VK_HASH_BYTES, to_compress.begin() + VK_HASH_OFFSET);
-    std::copy_n(acir_hash_buf, ACIR_HASH_BYTES, to_compress.begin() + ACIR_HASH_OFFSET);
-
-    info("Function leaf preimage: ", to_compress);
-    NT::fr leaf = NT::compress(to_compress, GeneratorIndex::FUNCTION_LEAF);
-
-    info("HERE6 leaf: ", leaf);
-    NT::fr::serialize_to_buffer(leaf, output);
-    info("HERE7");
+    FunctionLeafPreimage<NT> leaf_preimage;
+    read(function_leaf_preimage_buf, leaf_preimage);
+    leaf_preimage.hash();
+    NT::fr::serialize_to_buffer(leaf_preimage.hash(), output);
 }
-}
+} // extern "C"
