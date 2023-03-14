@@ -44,7 +44,7 @@ TEST(abis, hash_tx_request)
     TxRequest<NT> tx_request = TxRequest<NT>{
         .from = engine.get_random_uint256(),
         .to = engine.get_random_uint256(),
-        .function_signature = FunctionSignature<NT>(),
+        .function_data = FunctionData<NT>(),
         .args = args,
         .nonce = engine.get_random_uint256(),
         .tx_context = TxContext<NT>(),
