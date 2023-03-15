@@ -30,6 +30,7 @@ function(barretenberg_module MODULE_NAME)
             STATIC
             $<TARGET_OBJECTS:${MODULE_NAME}_objects>
         )
+        message($<TARGET_OBJECTS:${MODULE_NAME}_objects>)
 
         target_link_libraries(
             ${MODULE_NAME}
