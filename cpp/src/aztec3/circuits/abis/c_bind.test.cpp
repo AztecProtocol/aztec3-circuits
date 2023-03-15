@@ -3,6 +3,7 @@
 #include "tx_request.hpp"
 #include "function_leaf_preimage.hpp"
 
+#include <stdlib/merkle_tree/membership.hpp>
 #include <numeric/random/engine.hpp>
 #include <gtest/gtest.h>
 
@@ -57,7 +58,7 @@ TEST(abi_tests, hash_tx_request)
     write(buf, tx_request);
 
     // create an output buffer for cbind hash results
-    std::array<uint8_t, 32> output = { 0 };
+    std::array<uint8_t, sizeof(NT::fr)> output = { 0 };
     // Make the c_bind call to hash the tx request
     abis__hash_tx_request(buf.data(), output.data());
 
@@ -113,11 +114,42 @@ TEST(abi_tests, compute_function_leaf)
     std::vector<uint8_t> preimage_buf;
     write(preimage_buf, preimage);
 
-    std::array<uint8_t, 32> output = { 0 };
+    std::array<uint8_t, sizeof(NT::fr)> output = { 0 };
     abis__compute_function_leaf(preimage_buf.data(), output.data());
 
     NT::fr got_leaf = NT::fr::serialize_from_buffer(output.data());
     EXPECT_EQ(got_leaf, preimage.hash());
+}
+
+TEST(abi_tests, compute_function_tree_root)
+{
+    NT::fr zero_leaf = FunctionLeafPreimage<NT>().hash(); // hash of empty/0 preimage
+    // these frs will be used to compute the root directly (without cbind)
+    // all empty slots will have the zero-leaf to ensure full tree
+    std::vector<fr> leaves_frs(FUNCTION_TREE_NUM_LEAVES, zero_leaf);
+
+    // randomize number of non-zero leaves such that `0 < num_nonzero_leaves <= FUNCTION_TREE_NUM_LEAVES`
+    uint8_t num_nonzero_leaves = engine.get_random_uint8() % (FUNCTION_TREE_NUM_LEAVES + 1);
+    // create a vector whose vec.data() can be cast to a single mega-buffer containing all non-zero leaves
+    // initialize the vector with its size so that a leaf's data can be copied in (via `seralize_to_buffer`)
+    std::vector<uint8_t[sizeof(NT::fr)]> leaves(num_nonzero_leaves);
+
+    // generate some random leaves
+    // insert them into the vector of leaf fields (for direct tree root computation)
+    // insert their serialized form into the vector of uint8[32]s (to be cast to uint8_t* and passed to cbind)
+    for (size_t l = 0; l < num_nonzero_leaves; l++) {
+        NT::fr leaf = engine.get_random_uint256();
+        leaves_frs[l] = leaf;
+        NT::fr::serialize_to_buffer(leaf, leaves[l]);
+    }
+
+    // call cbind and get output (root)
+    std::array<uint8_t, sizeof(NT::fr)> output = { 0 };
+    abis__compute_function_tree_root(reinterpret_cast<uint8_t*>(leaves.data()), num_nonzero_leaves, output.data());
+
+    // compare cbind results with direct computation
+    NT::fr got_root = NT::fr::serialize_from_buffer(output.data());
+    EXPECT_EQ(got_root, plonk::stdlib::merkle_tree::compute_tree_root_native(leaves_frs));
 }
 
 } // namespace aztec3::circuits::abis

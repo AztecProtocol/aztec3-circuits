@@ -4,12 +4,12 @@
 
 #include <aztec3/constants.hpp>
 
+#include <stdlib/merkle_tree/membership.hpp>
 #include <stdlib/types/native_types.hpp>
 #include <crypto/keccak/keccak.hpp>
 #include <common/serialize.hpp>
 
 namespace {
-using aztec3::GeneratorIndex;
 using aztec3::circuits::abis::FunctionLeafPreimage;
 using aztec3::circuits::abis::TxRequest;
 using NT = plonk::stdlib::types::NativeTypes;
@@ -83,5 +83,46 @@ WASM_EXPORT void abis__compute_function_leaf(uint8_t const* function_leaf_preima
     read(function_leaf_preimage_buf, leaf_preimage);
     leaf_preimage.hash();
     NT::fr::serialize_to_buffer(leaf_preimage.hash(), output);
+}
+
+/**
+ * @brief Compute a function tree root from its leaves.
+ * This is a WASM-export that can be called from Typescript.
+ *
+ * @details given a `uint8_t const*` buffer representing a function trees leaves,
+ * compute the corresponding tree's root and return the serialized results
+ * in the `output` buffer.
+ *
+ * @param function_leaves_buf a buffer of bytes representing the function leaves of the
+ * tree for which the root is being computed
+ * @param output buffer that will contain the output. The serialiazed function tree root.
+ */
+WASM_EXPORT void abis__compute_function_tree_root(uint8_t const* function_leaves_buf,
+                                                  uint8_t num_leaves,
+                                                  uint8_t* output)
+{
+    // cant exceed max leaves
+    ASSERT(num_leaves <= aztec3::FUNCTION_TREE_NUM_LEAVES);
+
+    // initialize the vector of leaves to a full-tree-sized vector of zero-leaves
+    NT::fr zero_leaf = FunctionLeafPreimage<NT>().hash(); // hash of empty/0 preimage
+    std::vector<NT::fr> function_leaves(aztec3::FUNCTION_TREE_NUM_LEAVES, zero_leaf);
+
+    // Iterate over the input buffer, extracting each leaf
+    // and serializing it from buffer to fr/field.
+    // Insert each leaf field into the vector.
+    // If num_leaves < full tree, remaining leaves will be `zero_leaf`
+    // as set in vector initialization.
+    for (size_t l = 0; l < num_leaves; l++) {
+        // each iteration skips to over some number of `fr`s to get to the
+        // next leaf
+        uint8_t const* cur_leaf_ptr = function_leaves_buf + sizeof(NT::fr) * l;
+        NT::fr leaf = NT::fr::serialize_from_buffer(cur_leaf_ptr);
+        function_leaves[l] = leaf;
+    }
+
+    // compute the root of this full function tree, serialize, return
+    NT::fr root = plonk::stdlib::merkle_tree::compute_tree_root_native(function_leaves);
+    NT::fr::serialize_to_buffer(root, output);
 }
 } // extern "C"
