@@ -126,21 +126,23 @@ TEST(abi_tests, compute_function_tree_root)
     NT::fr zero_leaf = FunctionLeafPreimage<NT>().hash(); // hash of empty/0 preimage
     // these frs will be used to compute the root directly (without cbind)
     // all empty slots will have the zero-leaf to ensure full tree
-    std::vector<fr> leaves_frs(FUNCTION_TREE_NUM_LEAVES, zero_leaf);
+    std::vector<NT::fr> leaves_frs(FUNCTION_TREE_NUM_LEAVES, zero_leaf);
 
     // randomize number of non-zero leaves such that `0 < num_nonzero_leaves <= FUNCTION_TREE_NUM_LEAVES`
     uint8_t num_nonzero_leaves = engine.get_random_uint8() % (FUNCTION_TREE_NUM_LEAVES + 1);
     // create a vector whose vec.data() can be cast to a single mega-buffer containing all non-zero leaves
     // initialize the vector with its size so that a leaf's data can be copied in (via `seralize_to_buffer`)
-    std::vector<uint8_t[sizeof(NT::fr)]> leaves(num_nonzero_leaves);
+    // (uint256_t here means nothing; it is just used because it is the right size (32 uint8_ts))
+    std::vector<uint256_t> leaves(num_nonzero_leaves);
 
     // generate some random leaves
     // insert them into the vector of leaf fields (for direct tree root computation)
-    // insert their serialized form into the vector of uint8[32]s (to be cast to uint8_t* and passed to cbind)
+    // insert their serialized form into the vector of 32-bytes chunks/uint256_ts
+    // (to be cast to a single mega uint8_t* buffer and passed to cbind)
     for (size_t l = 0; l < num_nonzero_leaves; l++) {
         NT::fr leaf = engine.get_random_uint256();
         leaves_frs[l] = leaf;
-        NT::fr::serialize_to_buffer(leaf, leaves[l]);
+        NT::fr::serialize_to_buffer(leaf, reinterpret_cast<uint8_t*>(&leaves[l]));
     }
 
     // call cbind and get output (root)
