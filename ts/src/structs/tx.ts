@@ -1,5 +1,5 @@
-import { boolToBuffer } from "../wasm/serialize.js"
-import { EthAddress, Fr } from "./shared.js"
+import { serializeToBuffer } from "../wasm/serialize.js";
+import { Fr } from "./shared.js";
 
 /**
  * Contract deployment data in a @TxContext.
@@ -14,17 +14,21 @@ export class ContractDeploymentData {
     public functionTreeRoot: Fr,
     public constructorHash: Fr,
     public contractAddressSalt: Fr,
-    public portalContractAddress: EthAddress,
+    /**
+     * EthAddress of the Portal Contract
+     * TODO: Change to EthAddress once there's a uint160 circuit type
+     */
+    public portalContractAddress: Fr,
   ) { }
 
   toBuffer() {
-    return Buffer.concat([
+    return serializeToBuffer(
       this.contractDataHash,
       this.functionTreeRoot,
       this.constructorHash,
       this.contractAddressSalt,
       this.portalContractAddress,
-    ])
+    );
   }
 }
 
@@ -42,12 +46,12 @@ export class TxContext {
   ) {}
 
   toBuffer() {
-    return Buffer.concat([
-      boolToBuffer(this.isFeePaymentTx),
-      boolToBuffer(this.isRebatePaymentTx),
-      boolToBuffer(this.isContractDeployment),
-      this.contractDeploymentData.toBuffer(),
+    return serializeToBuffer(
+      this.isFeePaymentTx,
+      this.isRebatePaymentTx,
+      this.isContractDeployment,
+      this.contractDeploymentData,
       this.referenceBlockNumber,
-    ]);
+    );
   }
 }
