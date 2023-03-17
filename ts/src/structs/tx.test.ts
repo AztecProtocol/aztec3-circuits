@@ -45,7 +45,3 @@ describe("structs/tx", () => {
     wasm.call("bbfree", retPtr);
   });
 });
-
-// function bufferTo0xHex(buf: Buffer): string {
-//   return "0x" + buf.toString("hex");
-// }

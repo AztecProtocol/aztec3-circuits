@@ -1,6 +1,8 @@
 import { serializeToBuffer } from "../wasm/serialize.js";
+import { KERNEL_NEW_NULLIFIERS_LENGTH } from "./constants.js";
 import { PreviousKernelData } from "./kernel.js";
 import { AggregationObject, Fr, MembershipWitness, UInt32 } from "./shared.js";
+import { checkLength } from "./utils.js";
 
 export class NullifierLeafPreimage {
   constructor(
@@ -52,6 +54,7 @@ export class ConstantBaseRollupData {
 /**
  * Inputs to the base rollup circuit
  */
+// TODO: Validate sizes for MembershipWitnesses
 export class BaseRollupInputs {
   constructor(
     public kernelData: [PreviousKernelData, PreviousKernelData],
@@ -67,7 +70,18 @@ export class BaseRollupInputs {
     public constants: ConstantBaseRollupData,
 
     public proverId: Fr
-  ) {}
+  ) {
+    checkLength(
+      this.lowNullifierLeafPreimages,
+      2 * KERNEL_NEW_NULLIFIERS_LENGTH,
+      "lowNullifierLeafPreimages"
+    );
+    checkLength(
+      this.lowNullifierMembershipWitness,
+      2 * KERNEL_NEW_NULLIFIERS_LENGTH,
+      "lowNullifierMembershipWitness"
+    );
+  }
 
   toBuffer() {
     return serializeToBuffer(
