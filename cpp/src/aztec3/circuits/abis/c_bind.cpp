@@ -1,10 +1,12 @@
 #include "c_bind.h"
+#include "private_circuit_public_inputs.hpp"
 #include "tx_request.hpp"
 #include "tx_context.hpp"
 #include "function_leaf_preimage.hpp"
 
 #include <aztec3/constants.hpp>
 
+#include <cstring>
 #include <stdlib/types/native_types.hpp>
 #include <crypto/keccak/keccak.hpp>
 #include <common/serialize.hpp>
@@ -18,6 +20,34 @@ using NT = plonk::stdlib::types::NativeTypes;
 } // namespace
 
 #define WASM_EXPORT __attribute__((visibility("default")))
+
+// Note: We don't have a simple way of calling the barretenberg c-bind.
+// Mimick bbmalloc behaviour.
+static void* bbmalloc(size_t size)
+{
+    auto ptr = aligned_alloc(64, size);
+    return ptr;
+}
+
+/** Copy this object to a bbmalloc'd buffer */
+template <typename T> static uint8_t* bbmalloc_copy(const T& obj, uint32_t* size)
+{
+    std::vector<uint8_t> output_buf;
+    write(output_buf, obj);
+    uint8_t* output_copy = (uint8_t*)bbmalloc(output_buf.size());
+    memcpy(output_copy, output_buf.data(), output_buf.size());
+    *size = (uint32_t)output_buf.size();
+    return output_copy;
+}
+
+/**
+ * For testing only. Take this object, write it to a buffer, then output it. */
+template <typename T> static uint8_t* roundtrip_serialize(uint8_t const* input_buf, uint32_t* size)
+{
+    T obj;
+    read(input_buf, obj);
+    return bbmalloc_copy(obj, size);
+}
 
 extern "C" {
 
@@ -96,6 +126,23 @@ WASM_EXPORT uint32_t abis__inspect_tx_context(uint8_t const* tx_context_buf, uin
     stream << tx_context;
     std::string inspected = stream.str();
     inspected.copy((char*)output, 1024);
-    return inspected.size();
+    return (uint32_t)inspected.size();
+}
+
+WASM_EXPORT uint8_t* abis__test_roundtrip_serialize_tx_context(uint8_t const* tx_context_buf, uint32_t* size)
+{
+    return roundtrip_serialize<TxContext<NT>>(tx_context_buf, size);
+}
+
+WASM_EXPORT uint8_t* abis__test_roundtrip_serialize_tx_request(uint8_t const* tx_request_buf, uint32_t* size)
+{
+    return roundtrip_serialize<TxRequest<NT>>(tx_request_buf, size);
+}
+
+WASM_EXPORT uint8_t* abis__test_roundtrip_serialize_private_circuits_public_inputs(
+    uint8_t const* private_circuits_public_inputs_buf, uint32_t* size)
+{
+    return roundtrip_serialize<aztec3::circuits::abis::PrivateCircuitPublicInputs<NT>>(
+        private_circuits_public_inputs_buf, size);
 }
 } // extern "C"

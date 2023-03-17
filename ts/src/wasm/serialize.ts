@@ -63,6 +63,16 @@ export function numToUInt32LE(n: number, bufferSize = 4) {
 }
 
 /**
+ * Cast a uint8 array to a number;
+ * @param array - The uint8 array.
+ * @returns The number.
+ */
+export function uint8ArrayToNum(array: Uint8Array) {
+  const buf = Buffer.from(array);
+  return buf.readUint32LE();
+}
+
+/**
  * For serializing booleans in structs for calling into wasm
  * @param bool value to serialize
  */
@@ -81,6 +91,12 @@ export function deserializeField(buf: Buffer, offset = 0) {
   return { elem: buf.slice(offset, offset + adv), adv };
 }
 
+/** A type that can be written to a buffer. */
+export type Bufferable =
+  | boolean
+  | Buffer
+  | { toBuffer: () => Buffer }
+  | Bufferable[];
 /**
  * Serializes a list of objects contiguously for calling into wasm.
  * @param objs objects to serialize.
@@ -91,6 +107,10 @@ export function serializeToBuffer(
 ): Buffer {
   return Buffer.concat(
     objs.map((obj) => {
+      if (Array.isArray(obj)) {
+        // Note: These must match the length of the C++ structs
+        return Buffer.concat(obj.map((elem) => serializeToBuffer(elem)));
+      }
       if (Buffer.isBuffer(obj)) {
         return obj;
       } else if (typeof obj === "boolean") {

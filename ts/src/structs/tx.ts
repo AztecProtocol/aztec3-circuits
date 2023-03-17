@@ -31,8 +31,8 @@ export class ContractDeploymentData {
 }
 
 /**
- * Transaction context
- * cpp/src/aztec3/circuits/abis/tx_context.hpp
+ * Transaction context.
+ * @see cpp/src/aztec3/circuits/abis/tx_context.hpp.
  */
 export class TxContext {
   constructor(

@@ -161,7 +161,6 @@ template <typename NCT> void read(uint8_t const*& it, PrivateCircuitPublicInputs
     read(it, pis.old_private_data_tree_root);
     read(it, pis.old_nullifier_tree_root);
     read(it, pis.old_contract_tree_root);
-
     read(it, pis.contract_deployment_data);
 };
 
@@ -598,7 +597,6 @@ void read(uint8_t const*& it, OptionalPrivateCircuitPublicInputs<NCT>& private_c
     read(it, pis.old_private_data_tree_root);
     read(it, pis.old_nullifier_tree_root);
     read(it, pis.old_contract_tree_root);
-
     read(it, pis.contract_deployment_data);
 };
 
@@ -621,7 +619,6 @@ void write(std::vector<uint8_t>& buf, OptionalPrivateCircuitPublicInputs<NCT> co
     write(buf, pis.old_private_data_tree_root);
     write(buf, pis.old_nullifier_tree_root);
     write(buf, pis.old_contract_tree_root);
-
     write(buf, pis.contract_deployment_data);
 };
 
