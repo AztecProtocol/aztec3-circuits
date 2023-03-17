@@ -5,6 +5,7 @@
 
 #include <aztec3/constants.hpp>
 
+#include <cstring>
 #include <stdlib/types/native_types.hpp>
 #include <crypto/keccak/keccak.hpp>
 #include <common/serialize.hpp>
@@ -96,6 +97,25 @@ WASM_EXPORT uint32_t abis__inspect_tx_context(uint8_t const* tx_context_buf, uin
     stream << tx_context;
     std::string inspected = stream.str();
     inspected.copy((char*)output, 1024);
-    return inspected.size();
+    return (uint32_t)inspected.size();
+}
+
+// Note: We don't have a simple way of calling the barretenberg c-bind.
+// Mimick bbmalloc behaviour.
+static void* bbmalloc(size_t size)
+{
+    auto ptr = aligned_alloc(64, size);
+    return ptr;
+}
+
+WASM_EXPORT uint8_t* abis__test_roundtrip_serialize_tx_request(uint8_t const* tx_request_buf)
+{
+    TxRequest<NT> tx_request;
+    read(tx_request_buf, tx_request);
+    std::vector<uint8_t> tx_output_buf;
+    write(tx_output_buf, tx_request);
+    uint8_t* obj = (uint8_t*)bbmalloc(tx_output_buf.size());
+    memcpy(obj, tx_output_buf.data(), tx_output_buf.size());
+    return obj;
 }
 } // extern "C"

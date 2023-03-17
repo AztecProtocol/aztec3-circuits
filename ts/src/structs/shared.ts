@@ -6,7 +6,7 @@ export type AztecAddress = Buffer;
 export type EthAddress = Buffer;
 export type AggregationObject = Buffer;
 
-export type MembershipWitness = { 
-  leafIndex: UInt32, // type tbd
-  siblingPath: Fr[]
+export type MembershipWitness = {
+  leafIndex: UInt32; // type tbd
+  siblingPath: Fr[];
 };
