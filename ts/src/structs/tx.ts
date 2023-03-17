@@ -1,26 +1,37 @@
 import { boolToBuffer } from "../wasm/serialize.js"
 import { EthAddress, Fr } from "./shared.js"
 
+/**
+ * Contract deployment data in a @TxContext.
+ * cpp/src/aztec3/circuits/abis/contract_deployment_data.hpp
+ * 
+ * @todo Used the Cpp type as source of truth, which does not match the specification.
+ * Spec includes constructorVkHash but does not have contract_data_hash nor constructor_hash.
+ */
 export class ContractDeploymentData {
   constructor (
-    public constructorVkHash: Fr, // the user needs to sign over the constructor!
-    public functionTreeRoot: Fr, // the root of the function tree (see diagram)
-    public contractAddressSalt: Fr, // random
+    public contractDataHash: Fr,
+    public functionTreeRoot: Fr,
+    public constructorHash: Fr,
+    public contractAddressSalt: Fr,
     public portalContractAddress: EthAddress,
-    public hidePrivateFunctionData: true,
   ) { }
 
   toBuffer() {
     return Buffer.concat([
-      this.constructorVkHash,
+      this.contractDataHash,
       this.functionTreeRoot,
+      this.constructorHash,
       this.contractAddressSalt,
       this.portalContractAddress,
-      boolToBuffer(this.hidePrivateFunctionData),
     ])
   }
 }
 
+/**
+ * Transaction context
+ * cpp/src/aztec3/circuits/abis/tx_context.hpp
+ */
 export class TxContext {
   constructor (
     public isFeePaymentTx: false,

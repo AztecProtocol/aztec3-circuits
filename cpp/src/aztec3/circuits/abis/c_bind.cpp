@@ -1,5 +1,6 @@
 #include "c_bind.h"
 #include "tx_request.hpp"
+#include "tx_context.hpp"
 #include "function_leaf_preimage.hpp"
 
 #include <aztec3/constants.hpp>
@@ -11,6 +12,7 @@
 namespace {
 using aztec3::GeneratorIndex;
 using aztec3::circuits::abis::FunctionLeafPreimage;
+using aztec3::circuits::abis::TxContext;
 using aztec3::circuits::abis::TxRequest;
 using NT = plonk::stdlib::types::NativeTypes;
 } // namespace
@@ -83,5 +85,17 @@ WASM_EXPORT void abis__compute_function_leaf(uint8_t const* function_leaf_preima
     read(function_leaf_preimage_buf, leaf_preimage);
     leaf_preimage.hash();
     NT::fr::serialize_to_buffer(leaf_preimage.hash(), output);
+}
+
+WASM_EXPORT uint32_t abis__inspect_tx_context(uint8_t const* tx_context_buf, uint8_t* output)
+{
+    TxContext<NT> tx_context;
+    read(tx_context_buf, tx_context);
+
+    std::ostringstream stream;
+    stream << tx_context;
+    std::string inspected = stream.str();
+    inspected.copy((char*)output, 1024);
+    return inspected.size();
 }
 } // extern "C"
