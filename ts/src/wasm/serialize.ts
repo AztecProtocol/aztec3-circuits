@@ -87,7 +87,7 @@ export function deserializeField(buf: Buffer, offset = 0) {
  * @returns a single buffer with the concatenation of all fields.
  */
 export function serializeToBuffer(
-  ...objs: (boolean | Buffer | { toBuffer: () => Buffer })[]
+  ...objs: (boolean | number | Buffer | { toBuffer: () => Buffer })[]
 ): Buffer {
   return Buffer.concat(
     objs.map((obj) => {
@@ -95,6 +95,8 @@ export function serializeToBuffer(
         return obj;
       } else if (typeof obj === "boolean") {
         return boolToBuffer(obj);
+      } else if (typeof obj === "number") {
+        return numToUInt32LE(obj); // TODO: Are we always passsing numbers as UInt32?
       } else {
         return obj.toBuffer();
       }
