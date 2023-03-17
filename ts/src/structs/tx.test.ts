@@ -15,16 +15,10 @@ describe("structs/tx", () => {
       Fr.random(),
       Fr.random(),
       Fr.random(),
-      Fr.random(),
       Fr.random()
     );
 
-    const txContext = new TxContext(
-      false,
-      false,
-      true,
-      deploymentData,
-    );
+    const txContext = new TxContext(false, false, true, deploymentData);
 
     const retPtr = wasm.call("bbmalloc", 1024);
     const txContextPtr = wasm.call("bbmalloc", 1024);
@@ -40,9 +34,8 @@ describe("structs/tx", () => {
       is_rebate_payment_tx: 0
       is_contract_deployment_tx: 1
       contract_deployment_data: 
-      contract_data_hash: ${deploymentData.contractDataHash}
+      constructor_vk_hash: ${deploymentData.constructorVkHash}
       function_tree_root: ${deploymentData.functionTreeRoot}
-      constructor_hash: ${deploymentData.constructorHash}
       contract_address_salt: ${deploymentData.contractAddressSalt}
       portal_contract_address: ${deploymentData.portalContractAddress}\n
     `;
