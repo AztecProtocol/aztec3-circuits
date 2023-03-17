@@ -58,13 +58,3 @@ export type PreviousKernelData = {
   vkIndex: UInt32; // the index of the kernel circuit's vk in a big tree of kernel circuit vks
   vkSiblingPath: Fr[];
 };
-
-export interface PrivateCircuitPublicInputs {}
-// interface CallContext {}
-// interface TxRequest {}
-// interface FunctionData {}
-
-// class Fr {}
-// class VerificationKey {}
-// class AztecAddress {}
-// class Signature {}
