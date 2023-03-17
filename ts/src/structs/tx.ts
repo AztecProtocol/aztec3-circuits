@@ -10,9 +10,8 @@ import { Fr } from "./shared.js";
  */
 export class ContractDeploymentData {
   constructor(
-    public contractDataHash: Fr,
+    public constructorVkHash: Fr,
     public functionTreeRoot: Fr,
-    public constructorHash: Fr,
     public contractAddressSalt: Fr,
     /**
      * EthAddress of the Portal Contract
@@ -23,9 +22,8 @@ export class ContractDeploymentData {
 
   toBuffer() {
     return serializeToBuffer(
-      this.contractDataHash,
+      this.constructorVkHash,
       this.functionTreeRoot,
-      this.constructorHash,
       this.contractAddressSalt,
       this.portalContractAddress
     );

@@ -28,3 +28,8 @@ export const PRIVATE_DATA_TREE_HEIGHT = 8;
 export const NULLIFIER_TREE_HEIGHT = 8;
 
 export const FUNCTION_SELECTOR_NUM_BYTES = 31;
+
+export const PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT = 0; // TODO: Find out these values
+export const CONTRACT_TREE_ROOTS_TREE_HEIGHT = 0;
+export const KERNEL_NEW_CONTRACTS_LENGTH = 0;
+export const OPTIONALLY_REVEALED_DATA_LENGTH = 0;

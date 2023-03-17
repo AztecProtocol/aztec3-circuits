@@ -95,6 +95,7 @@ export function deserializeField(buf: Buffer, offset = 0) {
 export type Bufferable =
   | boolean
   | Buffer
+  | number
   | { toBuffer: () => Buffer }
   | Bufferable[];
 
@@ -109,11 +110,12 @@ export function serializeToBuffer(...objs: Bufferable[]): Buffer {
       if (Array.isArray(obj)) {
         // Note: These must match the length of the C++ structs
         return Buffer.concat(obj.map((elem) => serializeToBuffer(elem)));
-      }
-      if (Buffer.isBuffer(obj)) {
+      } else if (Buffer.isBuffer(obj)) {
         return obj;
       } else if (typeof obj === "boolean") {
         return boolToBuffer(obj);
+      } else if (typeof obj === "number") {
+        return numToUInt32LE(obj); // TODO: Are we always passsing numbers as UInt32?
       } else {
         return obj.toBuffer();
       }

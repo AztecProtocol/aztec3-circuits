@@ -15,7 +15,6 @@ describe("structs/tx", () => {
       Fr.random(),
       Fr.random(),
       Fr.random(),
-      Fr.random(),
       Fr.random()
     );
 
@@ -35,9 +34,8 @@ describe("structs/tx", () => {
       is_rebate_payment_tx: 0
       is_contract_deployment_tx: 1
       contract_deployment_data: 
-      contract_data_hash: ${deploymentData.contractDataHash}
+      constructor_vk_hash: ${deploymentData.constructorVkHash}
       function_tree_root: ${deploymentData.functionTreeRoot}
-      constructor_hash: ${deploymentData.constructorHash}
       contract_address_salt: ${deploymentData.contractAddressSalt}
       portal_contract_address: ${deploymentData.portalContractAddress}\n
     `;
@@ -47,7 +45,3 @@ describe("structs/tx", () => {
     wasm.call("bbfree", retPtr);
   });
 });
-
-// function bufferTo0xHex(buf: Buffer): string {
-//   return "0x" + buf.toString("hex");
-// }
