@@ -35,7 +35,7 @@ template <typename NCT> struct CallContext {
                is_static_call == other.is_static_call && is_contract_deployment == other.is_contract_deployment;
     };
 
-    static CallContext<NCT> empty() { return { 0, 0, 0, 0, 0, 0, 0 }; };
+    static CallContext<NCT> empty() { return { 0, 0, 0, 0, 0, 0 }; };
 
     template <typename Composer> CallContext<CircuitTypes<Composer>> to_circuit_type(Composer& composer) const
     {
@@ -45,8 +45,8 @@ template <typename NCT> struct CallContext {
         auto to_ct = [&](auto& e) { return plonk::stdlib::types::to_ct(composer, e); };
 
         CallContext<CircuitTypes<Composer>> call_context = {
-            to_ct(msg_sender),     to_ct(storage_contract_address), to_ct(tx_origin),           to_ct(is_delegate_call),
-            to_ct(is_static_call), to_ct(is_contract_deployment),   to_ct(reference_block_num),
+            to_ct(msg_sender),       to_ct(storage_contract_address), to_ct(tx_origin),
+            to_ct(is_delegate_call), to_ct(is_static_call),           to_ct(is_contract_deployment),
 
         };
 
