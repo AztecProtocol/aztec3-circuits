@@ -192,7 +192,6 @@ template <typename Composer> class FunctionExecutionContext {
             .is_delegate_call = false,
             .is_static_call = false,
             .is_contract_deployment = false,
-            .reference_block_num = 0,
         };
 
         NativeOracle f_oracle(oracle.native_oracle.db,

@@ -101,15 +101,12 @@ class state_var_tests : public ::testing::Test {
             .is_constructor = false,
         };
 
-        CallContext<NT> call_context{
-            .msg_sender = msg_sender,
-            .storage_contract_address = contract_address,
-            .tx_origin = msg_sender,
-            .is_delegate_call = false,
-            .is_static_call = false,
-            .is_contract_deployment = false,
-            .reference_block_num = 0,
-        };
+        CallContext<NT> call_context{ .msg_sender = msg_sender,
+                                      .storage_contract_address = contract_address,
+                                      .tx_origin = msg_sender,
+                                      .is_delegate_call = false,
+                                      .is_static_call = false,
+                                      .is_contract_deployment = false };
 
         return NativeOracle(db, contract_address, function_data, call_context, msg_sender_private_key);
     };

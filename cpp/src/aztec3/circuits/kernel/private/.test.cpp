@@ -102,7 +102,6 @@ TEST(private_kernel_tests, test_deposit)
         .is_delegate_call = false,
         .is_static_call = false,
         .is_contract_deployment = false,
-        .reference_block_num = 0,
     };
 
     NativeOracle deposit_oracle =

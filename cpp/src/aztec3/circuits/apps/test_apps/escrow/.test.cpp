@@ -36,7 +36,6 @@ class escrow_tests : public ::testing::Test {
             .is_delegate_call = false,
             .is_static_call = false,
             .is_contract_deployment = false,
-            .reference_block_num = 0,
         };
 
         return NativeOracle(db, contract_address, function_data, call_context, msg_sender_private_key);

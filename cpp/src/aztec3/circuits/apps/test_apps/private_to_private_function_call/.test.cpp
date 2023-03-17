@@ -36,7 +36,6 @@ TEST(private_to_private_function_call_tests, test_private_to_private_function_ca
         .is_delegate_call = false,
         .is_static_call = false,
         .is_contract_deployment = false,
-        .reference_block_num = 0,
     };
 
     NativeOracle fn1_oracle = NativeOracle(db, contract_address, function_data, call_context, msg_sender_private_key);
