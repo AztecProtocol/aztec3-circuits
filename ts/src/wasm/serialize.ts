@@ -97,14 +97,13 @@ export type Bufferable =
   | Buffer
   | { toBuffer: () => Buffer }
   | Bufferable[];
+
 /**
  * Serializes a list of objects contiguously for calling into wasm.
  * @param objs objects to serialize.
  * @returns a single buffer with the concatenation of all fields.
  */
-export function serializeToBuffer(
-  ...objs: (boolean | Buffer | { toBuffer: () => Buffer })[]
-): Buffer {
+export function serializeToBuffer(...objs: Bufferable[]): Buffer {
   return Buffer.concat(
     objs.map((obj) => {
       if (Array.isArray(obj)) {

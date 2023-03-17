@@ -29,24 +29,25 @@ static void* bbmalloc(size_t size)
     return ptr;
 }
 
-/** Copy this object to a bbmalloc'd buffer */
-template <typename T> static uint8_t* bbmalloc_copy(const T& obj, uint32_t* size)
+/** Copy this string to a bbmalloc'd buffer */
+static const char* bbmalloc_copy_string(const char* data, size_t len)
 {
-    std::vector<uint8_t> output_buf;
-    write(output_buf, obj);
-    uint8_t* output_copy = (uint8_t*)bbmalloc(output_buf.size());
-    memcpy(output_copy, output_buf.data(), output_buf.size());
-    *size = (uint32_t)output_buf.size();
+    char* output_copy = (char*)bbmalloc(len + 1);
+    memcpy(output_copy, data, len + 1);
     return output_copy;
 }
 
 /**
  * For testing only. Take this object, write it to a buffer, then output it. */
-template <typename T> static uint8_t* roundtrip_serialize(uint8_t const* input_buf, uint32_t* size)
+template <typename T> static const char* as_string_output(uint8_t const* input_buf, uint32_t* size)
 {
     T obj;
     read(input_buf, obj);
-    return bbmalloc_copy(obj, size);
+    std::ostringstream stream;
+    stream << obj;
+    std::string str = stream.str();
+    *size = (uint32_t)str.size();
+    return bbmalloc_copy_string(str.c_str(), *size);
 }
 
 extern "C" {
@@ -129,20 +130,25 @@ WASM_EXPORT uint32_t abis__inspect_tx_context(uint8_t const* tx_context_buf, uin
     return (uint32_t)inspected.size();
 }
 
-WASM_EXPORT uint8_t* abis__test_roundtrip_serialize_tx_context(uint8_t const* tx_context_buf, uint32_t* size)
+WASM_EXPORT const char* abis__test_roundtrip_serialize_tx_context(uint8_t const* tx_context_buf, uint32_t* size)
 {
-    return roundtrip_serialize<TxContext<NT>>(tx_context_buf, size);
+    return as_string_output<TxContext<NT>>(tx_context_buf, size);
 }
 
-WASM_EXPORT uint8_t* abis__test_roundtrip_serialize_tx_request(uint8_t const* tx_request_buf, uint32_t* size)
+WASM_EXPORT const char* abis__test_roundtrip_serialize_tx_request(uint8_t const* tx_request_buf, uint32_t* size)
 {
-    return roundtrip_serialize<TxRequest<NT>>(tx_request_buf, size);
+    return as_string_output<TxRequest<NT>>(tx_request_buf, size);
 }
 
-WASM_EXPORT uint8_t* abis__test_roundtrip_serialize_private_circuits_public_inputs(
+WASM_EXPORT const char* abis__test_roundtrip_serialize_call_context(uint8_t const* call_context_buf, uint32_t* size)
+{
+    return as_string_output<aztec3::circuits::abis::CallContext<NT>>(call_context_buf, size);
+}
+
+WASM_EXPORT const char* abis__test_roundtrip_serialize_private_circuits_public_inputs(
     uint8_t const* private_circuits_public_inputs_buf, uint32_t* size)
 {
-    return roundtrip_serialize<aztec3::circuits::abis::PrivateCircuitPublicInputs<NT>>(
-        private_circuits_public_inputs_buf, size);
+    return as_string_output<aztec3::circuits::abis::PrivateCircuitPublicInputs<NT>>(private_circuits_public_inputs_buf,
+                                                                                    size);
 }
 } // extern "C"
