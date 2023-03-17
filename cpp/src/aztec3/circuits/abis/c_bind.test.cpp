@@ -39,18 +39,18 @@ TEST(abi_tests, hash_tx_request)
     // randomize function args for tx request
     std::array<fr, ARGS_LENGTH> args;
     for (size_t i = 0; i < ARGS_LENGTH; i++) {
-        args[i] = fr(engine.get_random_uint256());
+        args[i] = NT::fr::random_element();
     }
 
     // Construct TxRequest with some randomized fields
     TxRequest<NT> tx_request = TxRequest<NT>{
-        .from = engine.get_random_uint256(),
-        .to = engine.get_random_uint256(),
+        .from = NT::fr::random_element(),
+        .to = NT::fr::random_element(),
         .function_data = FunctionData<NT>(),
         .args = args,
-        .nonce = engine.get_random_uint256(),
+        .nonce = NT::fr::random_element(),
         .tx_context = TxContext<NT>(),
-        .chain_id = engine.get_random_uint256(),
+        .chain_id = NT::fr::random_element(),
     };
 
     // Write the tx request to a buffer and
@@ -104,10 +104,10 @@ TEST(abi_tests, compute_function_leaf)
 {
     // Construct FunctionLeafPreimage with some randomized fields
     FunctionLeafPreimage<NT> preimage = FunctionLeafPreimage<NT>{
-        .function_selector = engine.get_random_uint256(),
+        .function_selector = NT::fr::random_element(),
         .is_private = static_cast<bool>(engine.get_random_uint8() & 1),
-        .vk_hash = engine.get_random_uint256(),
-        .acir_hash = engine.get_random_uint256(),
+        .vk_hash = NT::fr::random_element(),
+        .acir_hash = NT::fr::random_element(),
     };
 
     // Write the leaf preimage to a buffer
@@ -140,7 +140,7 @@ TEST(abi_tests, compute_function_tree_root)
     // insert their serialized form into the vector of 32-bytes chunks/uint256_ts
     // (to be cast to a single mega uint8_t* buffer and passed to cbind)
     for (size_t l = 0; l < num_nonzero_leaves; l++) {
-        NT::fr leaf = engine.get_random_uint256();
+        NT::fr leaf = NT::fr::random_element();
         leaves_frs[l] = leaf;
         NT::fr::serialize_to_buffer(leaf, reinterpret_cast<uint8_t*>(&leaves[l]));
     }
