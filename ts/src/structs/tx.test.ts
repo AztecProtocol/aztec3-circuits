@@ -24,7 +24,6 @@ describe("structs/tx", () => {
       false,
       true,
       deploymentData,
-      Fr.random()
     );
 
     const retPtr = wasm.call("bbmalloc", 1024);
@@ -45,7 +44,7 @@ describe("structs/tx", () => {
       function_tree_root: ${deploymentData.functionTreeRoot}
       constructor_hash: ${deploymentData.constructorHash}
       contract_address_salt: ${deploymentData.contractAddressSalt}
-      portal_contract_address: ${deploymentData.portalContractAddress}
+      portal_contract_address: ${deploymentData.portalContractAddress}\n
     `;
     expect(result).toEqual(expected);
 

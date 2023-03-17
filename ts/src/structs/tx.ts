@@ -41,8 +41,7 @@ export class TxContext {
     public isFeePaymentTx: false,
     public isRebatePaymentTx: false,
     public isContractDeployment: true,
-    public contractDeploymentData: ContractDeploymentData,
-    public referenceBlockNumber: Fr
+    public contractDeploymentData: ContractDeploymentData
   ) {}
 
   toBuffer() {
@@ -50,8 +49,7 @@ export class TxContext {
       this.isFeePaymentTx,
       this.isRebatePaymentTx,
       this.isContractDeployment,
-      this.contractDeploymentData,
-      this.referenceBlockNumber
+      this.contractDeploymentData
     );
   }
 }
