@@ -63,6 +63,14 @@ export function numToUInt32LE(n: number, bufferSize = 4) {
 }
 
 /**
+ * For serializing booleans in structs for calling into wasm
+ * @param bool value to serialize
+ */
+export function boolToBuffer(value: boolean) {
+  return Buffer.from([value ? 1 : 0]);
+}
+
+/**
  * Deserialize the 256-bit number at address `offset`.
  * @param buf - The buffer.
  * @param offset - The address.
