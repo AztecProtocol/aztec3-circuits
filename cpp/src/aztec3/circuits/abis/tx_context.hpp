@@ -109,8 +109,10 @@ template <typename NCT> std::ostream& operator<<(std::ostream& os, TxContext<NCT
     return os << "is_fee_payment_tx: " << tx_context.is_fee_payment_tx << "\n"
               << "is_rebate_payment_tx: " << tx_context.is_rebate_payment_tx << "\n"
               << "is_contract_deployment_tx: " << tx_context.is_contract_deployment_tx << "\n"
-              << "contract_deployment_data: " << tx_context.contract_deployment_data << "\n"
-              << "reference_block_num: " << tx_context.reference_block_num << "\n";
+              << "contract_deployment_data: "
+              << "\n"
+              << tx_context.contract_deployment_data << "reference_block_num: " << tx_context.reference_block_num
+              << "\n";
 }
 
 } // namespace aztec3::circuits::abis

@@ -80,3 +80,20 @@ export function deserializeField(buf: Buffer, offset = 0) {
   const adv = 32;
   return { elem: buf.slice(offset, offset + adv), adv };
 }
+
+/**
+ * Serializes a list of objects contiguously for calling into wasm.
+ * @param objs objects to serialize.
+ * @returns a single buffer with the concatenation of all fields.
+ */
+export function serializeToBuffer(...objs: (boolean | Buffer | { toBuffer: () => Buffer })[]): Buffer {
+  return Buffer.concat(objs.map(obj => {
+    if (Buffer.isBuffer(obj)) {
+      return obj;
+    } else if (typeof(obj) === 'boolean') {
+      return boolToBuffer(obj);
+    } else {
+      return obj.toBuffer();
+    }
+  }));
+}
