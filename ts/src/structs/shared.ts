@@ -28,6 +28,23 @@ export class Fr {
   }
 }
 
+/**
+ * For Ethereum addresses, which must be treated as 32 bytes.
+ * @param buffer - The 20 byte ethereum address buffer.
+ * @returns The 32 byte padded buffer.
+ */
+function pad32(buffer: Buffer) {
+  // Create a 32-byte Buffer filled with zeros
+  const paddedBuffer = Buffer.alloc(32);
+
+  // Calculate the padding length
+  const paddingLength = paddedBuffer.length - buffer.length;
+
+  // Copy the original Buffer into the padded Buffer with an offset
+  buffer.copy(paddedBuffer, paddingLength);
+  return paddedBuffer;
+}
+
 export class EthAddress {
   static SIZE_IN_BYTES = 20;
 
@@ -48,7 +65,7 @@ export class EthAddress {
   }
 
   toBuffer() {
-    return this.buffer;
+    return pad32(this.buffer);
   }
 }
 

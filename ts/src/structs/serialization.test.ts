@@ -1,66 +1,115 @@
+import { assertLength, range } from "../utils/jsUtils.js";
 import { CircuitsWasm } from "../wasm/circuits_wasm.js";
-import { uint8ArrayToNum } from "../wasm/serialize.js";
-import { Fr } from "./shared.js";
+import {
+  numToUInt32LE,
+  serializeToBuffer,
+  uint8ArrayToNum,
+} from "../wasm/serialize.js";
+import {
+  ARGS_LENGTH,
+  L1_MSG_STACK_LENGTH,
+  NEW_COMMITMENTS_LENGTH,
+  NEW_NULLIFIERS_LENGTH,
+  PRIVATE_CALL_STACK_LENGTH,
+  PUBLIC_CALL_STACK_LENGTH,
+  RETURN_VALUES_LENGTH,
+} from "./constants.js";
+import { AztecAddress, EthAddress, Fr } from "./shared.js";
 import { ContractDeploymentData, TxContext } from "./tx.js";
 
-// /**
-//  * Call context.
-//  * @see abis/call_context.hpp
-//  */
-// class CallContext {
-//   constructor(
-//     public msgSender: AztecAddress,
-//     public storageContractAddress: AztecAddress,
-//     public portalContractAddress: EthAddress,
-//     public isDelegateCall: boolean,
-//     public isStaticCall: boolean,
-//     public isContractDeployment: boolean
-//   ) {}
-//   toBuffer(): Buffer {
-//     return serializeToBuffer(
-//       this.msgSender,
-//       this.storageContractAddress,
-//       this.portalContractAddress,
-//       this.isDelegateCall,
-//       this.isStaticCall,
-//       this.isContractDeployment
-//     );
-//   }
-// }
+/**
+ * Call context.
+ * @see abis/call_context.hpp
+ */
+export class CallContext {
+  constructor(
+    public msgSender: AztecAddress,
+    public storageContractAddress: AztecAddress,
+    public portalContractAddress: EthAddress,
+    public isDelegateCall: boolean,
+    public isStaticCall: boolean,
+    public isContractDeployment: boolean
+  ) {}
+  toBuffer(): Buffer {
+    return serializeToBuffer(
+      this.msgSender,
+      this.storageContractAddress,
+      this.portalContractAddress.toBuffer(),
+      this.isDelegateCall,
+      this.isStaticCall,
+      this.isContractDeployment
+    );
+  }
+}
 
-// class PrivateCircuitPublicInputs {
-//   constructor(
-//     public callContext: CallContext,
-//     public args: Fr[],
-//     public returnValues: Fr[],
-//     public newCommitments: Fr[],
-//     public newNullifiers: Fr[],
-//     public privateCallStack: Fr[],
-//     public publicCallStack: Fr[],
-//     public l1MsgStack: Fr[],
-//     public historicPrivateDataTreeRoot: Fr
-//   ) {}
-//   toBuffer(): Buffer {
-//     return serializeToBuffer(
-//       this.callContext,
-//       this.args,
-//       this.returnValues,
-//       this.newCommitments,
-//       this.isStaticCall,
-//       this.isContractDeployment
-//     );
-//   }
-// }
+export class PrivateCircuitPublicInputs {
+  constructor(
+    public callContext: CallContext,
+    public args: Fr[],
+    public returnValues: Fr[],
+    public newCommitments: Fr[],
+    public newNullifiers: Fr[],
+    public privateCallStack: Fr[],
+    public publicCallStack: Fr[],
+    public l1MsgStack: Fr[],
+    public historicPrivateDataTreeRoot: Fr
+  ) {
+    assertLength(this, "args", ARGS_LENGTH);
+    assertLength(this, "returnValues", RETURN_VALUES_LENGTH);
+    assertLength(this, "newCommitments", NEW_COMMITMENTS_LENGTH);
+    assertLength(this, "newNullifiers", NEW_NULLIFIERS_LENGTH);
+    assertLength(this, "privateCallStack", PRIVATE_CALL_STACK_LENGTH);
+    assertLength(this, "publicCallStack", PUBLIC_CALL_STACK_LENGTH);
+    assertLength(this, "l1MsgStack", L1_MSG_STACK_LENGTH);
+  }
+  toBuffer(): Buffer {
+    return serializeToBuffer(
+      this.callContext,
+      this.args,
+      this.returnValues,
+      this.newCommitments,
+      this.newNullifiers,
+      this.privateCallStack,
+      this.publicCallStack,
+      this.l1MsgStack,
+      this.historicPrivateDataTreeRoot
+    );
+  }
+}
+
+function fr(n: number) {
+  return new Fr(numToUInt32LE(n + 1, 32));
+}
+
+function privateCircuitPublicInputs() {
+  return new PrivateCircuitPublicInputs(
+    new CallContext(
+      numToUInt32LE(1, 32),
+      numToUInt32LE(2, 32),
+      new EthAddress(numToUInt32LE(3, 20)),
+      true,
+      true,
+      true
+    ),
+    range(ARGS_LENGTH).map(fr),
+    range(RETURN_VALUES_LENGTH).map(fr),
+    range(NEW_COMMITMENTS_LENGTH).map(fr),
+    range(NEW_NULLIFIERS_LENGTH).map(fr),
+    range(PRIVATE_CALL_STACK_LENGTH).map(fr),
+    range(PUBLIC_CALL_STACK_LENGTH).map(fr),
+    range(L1_MSG_STACK_LENGTH).map(fr),
+    new Fr(numToUInt32LE(1, 32))
+  );
+}
 
 function txContext() {
   const deploymentData = new ContractDeploymentData(
-    Fr.random(),
-    Fr.random(),
-    Fr.random(),
-    Fr.random(),
-    Fr.random()
+    new Fr(numToUInt32LE(1, 32)),
+    new Fr(numToUInt32LE(2, 32)),
+    new Fr(numToUInt32LE(3, 32)),
+    new Fr(numToUInt32LE(4, 32)),
+    new Fr(numToUInt32LE(5, 32))
   );
-
   return new TxContext(false, false, true, deploymentData);
 }
 
@@ -70,11 +119,11 @@ describe("basic struct serialization", () => {
     await wasm.init();
   });
   for (const { name, object, method } of [
-    // {
-    //   name: "PrivateCircuitPublicInputs",
-    //   object: new PrivateCircuitPublicInputs(),
-    //   method: "abis__test_roundtrip_serialize_private_circuits_public_inputs",
-    // },
+    {
+      name: "PrivateCircuitPublicInputs",
+      object: privateCircuitPublicInputs(),
+      method: "abis__test_roundtrip_serialize_private_circuits_public_inputs",
+    },
     {
       name: "TxContext",
       object: txContext(),
@@ -86,11 +135,8 @@ describe("basic struct serialization", () => {
       const inputBufPtr = wasm.call("bbmalloc", inputBuf.length);
       wasm.writeMemory(inputBufPtr, inputBuf);
       const outputBufSizePtr = wasm.call("bbmalloc", 4);
-      // Get a passthrough trivial copy of our buffer
-      // We sanity check this for basic serialization checks
-      // Note that without structured output from the C++,
-      // we can be tricked by output that happens to be the same length.
-      // NOTE: bbmalloc's memory.
+      // Get a string version of our object. As a quick and dirty test,
+      // we compare a snapshot of its string form to its previous form.
       const outputBufPtr = wasm.call(method, inputBufPtr, outputBufSizePtr);
       // Read the size pointer
       const outputBufSize = uint8ArrayToNum(
@@ -100,7 +146,8 @@ describe("basic struct serialization", () => {
         outputBufPtr,
         outputBufPtr + outputBufSize
       );
-      expect(inputBuf).toEqual(Buffer.from(outputBuf));
+      const outputStr = Buffer.from(outputBuf).toString("utf-8");
+      expect(outputStr).toMatchSnapshot();
       // Free memory
       wasm.call("bbfree", outputBufPtr);
       wasm.call("bbfree", outputBufSizePtr);

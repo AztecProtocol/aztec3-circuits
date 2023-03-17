@@ -95,23 +95,22 @@ export function deserializeField(buf: Buffer, offset = 0) {
 export type Bufferable =
   | boolean
   | Buffer
+  | number
   | { toBuffer: () => Buffer }
   | Bufferable[];
+
 /**
  * Serializes a list of objects contiguously for calling into wasm.
  * @param objs objects to serialize.
  * @returns a single buffer with the concatenation of all fields.
  */
-export function serializeToBuffer(
-  ...objs: (boolean | number | Buffer | { toBuffer: () => Buffer })[]
-): Buffer {
+export function serializeToBuffer(...objs: Bufferable[]): Buffer {
   return Buffer.concat(
     objs.map((obj) => {
       if (Array.isArray(obj)) {
         // Note: These must match the length of the C++ structs
         return Buffer.concat(obj.map((elem) => serializeToBuffer(elem)));
-      }
-      if (Buffer.isBuffer(obj)) {
+      } else if (Buffer.isBuffer(obj)) {
         return obj;
       } else if (typeof obj === "boolean") {
         return boolToBuffer(obj);
