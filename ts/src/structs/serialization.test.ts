@@ -34,7 +34,7 @@ export class CallContext {
     return serializeToBuffer(
       this.msgSender,
       this.storageContractAddress,
-      this.portalContractAddress,
+      this.portalContractAddress.toBuffer(),
       this.isDelegateCall,
       this.isStaticCall,
       this.isContractDeployment
@@ -78,15 +78,15 @@ export class PrivateCircuitPublicInputs {
 }
 
 function fr(n: number) {
-  return new Fr(numToUInt32LE(n));
+  return new Fr(numToUInt32LE(n + 1, 32));
 }
 
 function privateCircuitPublicInputs() {
   return new PrivateCircuitPublicInputs(
     new CallContext(
-      numToUInt32LE(1),
-      numToUInt32LE(2),
-      new EthAddress(numToUInt32LE(3)),
+      numToUInt32LE(1, 32),
+      numToUInt32LE(2, 32),
+      new EthAddress(numToUInt32LE(3, 20)),
       true,
       true,
       true
@@ -98,17 +98,17 @@ function privateCircuitPublicInputs() {
     range(PRIVATE_CALL_STACK_LENGTH).map(fr),
     range(PUBLIC_CALL_STACK_LENGTH).map(fr),
     range(L1_MSG_STACK_LENGTH).map(fr),
-    new Fr(numToUInt32LE(1))
+    new Fr(numToUInt32LE(1, 32))
   );
 }
 
 function txContext() {
   const deploymentData = new ContractDeploymentData(
-    new Fr(numToUInt32LE(1)),
-    new Fr(numToUInt32LE(2)),
-    new Fr(numToUInt32LE(3)),
-    new Fr(numToUInt32LE(4)),
-    new Fr(numToUInt32LE(5))
+    new Fr(numToUInt32LE(1, 32)),
+    new Fr(numToUInt32LE(2, 32)),
+    new Fr(numToUInt32LE(3, 32)),
+    new Fr(numToUInt32LE(4, 32)),
+    new Fr(numToUInt32LE(5, 32))
   );
   return new TxContext(false, false, true, deploymentData);
 }
