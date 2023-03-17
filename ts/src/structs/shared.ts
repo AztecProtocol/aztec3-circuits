@@ -5,16 +5,20 @@ export class Fr {
 
   constructor(private buffer: Buffer) {
     if (buffer.length != Fr.SIZE_IN_BYTES) {
-      throw new Error(`Unexpected buffer size ${buffer.length} (expected ${Fr.SIZE_IN_BYTES} bytes)`);
+      throw new Error(
+        `Unexpected buffer size ${buffer.length} (expected ${Fr.SIZE_IN_BYTES} bytes)`
+      );
     }
   }
 
   static random() {
-    return new Fr(Buffer.concat([Buffer.alloc(1, 0), randomBytes(Fr.SIZE_IN_BYTES - 1)]));
+    return new Fr(
+      Buffer.concat([Buffer.alloc(1, 0), randomBytes(Fr.SIZE_IN_BYTES - 1)])
+    );
   }
 
   toString() {
-    return '0x' + this.buffer.toString('hex');
+    return "0x" + this.buffer.toString("hex");
   }
 
   toBuffer() {
@@ -27,7 +31,9 @@ export class EthAddress {
 
   constructor(private buffer: Buffer) {
     if (buffer.length != EthAddress.SIZE_IN_BYTES) {
-      throw new Error(`Unexpected buffer size ${buffer.length} (expected ${EthAddress.SIZE_IN_BYTES} bytes)`);
+      throw new Error(
+        `Unexpected buffer size ${buffer.length} (expected ${EthAddress.SIZE_IN_BYTES} bytes)`
+      );
     }
   }
 
@@ -36,7 +42,7 @@ export class EthAddress {
   }
 
   toString() {
-    return '0x' + this.buffer.toString('hex');
+    return "0x" + this.buffer.toString("hex");
   }
 
   toBuffer() {
@@ -50,7 +56,7 @@ export type VK = Buffer;
 export type AztecAddress = Buffer;
 export type AggregationObject = Buffer;
 
-export type MembershipWitness = { 
-  leafIndex: UInt32, // type tbd
-  siblingPath: Fr[]
+export type MembershipWitness = {
+  leafIndex: UInt32; // type tbd
+  siblingPath: Fr[];
 };

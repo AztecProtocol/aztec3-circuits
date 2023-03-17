@@ -86,14 +86,18 @@ export function deserializeField(buf: Buffer, offset = 0) {
  * @param objs objects to serialize.
  * @returns a single buffer with the concatenation of all fields.
  */
-export function serializeToBuffer(...objs: (boolean | Buffer | { toBuffer: () => Buffer })[]): Buffer {
-  return Buffer.concat(objs.map(obj => {
-    if (Buffer.isBuffer(obj)) {
-      return obj;
-    } else if (typeof(obj) === 'boolean') {
-      return boolToBuffer(obj);
-    } else {
-      return obj.toBuffer();
-    }
-  }));
+export function serializeToBuffer(
+  ...objs: (boolean | Buffer | { toBuffer: () => Buffer })[]
+): Buffer {
+  return Buffer.concat(
+    objs.map((obj) => {
+      if (Buffer.isBuffer(obj)) {
+        return obj;
+      } else if (typeof obj === "boolean") {
+        return boolToBuffer(obj);
+      } else {
+        return obj.toBuffer();
+      }
+    })
+  );
 }

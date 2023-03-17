@@ -15,6 +15,7 @@
     "bundle-deps": "yalc add @aztec/wasm-worker @aztec/log && yalc add -D @aztec/eslint-config",
     "dev-deps": "rm -r node_modules/@aztec/wasm-worker ; yarn link ../../yarn-project/wasm-worker ; cd ../../yarn-project/wasm-worker ; yarn build:dev",
     "formatting": "prettier --check ./src && eslint --max-warnings 0 ./src",
+    "formatting:fix": "prettier -w ./src",
     "test": "NODE_NO_WARNINGS=1 node --experimental-vm-modules $(yarn bin jest) --no-cache --passWithNoTests",
     "test-debug": "NODE_NO_WARNINGS=1 node --inspect-brk --experimental-vm-modules $(yarn bin jest) --no-cache --passWithNoTests --runInBand"
   },
