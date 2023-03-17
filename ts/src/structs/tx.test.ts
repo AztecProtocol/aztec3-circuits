@@ -48,6 +48,6 @@ describe("structs/tx", () => {
   });
 });
 
-function bufferTo0xHex(buf: Buffer): string {
-  return "0x" + buf.toString("hex");
-}
+// function bufferTo0xHex(buf: Buffer): string {
+//   return "0x" + buf.toString("hex");
+// }
