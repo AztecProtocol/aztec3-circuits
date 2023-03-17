@@ -1,5 +1,6 @@
 import { randomBytes } from "crypto";
 import { serializeToBuffer } from "../wasm/serialize.js";
+import { checkLength } from "./utils.js";
 
 export class Fr {
   static SIZE_IN_BYTES = 32;
@@ -51,16 +52,18 @@ export class EthAddress {
   }
 }
 
-export type UInt32 = number;
-export type Proof = Buffer;
-export type VK = Buffer;
-export type AztecAddress = Buffer;
-export type AggregationObject = Buffer;
-
-export class MembershipWitness {
-  constructor(public leafIndex: UInt32, public siblingPath: Fr[]) {}
+export class MembershipWitness<N extends number> {
+  constructor(pathSize: N, public leafIndex: UInt32, public siblingPath: Fr[]) {
+    checkLength(this.siblingPath, pathSize, "MembershipWitness.siblingPath");
+  }
 
   toBuffer() {
     return serializeToBuffer(this.leafIndex, ...this.siblingPath);
   }
 }
+
+export type UInt32 = number;
+export type Proof = Buffer;
+export type VK = Buffer;
+export type AztecAddress = Buffer;
+export type AggregationObject = Buffer;

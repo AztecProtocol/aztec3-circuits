@@ -1,5 +1,10 @@
 import { serializeToBuffer } from "../wasm/serialize.js";
-import { KERNEL_NEW_NULLIFIERS_LENGTH } from "./constants.js";
+import {
+  CONTRACT_TREE_ROOTS_TREE_HEIGHT,
+  KERNEL_NEW_NULLIFIERS_LENGTH,
+  NULLIFIER_TREE_HEIGHT,
+  PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT,
+} from "./constants.js";
 import { PreviousKernelData } from "./kernel.js";
 import { AggregationObject, Fr, MembershipWitness, UInt32 } from "./shared.js";
 import { checkLength } from "./utils.js";
@@ -54,18 +59,24 @@ export class ConstantBaseRollupData {
 /**
  * Inputs to the base rollup circuit
  */
-// TODO: Validate sizes for MembershipWitnesses
 export class BaseRollupInputs {
   constructor(
     public kernelData: [PreviousKernelData, PreviousKernelData],
 
     public startNullifierTreeSnapshot: AppendOnlyTreeSnapshot,
     public lowNullifierLeafPreimages: NullifierLeafPreimage[],
-    public lowNullifierMembershipWitness: MembershipWitness[],
+    public lowNullifierMembershipWitness: MembershipWitness<
+      typeof NULLIFIER_TREE_HEIGHT
+    >[],
 
-    public oldPrivateDataTreeRootMembershipWitnesses: MembershipWitness[],
-    public oldContractsTreeRootMembershipWitnesses: MembershipWitness[],
-    public oldL1ToL2MsgTreeRootMembershipWitnesses: MembershipWitness[],
+    public historicPrivateDataTreeRootMembershipWitnesses: [
+      MembershipWitness<typeof PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>,
+      MembershipWitness<typeof PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>
+    ],
+    public historicContractsTreeRootMembershipWitnesses: [
+      MembershipWitness<typeof CONTRACT_TREE_ROOTS_TREE_HEIGHT>,
+      MembershipWitness<typeof CONTRACT_TREE_ROOTS_TREE_HEIGHT>
+    ],
 
     public constants: ConstantBaseRollupData,
 
@@ -89,9 +100,8 @@ export class BaseRollupInputs {
       this.startNullifierTreeSnapshot,
       ...this.lowNullifierLeafPreimages,
       ...this.lowNullifierMembershipWitness,
-      ...this.oldPrivateDataTreeRootMembershipWitnesses,
-      ...this.oldContractsTreeRootMembershipWitnesses,
-      ...this.oldL1ToL2MsgTreeRootMembershipWitnesses,
+      ...this.historicPrivateDataTreeRootMembershipWitnesses,
+      ...this.historicContractsTreeRootMembershipWitnesses,
       this.constants,
       this.proverId
     );
