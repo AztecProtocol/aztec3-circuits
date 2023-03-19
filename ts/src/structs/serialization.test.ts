@@ -3,6 +3,7 @@ import { CircuitsWasm } from "../wasm/circuits_wasm.js";
 import { serializeToBuffer, uint8ArrayToNum } from "../wasm/serialize.js";
 import {
   ARGS_LENGTH,
+  EMITTED_EVENTS_LENGTH,
   L1_MSG_STACK_LENGTH,
   NEW_COMMITMENTS_LENGTH,
   NEW_NULLIFIERS_LENGTH,
@@ -48,6 +49,7 @@ export class PrivateCircuitPublicInputs {
     public callContext: CallContext,
     public args: Fr[],
     public returnValues: Fr[],
+    public emittedEvents: Fr[],
     public newCommitments: Fr[],
     public newNullifiers: Fr[],
     public privateCallStack: Fr[],
@@ -57,6 +59,7 @@ export class PrivateCircuitPublicInputs {
   ) {
     assertLength(this, "args", ARGS_LENGTH);
     assertLength(this, "returnValues", RETURN_VALUES_LENGTH);
+    assertLength(this, "emittedEvents", EMITTED_EVENTS_LENGTH);
     assertLength(this, "newCommitments", NEW_COMMITMENTS_LENGTH);
     assertLength(this, "newNullifiers", NEW_NULLIFIERS_LENGTH);
     assertLength(this, "privateCallStack", PRIVATE_CALL_STACK_LENGTH);
@@ -68,6 +71,7 @@ export class PrivateCircuitPublicInputs {
       this.callContext,
       this.args,
       this.returnValues,
+      this.emittedEvents,
       this.newCommitments,
       this.newNullifiers,
       this.privateCallStack,
@@ -103,13 +107,14 @@ function privateCircuitPublicInputs() {
       true
     ),
     range(ARGS_LENGTH).map(fr),
-    range(RETURN_VALUES_LENGTH).map(fr),
-    range(NEW_COMMITMENTS_LENGTH).map(fr),
-    range(NEW_NULLIFIERS_LENGTH).map(fr),
-    range(PRIVATE_CALL_STACK_LENGTH).map(fr),
-    range(PUBLIC_CALL_STACK_LENGTH).map(fr),
-    range(L1_MSG_STACK_LENGTH).map(fr),
-    new Fr(asBEBuffer(1))
+    range(EMITTED_EVENTS_LENGTH, 0x100).map(fr), // TODO not in spec
+    range(RETURN_VALUES_LENGTH, 0x200).map(fr),
+    range(NEW_COMMITMENTS_LENGTH, 0x300).map(fr),
+    range(NEW_NULLIFIERS_LENGTH, 0x400).map(fr),
+    range(PRIVATE_CALL_STACK_LENGTH, 0x500).map(fr),
+    range(PUBLIC_CALL_STACK_LENGTH, 0x600).map(fr),
+    range(L1_MSG_STACK_LENGTH, 0x700).map(fr),
+    new Fr(asBEBuffer(0x801))
   );
 }
 
@@ -141,29 +146,35 @@ describe("basic struct serialization", () => {
     },
   ]) {
     it(`serializes a ${name} and calls trivial C++ code`, () => {
-      const inputBuf = object.toBuffer();
-      const inputBufPtr = wasm.call("bbmalloc", inputBuf.length);
-      wasm.writeMemory(inputBufPtr, inputBuf);
-      const outputBufSizePtr = wasm.call("bbmalloc", 4);
-      // Get a string version of our object. As a quick and dirty test,
-      // we compare a snapshot of its string form to its previous form.
-      const outputBufPtr = wasm.call(method, inputBufPtr, outputBufSizePtr);
-      // Read the size pointer
-      const outputBufSize = uint8ArrayToNum(
-        wasm.getMemorySlice(outputBufSizePtr, outputBufSizePtr + 4)
-      );
-      const outputBuf = wasm.getMemorySlice(
-        outputBufPtr,
-        outputBufPtr + outputBufSize
-      );
-      const outputStr = simplifyHexValues(
-        Buffer.from(outputBuf).toString("utf-8")
-      );
-      expect(outputStr).toMatchSnapshot();
-      // Free memory
-      wasm.call("bbfree", outputBufPtr);
-      wasm.call("bbfree", outputBufSizePtr);
-      wasm.call("bbfree", inputBufPtr);
+      const testBufferSerialize = (inputBuf: Buffer) => {
+        const inputBufPtr = wasm.call("bbmalloc", inputBuf.length);
+        wasm.writeMemory(inputBufPtr, inputBuf);
+        const outputBufSizePtr = wasm.call("bbmalloc", 4);
+        // Get a string version of our object. As a quick and dirty test,
+        // we compare a snapshot of its string form to its previous form.
+        const outputBufPtr = wasm.call(method, inputBufPtr, outputBufSizePtr);
+        // Read the size pointer
+        const outputBufSize = uint8ArrayToNum(
+          wasm.getMemorySlice(outputBufSizePtr, outputBufSizePtr + 4)
+        );
+        const outputBuf = wasm.getMemorySlice(
+          outputBufPtr,
+          outputBufPtr + outputBufSize
+        );
+        const outputStr = simplifyHexValues(
+          Buffer.from(outputBuf).toString("utf-8")
+        );
+        expect(outputStr).toMatchSnapshot();
+        // Free memory
+        wasm.call("bbfree", outputBufPtr);
+        wasm.call("bbfree", outputBufSizePtr);
+        wasm.call("bbfree", inputBufPtr);
+      };
+      const objBuffer = object.toBuffer();
+      // Test the trivial case: writing lots of 0's and making sure no garbage data
+      testBufferSerialize(Buffer.alloc(4000, 0));
+      // Test the data case: writing (mostly) sequential numbers
+      testBufferSerialize(objBuffer);
     });
   }
 });

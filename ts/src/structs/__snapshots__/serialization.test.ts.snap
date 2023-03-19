@@ -1,22 +1,22 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`basic struct serialization serializes a PrivateCircuitPublicInputs and calls trivial C++ code 1`] = `
-"call_context: msg_sender: 0x1
-storage_contract_address: 0x2
-tx_origin: 0x3
-is_delegate_call: 1
-is_static_call: 1
-is_contract_deployment: 1
+"call_context: msg_sender: 0x0
+storage_contract_address: 0x0
+tx_origin: 0x0
+is_delegate_call: 0
+is_static_call: 0
+is_contract_deployment: 0
 
-args: [ 0x1 0x2 0x3 0x4 0x5 0x6 0x7 0x8 ]
-return_values: [ 0x1 0x2 0x3 0x4 ]
-emitted_events: [ 0x1 0x2 0x3 0x4 ]
-new_commitments: [ 0x1 0x2 0x3 0x4 ]
-new_nullifiers: [ 0x1 0x2 0x3 0x4 ]
-private_call_stack: [ 0x1 0x2 0x3 0x4 ]
-public_call_stack: [ 0x1 0x2 0x1 0x31000000c8cd1200000000000000000000000000000000 ]
-l1_msg_stack: [ 0x612d020000000000000000000000000000000000000000 0x412d020000000000000000000000000000000000000000 ]
-old_private_data_tree_root: 0x212d020000000000000000000000000000000000000000
+args: [ 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 ]
+return_values: [ 0x0 0x0 0x0 0x0 ]
+emitted_events: [ 0x0 0x0 0x0 0x0 ]
+new_commitments: [ 0x0 0x0 0x0 0x0 ]
+new_nullifiers: [ 0x0 0x0 0x0 0x0 ]
+private_call_stack: [ 0x0 0x0 0x0 0x0 ]
+public_call_stack: [ 0x0 0x0 0x0 0x0 ]
+l1_msg_stack: [ 0x0 0x0 ]
+old_private_data_tree_root: 0x0
 old_nullifier_tree_root: 0x0
 old_nullifier_tree_root: 0x0
 contract_deployment_data: constructor_vk_hash: 0x0
@@ -27,7 +27,46 @@ portal_contract_address: 0x0
 "
 `;
 
+exports[`basic struct serialization serializes a PrivateCircuitPublicInputs and calls trivial C++ code 2`] = `
+"call_context: msg_sender: 0x1
+storage_contract_address: 0x2
+tx_origin: 0x3
+is_delegate_call: 1
+is_static_call: 1
+is_contract_deployment: 1
+
+args: [ 0x1 0x2 0x3 0x4 0x5 0x6 0x7 0x8 ]
+return_values: [ 0x101 0x102 0x103 0x104 ]
+emitted_events: [ 0x201 0x202 0x203 0x204 ]
+new_commitments: [ 0x301 0x302 0x303 0x304 ]
+new_nullifiers: [ 0x401 0x402 0x403 0x404 ]
+private_call_stack: [ 0x501 0x502 0x503 0x504 ]
+public_call_stack: [ 0x601 0x602 0x603 0x604 ]
+l1_msg_stack: [ 0x701 0x702 ]
+old_private_data_tree_root: 0x801
+old_nullifier_tree_root: 0x31000000c8cd1200000000000000000000000000000000
+old_nullifier_tree_root: 0x31000000c8cd1200000000000000000000000000000000
+contract_deployment_data: constructor_vk_hash: 0xc12c020000000000000000000000000000000000000000
+function_tree_root: 0xa12c020000000000000000000000000000000000000000
+contract_address_salt: 0x0
+portal_contract_address: 0x0
+
+"
+`;
+
 exports[`basic struct serialization serializes a TxContext and calls trivial C++ code 1`] = `
+"is_fee_payment_tx: 0
+is_rebate_payment_tx: 0
+is_contract_deployment_tx: 0
+contract_deployment_data: 
+constructor_vk_hash: 0x0
+function_tree_root: 0x0
+contract_address_salt: 0x0
+portal_contract_address: 0x0
+"
+`;
+
+exports[`basic struct serialization serializes a TxContext and calls trivial C++ code 2`] = `
 "is_fee_payment_tx: 0
 is_rebate_payment_tx: 0
 is_contract_deployment_tx: 1
