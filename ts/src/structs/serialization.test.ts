@@ -1,10 +1,6 @@
 import { assertLength, range } from "../utils/jsUtils.js";
 import { CircuitsWasm } from "../wasm/circuits_wasm.js";
-import {
-  numToUInt32LE,
-  serializeToBuffer,
-  uint8ArrayToNum,
-} from "../wasm/serialize.js";
+import { serializeToBuffer, uint8ArrayToNum } from "../wasm/serialize.js";
 import {
   ARGS_LENGTH,
   L1_MSG_STACK_LENGTH,
@@ -17,6 +13,11 @@ import {
 import { AztecAddress, EthAddress, Fr } from "./shared.js";
 import { ContractDeploymentData, TxContext } from "./tx.js";
 
+function asBEBuffer(num: number, bufferSize = 32) {
+  const buf = Buffer.alloc(bufferSize);
+  buf.writeUInt32BE(num, bufferSize - 4);
+  return buf;
+}
 /**
  * Call context.
  * @see abis/call_context.hpp
@@ -78,15 +79,15 @@ export class PrivateCircuitPublicInputs {
 }
 
 function fr(n: number) {
-  return new Fr(numToUInt32LE(n + 1, 32));
+  return new Fr(asBEBuffer(n + 1));
 }
 
 function privateCircuitPublicInputs() {
   return new PrivateCircuitPublicInputs(
     new CallContext(
-      numToUInt32LE(1, 32),
-      numToUInt32LE(2, 32),
-      new EthAddress(numToUInt32LE(3, 20)),
+      asBEBuffer(1),
+      asBEBuffer(2),
+      new EthAddress(asBEBuffer(3, /* eth address is 20 bytes */ 20)),
       true,
       true,
       true
@@ -98,16 +99,16 @@ function privateCircuitPublicInputs() {
     range(PRIVATE_CALL_STACK_LENGTH).map(fr),
     range(PUBLIC_CALL_STACK_LENGTH).map(fr),
     range(L1_MSG_STACK_LENGTH).map(fr),
-    new Fr(numToUInt32LE(1, 32))
+    new Fr(asBEBuffer(1))
   );
 }
 
 function txContext() {
   const deploymentData = new ContractDeploymentData(
-    new Fr(numToUInt32LE(1, 32)),
-    new Fr(numToUInt32LE(2, 32)),
-    new Fr(numToUInt32LE(3, 32)),
-    new Fr(numToUInt32LE(4, 32))
+    new Fr(asBEBuffer(1)),
+    new Fr(asBEBuffer(2)),
+    new Fr(asBEBuffer(3)),
+    new Fr(asBEBuffer(4))
   );
   return new TxContext(false, false, true, deploymentData);
 }
