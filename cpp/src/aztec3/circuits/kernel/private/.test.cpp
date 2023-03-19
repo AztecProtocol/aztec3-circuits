@@ -186,7 +186,7 @@ TEST(private_kernel_tests, test_deposit)
             ConstantData<NT>{
                 .old_tree_roots =
                     OldTreeRoots<NT>{
-                        .private_data_tree_root = deposit_public_inputs.old_private_data_tree_root,
+                        .private_data_tree_root = deposit_public_inputs.historic_private_data_tree_root,
                         // .nullifier_tree_root =
                         // .contract_tree_root =
                         // .private_kernel_vk_tree_root =

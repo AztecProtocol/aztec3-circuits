@@ -87,7 +87,7 @@ TEST(abi_tests, test_native_to_circuit_call_context)
 //         .public_call_stack = { 26, 27, 28, 29 },
 //         .contract_deployment_call_stack = { 30, 31 },
 //         .partial_l1_call_stack = { 32, 33 },
-//         .old_private_data_tree_root = 38,
+//         .historic_private_data_tree_root = 38,
 //     };
 
 //     info("public_circuit_public_inputs: ", public_inputs);
@@ -104,7 +104,7 @@ TEST(abi_tests, test_native_to_circuit_call_context)
 //         .public_call_stack = { 26, 27, 28, 29 },
 //         .contract_deployment_call_stack = { 30, 31 },
 //         .partial_l1_call_stack = { 32, 33 },
-//         .old_private_data_tree_root = 38,
+//         .historic_private_data_tree_root = 38,
 //     };
 
 //     info("public_circuit_public_inputs: ", native_public_inputs);
@@ -126,7 +126,7 @@ TEST(abi_tests, test_native_to_circuit_call_context)
 //         .public_call_stack = { 26, 27, 28, 29 },
 //         .contract_deployment_call_stack = { 30, 31 },
 //         .partial_l1_call_stack = { 32, 33 },
-//         .old_private_data_tree_root = 38,
+//         .historic_private_data_tree_root = 38,
 //     };
 
 //     CallStackItem<NT, CallType::Public> call_stack_item = {
@@ -159,7 +159,7 @@ TEST(abi_tests, test_native_to_circuit_call_context)
 //         .public_call_stack = { 26, 27, 28, 29 },
 //         .contract_deployment_call_stack = { 30, 31 },
 //         .partial_l1_call_stack = { 32, 33 },
-//         .old_private_data_tree_root = 38,
+//         .historic_private_data_tree_root = 38,
 //     };
 
 //     CallStackItem<NT, CallType::Public> native_call_stack_item = {

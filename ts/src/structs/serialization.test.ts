@@ -44,8 +44,19 @@ export class CallContext {
   }
 }
 
+/**
+ * Strips methods of a type.
+ */
+type FieldsOf<T> = {
+  [P in keyof T as T[P] extends Function ? never : P]: T[P];
+};
+
+/**
+ * @see abis/private_circuit_public_inputs.hpp.
+ */
 export class PrivateCircuitPublicInputs {
   constructor(
+    // NOTE: Must have same order as CPP.
     public callContext: CallContext,
     public args: Fr[],
     public returnValues: Fr[],
@@ -55,7 +66,10 @@ export class PrivateCircuitPublicInputs {
     public privateCallStack: Fr[],
     public publicCallStack: Fr[],
     public l1MsgStack: Fr[],
-    public historicPrivateDataTreeRoot: Fr
+    public historicPrivateDataTreeRoot: Fr,
+    public historicPrivateNullifierTreeRoot: Fr,
+    public historicContractTreeRoot: Fr,
+    public contractDeploymentData: ContractDeploymentData
   ) {
     assertLength(this, "args", ARGS_LENGTH);
     assertLength(this, "returnValues", RETURN_VALUES_LENGTH);
@@ -66,19 +80,33 @@ export class PrivateCircuitPublicInputs {
     assertLength(this, "publicCallStack", PUBLIC_CALL_STACK_LENGTH);
     assertLength(this, "l1MsgStack", L1_MSG_STACK_LENGTH);
   }
-  toBuffer(): Buffer {
-    return serializeToBuffer(
-      this.callContext,
-      this.args,
-      this.returnValues,
-      this.emittedEvents,
-      this.newCommitments,
-      this.newNullifiers,
-      this.privateCallStack,
-      this.publicCallStack,
-      this.l1MsgStack,
-      this.historicPrivateDataTreeRoot
+  static from(
+    fields: FieldsOf<PrivateCircuitPublicInputs>
+  ): PrivateCircuitPublicInputs {
+    return new PrivateCircuitPublicInputs(
+      ...PrivateCircuitPublicInputs.getFields(fields)
     );
+  }
+  static getFields(fields: FieldsOf<PrivateCircuitPublicInputs>) {
+    return [
+      // NOTE: Must have same order as CPP.
+      fields.callContext,
+      fields.args,
+      fields.returnValues,
+      fields.emittedEvents,
+      fields.newCommitments,
+      fields.newNullifiers,
+      fields.privateCallStack,
+      fields.publicCallStack,
+      fields.l1MsgStack,
+      fields.historicPrivateDataTreeRoot,
+      fields.historicPrivateNullifierTreeRoot,
+      fields.historicContractTreeRoot,
+      fields.contractDeploymentData,
+    ] as const;
+  }
+  toBuffer(): Buffer {
+    return serializeToBuffer(...PrivateCircuitPublicInputs.getFields(this));
   }
 }
 
@@ -97,8 +125,8 @@ function fr(n: number) {
 }
 
 function privateCircuitPublicInputs() {
-  return new PrivateCircuitPublicInputs(
-    new CallContext(
+  return PrivateCircuitPublicInputs.from({
+    callContext: new CallContext(
       asBEBuffer(1),
       asBEBuffer(2),
       new EthAddress(asBEBuffer(3, /* eth address is 20 bytes */ 20)),
@@ -106,26 +134,32 @@ function privateCircuitPublicInputs() {
       true,
       true
     ),
-    range(ARGS_LENGTH).map(fr),
-    range(EMITTED_EVENTS_LENGTH, 0x100).map(fr), // TODO not in spec
-    range(RETURN_VALUES_LENGTH, 0x200).map(fr),
-    range(NEW_COMMITMENTS_LENGTH, 0x300).map(fr),
-    range(NEW_NULLIFIERS_LENGTH, 0x400).map(fr),
-    range(PRIVATE_CALL_STACK_LENGTH, 0x500).map(fr),
-    range(PUBLIC_CALL_STACK_LENGTH, 0x600).map(fr),
-    range(L1_MSG_STACK_LENGTH, 0x700).map(fr),
-    new Fr(asBEBuffer(0x801))
-  );
+    args: range(ARGS_LENGTH).map(fr),
+    emittedEvents: range(EMITTED_EVENTS_LENGTH, 0x100).map(fr), // TODO not in spec
+    returnValues: range(RETURN_VALUES_LENGTH, 0x200).map(fr),
+    newCommitments: range(NEW_COMMITMENTS_LENGTH, 0x300).map(fr),
+    newNullifiers: range(NEW_NULLIFIERS_LENGTH, 0x400).map(fr),
+    privateCallStack: range(PRIVATE_CALL_STACK_LENGTH, 0x500).map(fr),
+    publicCallStack: range(PUBLIC_CALL_STACK_LENGTH, 0x600).map(fr),
+    l1MsgStack: range(L1_MSG_STACK_LENGTH, 0x700).map(fr),
+    historicContractTreeRoot: new Fr(asBEBuffer(0x801)), // TODO not in spec
+    historicPrivateDataTreeRoot: new Fr(asBEBuffer(0x901)),
+    historicPrivateNullifierTreeRoot: new Fr(asBEBuffer(0x1001)), // TODO not in spec
+    contractDeploymentData: contractDeploymentData(),
+  });
 }
 
-function txContext() {
-  const deploymentData = new ContractDeploymentData(
+function contractDeploymentData() {
+  return new ContractDeploymentData(
     new Fr(asBEBuffer(1)),
     new Fr(asBEBuffer(2)),
     new Fr(asBEBuffer(3)),
     new Fr(asBEBuffer(4))
   );
-  return new TxContext(false, false, true, deploymentData);
+}
+
+function txContext() {
+  return new TxContext(false, false, true, contractDeploymentData());
 }
 
 describe("basic struct serialization", () => {
@@ -145,34 +179,37 @@ describe("basic struct serialization", () => {
       method: "abis__test_roundtrip_serialize_tx_context",
     },
   ]) {
-    it(`serializes a ${name} and calls trivial C++ code`, () => {
-      const testBufferSerialize = (inputBuf: Buffer) => {
-        const inputBufPtr = wasm.call("bbmalloc", inputBuf.length);
-        wasm.writeMemory(inputBufPtr, inputBuf);
-        const outputBufSizePtr = wasm.call("bbmalloc", 4);
-        // Get a string version of our object. As a quick and dirty test,
-        // we compare a snapshot of its string form to its previous form.
-        const outputBufPtr = wasm.call(method, inputBufPtr, outputBufSizePtr);
-        // Read the size pointer
-        const outputBufSize = uint8ArrayToNum(
-          wasm.getMemorySlice(outputBufSizePtr, outputBufSizePtr + 4)
-        );
-        const outputBuf = wasm.getMemorySlice(
-          outputBufPtr,
-          outputBufPtr + outputBufSize
-        );
-        const outputStr = simplifyHexValues(
-          Buffer.from(outputBuf).toString("utf-8")
-        );
-        expect(outputStr).toMatchSnapshot();
-        // Free memory
-        wasm.call("bbfree", outputBufPtr);
-        wasm.call("bbfree", outputBufSizePtr);
-        wasm.call("bbfree", inputBufPtr);
-      };
-      const objBuffer = object.toBuffer();
+    const testBufferSerialize = (inputBuf: Buffer) => {
+      const inputBufPtr = wasm.call("bbmalloc", inputBuf.length);
+      wasm.writeMemory(inputBufPtr, inputBuf);
+      const outputBufSizePtr = wasm.call("bbmalloc", 4);
+      // Get a string version of our object. As a quick and dirty test,
+      // we compare a snapshot of its string form to its previous form.
+      const outputBufPtr = wasm.call(method, inputBufPtr, outputBufSizePtr);
+      // Read the size pointer
+      const outputBufSize = uint8ArrayToNum(
+        wasm.getMemorySlice(outputBufSizePtr, outputBufSizePtr + 4)
+      );
+      const outputBuf = wasm.getMemorySlice(
+        outputBufPtr,
+        outputBufPtr + outputBufSize
+      );
+      const outputStr = simplifyHexValues(
+        Buffer.from(outputBuf).toString("utf-8")
+      );
+      expect(outputStr).toMatchSnapshot();
+      // Free memory
+      wasm.call("bbfree", outputBufPtr);
+      wasm.call("bbfree", outputBufSizePtr);
+      wasm.call("bbfree", inputBufPtr);
+    };
+    it(`serializes a blank ${name} and prints it`, () => {
       // Test the trivial case: writing lots of 0's and making sure no garbage data
       testBufferSerialize(Buffer.alloc(4000, 0));
+    });
+
+    it(`serializes a trivial ${name} and prints it`, () => {
+      const objBuffer = object.toBuffer();
       // Test the data case: writing (mostly) sequential numbers
       testBufferSerialize(objBuffer);
     });
