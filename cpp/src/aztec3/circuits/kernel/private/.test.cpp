@@ -90,7 +90,7 @@ TEST(private_kernel_tests, test_deposit)
     DB db;
 
     FunctionData<NT> function_data{
-        .function_encoding = 1, // TODO: deduce this from the contract, somehow.
+        .function_selector = 1, // TODO: deduce this from the contract, somehow.
         .is_private = true,
         .is_constructor = false,
     };

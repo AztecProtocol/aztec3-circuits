@@ -16,7 +16,7 @@ class abi_tests : public ::testing::Test {};
 TEST(abi_tests, test_native_function_data)
 {
     FunctionData<NT> function_data = {
-        .function_encoding = 11,
+        .function_selector = 11,
         .is_private = false,
         .is_constructor = false,
     };
@@ -32,7 +32,7 @@ TEST(abi_tests, test_native_function_data)
 TEST(abi_tests, test_native_to_circuit_function_data)
 {
     FunctionData<NT> native_function_data = {
-        .function_encoding = 11,
+        .function_selector = 11,
         .is_private = false,
         .is_constructor = false,
     };
@@ -132,7 +132,7 @@ TEST(abi_tests, test_native_to_circuit_call_context)
 //     CallStackItem<NT, CallType::Public> call_stack_item = {
 //         .function_data = {
 //             // .contract_address = 10,
-//             .function_encoding = 11,
+//             .function_selector = 11,
 //             .is_private = false,
 //             .is_constructor = false,
 //         },
@@ -165,7 +165,7 @@ TEST(abi_tests, test_native_to_circuit_call_context)
 //     CallStackItem<NT, CallType::Public> native_call_stack_item = {
 //         .function_data = {
 //             // .contract_address = 10,
-//             .function_encoding = 11,
+//             .function_selector = 11,
 //             .is_private = false,
 //             .is_constructor = false,
 //         },
