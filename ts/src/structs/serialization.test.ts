@@ -107,8 +107,7 @@ function txContext() {
     new Fr(numToUInt32LE(1, 32)),
     new Fr(numToUInt32LE(2, 32)),
     new Fr(numToUInt32LE(3, 32)),
-    new Fr(numToUInt32LE(4, 32)),
-    new Fr(numToUInt32LE(5, 32))
+    new Fr(numToUInt32LE(4, 32))
   );
   return new TxContext(false, false, true, deploymentData);
 }
