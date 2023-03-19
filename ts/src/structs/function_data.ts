@@ -1,6 +1,7 @@
 import { serializeToBuffer } from "../wasm/serialize.js";
 
 /**
+ * Function description for circuit.
  * @see abis/function_data.hpp
  */
 export class FunctionData {
@@ -9,6 +10,10 @@ export class FunctionData {
     public isPrivate: true,
     public isConstructor: true
   ) {}
+  /**
+   * Serialize this as a buffer.
+   * @returns The buffer.
+   */
   toBuffer(): Buffer {
     return serializeToBuffer(
       this.functionSelector,

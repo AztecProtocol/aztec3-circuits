@@ -101,8 +101,8 @@ export type Bufferable =
 
 /**
  * Serializes a list of objects contiguously for calling into wasm.
- * @param objs objects to serialize.
- * @returns a buffer list with the concatenation of all fields.
+ * @param objs - Objects to serialize.
+ * @returns A buffer list with the concatenation of all fields.
  */
 export function serializeToBufferArray(...objs: Bufferable[]): Buffer[] {
   let ret: Buffer[] = [];
@@ -125,8 +125,8 @@ export function serializeToBufferArray(...objs: Bufferable[]): Buffer[] {
 
 /**
  * Serializes a list of objects contiguously for calling into wasm.
- * @param objs objects to serialize.
- * @returns a single buffer with the concatenation of all fields.
+ * @param objs - Objects to serialize.
+ * @returns A single buffer with the concatenation of all fields.
  */
 export function serializeToBuffer(...objs: Bufferable[]): Buffer {
   return Buffer.concat(serializeToBufferArray(...objs));
