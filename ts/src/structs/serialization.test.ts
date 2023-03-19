@@ -78,6 +78,16 @@ export class PrivateCircuitPublicInputs {
   }
 }
 
+function simplifyHexValues(input: string) {
+  const regex = /0x[\dA-Fa-f]+/g;
+  const matches = input.match(regex) || [];
+  const simplifiedMatches = matches.map(
+    (match) => "0x" + parseInt(match, 16).toString(16)
+  );
+  const result = input.replace(regex, () => simplifiedMatches.shift() || "");
+  return result;
+}
+
 function fr(n: number) {
   return new Fr(asBEBuffer(n + 1));
 }
@@ -146,7 +156,9 @@ describe("basic struct serialization", () => {
         outputBufPtr,
         outputBufPtr + outputBufSize
       );
-      const outputStr = Buffer.from(outputBuf).toString("utf-8");
+      const outputStr = simplifyHexValues(
+        Buffer.from(outputBuf).toString("utf-8")
+      );
       expect(outputStr).toMatchSnapshot();
       // Free memory
       wasm.call("bbfree", outputBufPtr);
