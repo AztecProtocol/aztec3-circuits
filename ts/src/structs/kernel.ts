@@ -6,7 +6,7 @@ import {
   KERNEL_NEW_NULLIFIERS_LENGTH,
   KERNEL_PRIVATE_CALL_STACK_LENGTH,
   KERNEL_PUBLIC_CALL_STACK_LENGTH,
-  OPTIONALLY_REVEALED_DATA_LENGTH,
+  KERNEL_OPTIONALLY_REVEALED_DATA_LENGTH,
   VK_TREE_HEIGHT,
 } from "./constants.js";
 import {
@@ -105,7 +105,7 @@ export class AccumulatedData {
     checkLength(this.newContracts, KERNEL_NEW_CONTRACTS_LENGTH, "newContracts");
     checkLength(
       this.optionallyRevealedData,
-      OPTIONALLY_REVEALED_DATA_LENGTH,
+      KERNEL_OPTIONALLY_REVEALED_DATA_LENGTH,
       "optionallyRevealedData"
     );
   }
