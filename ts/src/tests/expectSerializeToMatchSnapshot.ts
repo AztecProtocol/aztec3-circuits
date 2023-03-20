@@ -23,9 +23,10 @@ function simplifyHexValues(input: string) {
  */
 export async function expectSerializeToMatchSnapshot(
   inputBuf: Buffer,
-  serializeMethod: string
+  serializeMethod: string,
+  wasm?: CircuitsWasm
 ) {
-  const wasm = await CircuitsWasm.new();
+  wasm = wasm || (await CircuitsWasm.new());
   const inputBufPtr = wasm.call("bbmalloc", inputBuf.length);
   wasm.writeMemory(inputBufPtr, inputBuf);
   const outputBufSizePtr = wasm.call("bbmalloc", 4);
