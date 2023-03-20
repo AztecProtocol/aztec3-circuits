@@ -46,4 +46,35 @@ template <typename NCT> struct PreviousKernelData {
     };
 }; // namespace aztec3::circuits::abis::private_kernel
 
+template <typename NCT> void read(uint8_t const*& it, PreviousKernelData<NCT>& kernel_data)
+{
+    using serialize::read;
+
+    read(it, kernel_data.public_inputs);
+    read(it, kernel_data.proof);
+    read(it, kernel_data.vk);
+    read(it, kernel_data.vk_index);
+    read(it, kernel_data.vk_path);
+};
+
+template <typename NCT> void write(std::vector<uint8_t>& buf, PreviousKernelData<NCT> const& kernel_data)
+{
+    using serialize::write;
+
+    write(buf, kernel_data.public_inputs);
+    write(buf, kernel_data.proof);
+    write(buf, kernel_data.vk);
+    write(buf, kernel_data.vk_index);
+    write(buf, kernel_data.vk_path);
+};
+
+template <typename NCT> std::ostream& operator<<(std::ostream& os, PreviousKernelData<NCT> const& kernel_data)
+{
+    return os << "public_inputs: " << kernel_data.public_inputs << "\n"
+              << "proof: " << kernel_data.proof << "\n"
+              << "vk: " << kernel_data.vk << "\n"
+              << "vk_index: " << kernel_data.vk_index << "\n"
+              << "vk_path: " << kernel_data.vk_path << "\n";
+}
+
 } // namespace aztec3::circuits::abis::private_kernel
