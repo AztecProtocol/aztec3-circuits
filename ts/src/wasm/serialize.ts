@@ -132,6 +132,7 @@ export function serializeToBufferArray(...objs: Bufferable[]): Buffer[] {
     } else if (typeof obj === "boolean") {
       ret.push(boolToBuffer(obj));
     } else if (typeof obj === "number") {
+      // Note: barretenberg assumes everything is big-endian
       ret.push(numToUInt32BE(obj)); // TODO: Are we always passsing numbers as UInt32?
     } else {
       ret.push(obj.toBuffer());

@@ -196,3 +196,13 @@ export class AffineElement {
 
 // TODO: Adapt from cpp/barretenberg/cpp/src/aztec/proof_system/verification_key/verification_key.hpp
 export type VK = Buffer;
+
+/**
+ * Composer prover type.
+ */
+export enum ComposerType {
+  STANDARD = 0,
+  TURBO = 1,
+  PLOOKUP = 2,
+  STANDARD_HONK = 3,
+}
