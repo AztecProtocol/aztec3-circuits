@@ -96,12 +96,12 @@ export class BaseRollupInputs {
 
   toBuffer() {
     return serializeToBuffer(
-      // ...this.kernelData, // TODO: Serialize!
+      this.kernelData,
       this.startNullifierTreeSnapshot,
-      ...this.lowNullifierLeafPreimages,
-      ...this.lowNullifierMembershipWitness,
-      ...this.historicPrivateDataTreeRootMembershipWitnesses,
-      ...this.historicContractsTreeRootMembershipWitnesses,
+      this.lowNullifierLeafPreimages,
+      this.lowNullifierMembershipWitness,
+      this.historicPrivateDataTreeRootMembershipWitnesses,
+      this.historicContractsTreeRootMembershipWitnesses,
       this.constants,
       this.proverId
     );
