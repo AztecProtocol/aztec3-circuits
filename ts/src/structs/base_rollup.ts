@@ -143,6 +143,10 @@ export class BaseRollupPublicInputs {
     throw new Error("Not implemented");
   }
 
+  /**
+   * Serialize this as a buffer.
+   * @returns The buffer.
+   */
   toBuffer() {
     return serializeToBuffer(
       this.rollupType.valueOf(), // TODO: Check the size of the enum in cpp land
