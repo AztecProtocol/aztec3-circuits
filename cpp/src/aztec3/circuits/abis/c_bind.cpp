@@ -1,4 +1,5 @@
 #include "c_bind.h"
+#include "aztec3/circuits/abis/function_data.hpp"
 #include "private_circuit_public_inputs.hpp"
 #include "tx_request.hpp"
 #include "tx_context.hpp"
@@ -145,10 +146,14 @@ WASM_EXPORT const char* abis__test_roundtrip_serialize_call_context(uint8_t cons
     return as_string_output<aztec3::circuits::abis::CallContext<NT>>(call_context_buf, size);
 }
 
-WASM_EXPORT const char* abis__test_roundtrip_serialize_private_circuits_public_inputs(
+WASM_EXPORT const char* abis__test_roundtrip_serialize_private_circuit_public_inputs(
     uint8_t const* private_circuits_public_inputs_buf, uint32_t* size)
 {
     return as_string_output<aztec3::circuits::abis::PrivateCircuitPublicInputs<NT>>(private_circuits_public_inputs_buf,
                                                                                     size);
+}
+WASM_EXPORT const char* abis__test_roundtrip_serialize_function_data(uint8_t const* function_data_buf, uint32_t* size)
+{
+    return as_string_output<aztec3::circuits::abis::FunctionData<NT>>(function_data_buf, size);
 }
 } // extern "C"

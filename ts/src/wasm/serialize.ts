@@ -101,24 +101,33 @@ export type Bufferable =
 
 /**
  * Serializes a list of objects contiguously for calling into wasm.
- * @param objs objects to serialize.
- * @returns a single buffer with the concatenation of all fields.
+ * @param objs - Objects to serialize.
+ * @returns A buffer list with the concatenation of all fields.
+ */
+export function serializeToBufferArray(...objs: Bufferable[]): Buffer[] {
+  let ret: Buffer[] = [];
+  for (const obj of objs) {
+    if (Array.isArray(obj)) {
+      // Note: These must match the length of the C++ structs
+      ret = [...ret, ...serializeToBufferArray(...obj)];
+    } else if (Buffer.isBuffer(obj)) {
+      ret.push(obj);
+    } else if (typeof obj === "boolean") {
+      ret.push(boolToBuffer(obj));
+    } else if (typeof obj === "number") {
+      ret.push(numToUInt32LE(obj)); // TODO: Are we always passsing numbers as UInt32?
+    } else {
+      ret.push(obj.toBuffer());
+    }
+  }
+  return ret;
+}
+
+/**
+ * Serializes a list of objects contiguously for calling into wasm.
+ * @param objs - Objects to serialize.
+ * @returns A single buffer with the concatenation of all fields.
  */
 export function serializeToBuffer(...objs: Bufferable[]): Buffer {
-  return Buffer.concat(
-    objs.map((obj) => {
-      if (Array.isArray(obj)) {
-        // Note: These must match the length of the C++ structs
-        return Buffer.concat(obj.map((elem) => serializeToBuffer(elem)));
-      } else if (Buffer.isBuffer(obj)) {
-        return obj;
-      } else if (typeof obj === "boolean") {
-        return boolToBuffer(obj);
-      } else if (typeof obj === "number") {
-        return numToUInt32LE(obj); // TODO: Are we always passsing numbers as UInt32?
-      } else {
-        return obj.toBuffer();
-      }
-    })
-  );
+  return Buffer.concat(serializeToBufferArray(...objs));
 }
