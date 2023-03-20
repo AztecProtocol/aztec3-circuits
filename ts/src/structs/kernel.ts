@@ -17,7 +17,7 @@ import {
   AztecAddress,
   EthAddress,
   Fr,
-  DynamicSizeBuffer,
+  UInt8Vector,
   UInt32,
   VK,
 } from "./shared.js";
@@ -156,7 +156,7 @@ export class PrivateKernelPublicInputs {
 export class PreviousKernelData {
   constructor(
     public publicInputs: PrivateKernelPublicInputs,
-    public proof: DynamicSizeBuffer,
+    public proof: UInt8Vector,
     public vk: VK,
     public vkIndex: UInt32, // the index of the kernel circuit's vk in a big tree of kernel circuit vks
     public vkSiblingPath: Fr[]

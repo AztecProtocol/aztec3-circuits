@@ -1,6 +1,10 @@
 import { randomBytes } from "crypto";
 import { checkLength, range } from "../utils/jsUtils.js";
-import { numToUInt32BE, serializeToBuffer } from "../wasm/serialize.js";
+import {
+  Bufferable,
+  numToUInt32BE,
+  serializeToBuffer,
+} from "../wasm/serialize.js";
 
 export class Fr {
   static SIZE_IN_BYTES = 32;
@@ -103,12 +107,19 @@ export class MembershipWitness<N extends number> {
 
 export class AggregationObject {
   public hasData: false = false;
+
+  public publicInputs: Vector<Fr>;
+  public proofWitnessIndices: Vector<UInt32>;
+
   constructor(
     public p0: G1,
     public p1: G1,
-    public publicInputs: Fr[],
-    public proofWitnessIndices: UInt32[]
-  ) {}
+    publicInputsData: Fr[],
+    proofWitnessIndicesData: UInt32[]
+  ) {
+    this.publicInputs = new Vector(publicInputsData);
+    this.proofWitnessIndices = new Vector(proofWitnessIndicesData);
+  }
 
   toBuffer() {
     return serializeToBuffer(
@@ -121,7 +132,15 @@ export class AggregationObject {
   }
 }
 
-export class DynamicSizeBuffer {
+export class Vector<T extends Bufferable> {
+  constructor(public items: T[]) {}
+
+  toBuffer() {
+    return serializeToBuffer(this.items.length, this.items);
+  }
+}
+
+export class UInt8Vector {
   constructor(public buffer: Buffer) {}
 
   toBuffer() {

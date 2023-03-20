@@ -1,4 +1,14 @@
-import { EMITTED_EVENTS_LENGTH } from "../structs/constants.js";
+import {
+  EMITTED_EVENTS_LENGTH,
+  KERNEL_L1_MSG_STACK_LENGTH,
+  KERNEL_NEW_COMMITMENTS_LENGTH,
+  KERNEL_NEW_CONTRACTS_LENGTH,
+  KERNEL_NEW_NULLIFIERS_LENGTH,
+  KERNEL_OPTIONALLY_REVEALED_DATA_LENGTH,
+  KERNEL_PRIVATE_CALL_STACK_LENGTH,
+  KERNEL_PUBLIC_CALL_STACK_LENGTH,
+  VK_TREE_HEIGHT,
+} from "../structs/constants.js";
 import { FunctionData } from "../structs/function_data.js";
 import {
   AccumulatedData,
@@ -11,24 +21,14 @@ import {
 } from "../structs/kernel.js";
 import {
   AggregationObject,
-  DynamicSizeBuffer,
   EthAddress,
   Fr,
   MembershipWitness,
+  UInt8Vector,
 } from "../structs/shared.js";
 import { ContractDeploymentData, TxContext } from "../structs/tx.js";
 import { range } from "../utils/jsUtils.js";
 import { numToUInt32BE } from "../wasm/serialize.js";
-import {
-  KERNEL_L1_MSG_STACK_LENGTH,
-  KERNEL_NEW_COMMITMENTS_LENGTH,
-  KERNEL_NEW_CONTRACTS_LENGTH,
-  KERNEL_NEW_NULLIFIERS_LENGTH,
-  KERNEL_OPTIONALLY_REVEALED_DATA_LENGTH,
-  KERNEL_PRIVATE_CALL_STACK_LENGTH,
-  KERNEL_PUBLIC_CALL_STACK_LENGTH,
-  VK_TREE_HEIGHT,
-} from "../structs/constants.js";
 
 export function makeTxContext(seed: number): TxContext {
   const deploymentData = new ContractDeploymentData(
@@ -104,7 +104,7 @@ export function makePrivateKernelPublicInputs(
 }
 
 export function makeDynamicSizeBuffer(size: number, fill: number) {
-  return new DynamicSizeBuffer(Buffer.alloc(size, fill));
+  return new UInt8Vector(Buffer.alloc(size, fill));
 }
 
 export function makeMembershipWitness<N extends number>(
