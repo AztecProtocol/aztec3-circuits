@@ -1,11 +1,12 @@
 #pragma once
-#include "proof_system/verification_key/verification_key.hpp"
-#include "public_inputs.hpp"
-#include "../barretenberg/proof.hpp"
 #include <stdlib/primitives/witness/witness.hpp>
 #include <stdlib/types/native_types.hpp>
 #include <stdlib/types/circuit_types.hpp>
 #include <stdlib/types/convert.hpp>
+#include "aztec3/circuits/abis/verifier_reference_string.hpp"
+#include "proof_system/verification_key/verification_key.hpp"
+#include "public_inputs.hpp"
+#include "../barretenberg/proof.hpp"
 
 namespace aztec3::circuits::abis::private_kernel {
 
@@ -49,10 +50,6 @@ template <typename NCT> struct PreviousKernelData {
     };
 }; // namespace aztec3::circuits::abis::private_kernel
 
-// TODO(AD): After Milestone 1, rewrite this with better injection mechanism.
-// Defined in c_bind.cpp.
-std::shared_ptr<VerifierReferenceString> get_global_verifier_reference_string();
-
 template <typename B> inline void read(B& buf, verification_key& key)
 {
     using serialize::read;
@@ -64,27 +61,24 @@ template <typename B> inline void read(B& buf, verification_key& key)
 
 template <typename NCT> void read(uint8_t const*& it, PreviousKernelData<NCT>& kernel_data)
 {
+    using aztec3::circuits::abis::read;
     using serialize::read;
 
     read(it, kernel_data.public_inputs);
     read(it, kernel_data.proof);
-    // Note: matches the structure of write verification_key
-    verification_key_data vk_data;
-    read(it, vk_data);
-    kernel_data.vk = bonk::verification_key{ std::move(vk_data), get_global_verifier_reference_string() };
-    // read(it, kernel_data.vk);
+    read(it, kernel_data.vk);
     read(it, kernel_data.vk_index);
     read(it, kernel_data.vk_path);
 };
 
 template <typename NCT> void write(std::vector<uint8_t>& buf, PreviousKernelData<NCT> const& kernel_data)
 {
+    using aztec3::circuits::abis::write;
     using serialize::write;
 
     write(buf, kernel_data.public_inputs);
     write(buf, kernel_data.proof);
-    // Note: matches the structure of read verification_key_data
-    write(buf, *kernel_data.vk.get());
+    write(buf, kernel_data.vk);
     write(buf, kernel_data.vk_index);
     write(buf, kernel_data.vk_path);
 };

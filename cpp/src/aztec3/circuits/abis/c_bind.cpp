@@ -123,6 +123,14 @@ WASM_EXPORT void abis__compute_function_leaf(uint8_t const* function_leaf_preima
     NT::fr::serialize_to_buffer(leaf_preimage.hash(), output);
 }
 
+// TODO(AD): After Milestone 1, rewrite this with better injection mechanism.
+WASM_EXPORT void abis__set_global_verifier_reference_string(uint8_t* data)
+{
+    auto vrs = std::make_shared<bonk::VerifierMemReferenceString>(data);
+    aztec3::circuits::abis::set_global_verifier_reference_string(vrs);
+}
+
+/*** Serialization test helpers ***/
 WASM_EXPORT const char* abis__test_roundtrip_serialize_tx_context(uint8_t const* tx_context_buf, uint32_t* size)
 {
     return as_string_output<TxContext<NT>>(tx_context_buf, size);
@@ -149,4 +157,9 @@ WASM_EXPORT const char* abis__test_roundtrip_serialize_function_data(uint8_t con
     return as_string_output<aztec3::circuits::abis::FunctionData<NT>>(function_data_buf, size);
 }
 
+WASM_EXPORT const char* abis__test_roundtrip_serialize_previous_kernel_data(uint8_t const* kernel_data_buf,
+                                                                            uint32_t* size)
+{
+    return as_string_output<aztec3::circuits::abis::private_kernel::PreviousKernelData<NT>>(kernel_data_buf, size);
+}
 } // extern "C"
