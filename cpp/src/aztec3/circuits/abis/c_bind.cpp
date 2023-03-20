@@ -5,8 +5,8 @@
 #include <aztec3/constants.hpp>
 
 #include <aztec3/utils/types/native_types.hpp>
-#include "barretenberg/crypto/keccak/keccak.hpp"
-#include "barretenberg/common/serialize.hpp"
+#include <barretenberg/crypto/keccak/keccak.hpp>
+#include <barretenberg/common/serialize.hpp>
 
 namespace {
 using aztec3::GeneratorIndex;

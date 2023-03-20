@@ -5,7 +5,7 @@
 
 #include <aztec3/circuits/abis/function_data.hpp>
 
-#include "barretenberg/common/container.hpp"
+#include <barretenberg/common/container.hpp>
 
 namespace aztec3::circuits::apps {
 

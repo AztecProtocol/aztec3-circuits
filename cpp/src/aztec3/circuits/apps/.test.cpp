@@ -1,10 +1,10 @@
 
-// #include "barretenberg/common/serialize.hpp"
-// #include "barretenberg/stdlib/types/types.hpp"
-// #include "barretenberg/numeric/random/engine.hpp"
+// #include <barretenberg/common/serialize.hpp>
+// #include <barretenberg/stdlib/types/types.hpp>
+// #include <barretenberg/numeric/random/engine.hpp>
 
 #include <gtest/gtest.h>
-#include "barretenberg/common/test.hpp"
+#include <barretenberg/common/test.hpp>
 
 // #include "utxo_state_var.hpp"
 
@@ -31,7 +31,7 @@
 #include <aztec3/utils/types/convert.hpp>
 #include <aztec3/utils/types/circuit_types.hpp>
 #include <aztec3/utils/types/native_types.hpp>
-#include "barretenberg/stdlib/types/types.hpp"
+#include <barretenberg/stdlib/types/types.hpp>
 
 namespace {
 // Composer

@@ -13,9 +13,9 @@
 #include <aztec3/circuits/abis/function_data.hpp>
 #include <aztec3/circuits/abis/private_circuit_public_inputs.hpp>
 
-#include "barretenberg/stdlib/primitives/field/array.hpp"
+#include <barretenberg/stdlib/primitives/field/array.hpp>
 
-#include "barretenberg/common/container.hpp"
+#include <barretenberg/common/container.hpp>
 
 #include <aztec3/utils/types/convert.hpp>
 

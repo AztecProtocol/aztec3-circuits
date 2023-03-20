@@ -8,13 +8,13 @@
 
 #include "../../state_vars/state_var_base.hpp"
 
-#include "barretenberg/crypto/generators/generator_data.hpp"
+#include <barretenberg/crypto/generators/generator_data.hpp>
 
-#include "barretenberg/plonk/composer/turbo_composer.hpp"
+#include <barretenberg/plonk/composer/turbo_composer.hpp>
 
-#include "barretenberg/stdlib/hash/pedersen/pedersen.hpp"
-#include "barretenberg/stdlib/hash/blake2s/blake2s.hpp"
-#include "barretenberg/stdlib/primitives/witness/witness.hpp"
+#include <barretenberg/stdlib/hash/pedersen/pedersen.hpp>
+#include <barretenberg/stdlib/hash/blake2s/blake2s.hpp>
+#include <barretenberg/stdlib/primitives/witness/witness.hpp>
 #include <aztec3/utils/types/native_types.hpp>
 #include <aztec3/utils/types/circuit_types.hpp>
 #include <aztec3/utils/types/convert.hpp>

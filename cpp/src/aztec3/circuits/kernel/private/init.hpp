@@ -7,7 +7,7 @@
 
 #include <aztec3/circuits/abis/private_kernel/private_inputs.hpp>
 
-#include "barretenberg/stdlib/types/types.hpp"
+#include <barretenberg/stdlib/types/types.hpp>
 #include <aztec3/utils/types/convert.hpp>
 #include <aztec3/utils/types/circuit_types.hpp>
 #include <aztec3/utils/types/native_types.hpp>

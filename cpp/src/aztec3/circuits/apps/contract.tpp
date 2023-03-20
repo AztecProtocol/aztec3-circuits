@@ -3,7 +3,7 @@
 #include "function_declaration.hpp"
 #include "l1_function_interface.hpp"
 
-#include "barretenberg/common/container.hpp"
+#include <barretenberg/common/container.hpp>
 
 #include <aztec3/constants.hpp>
 

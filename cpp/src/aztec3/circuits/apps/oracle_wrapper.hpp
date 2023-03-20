@@ -2,7 +2,7 @@
 #include <aztec3/circuits/abis/call_context.hpp>
 #include <aztec3/oracle/oracle.hpp>
 
-#include "barretenberg/common/map.hpp"
+#include <barretenberg/common/map.hpp>
 
 #include <aztec3/utils/types/native_types.hpp>
 #include <aztec3/utils/types/circuit_types.hpp>

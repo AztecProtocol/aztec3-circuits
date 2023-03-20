@@ -3,7 +3,7 @@
 #include "tx_request.hpp"
 #include "function_leaf_preimage.hpp"
 
-#include "barretenberg/numeric/random/engine.hpp"
+#include <barretenberg/numeric/random/engine.hpp>
 #include <gtest/gtest.h>
 
 namespace {
