@@ -13,10 +13,9 @@ inline void read(uint8_t const*& it, Proof& proof)
 };
 } // namespace serialize
 
-// TODO: Uncommenting this yields a duplicate symbol error in the linker which I haven't been able to solve
-// namespace std {
-// std::ostream& operator<<(std::ostream& os, plonk::stdlib::types::NativeTypes::Proof const& data)
-// {
-//     return os << data.proof_data;
-// }
-// } // namespace std
+namespace std {
+inline std::ostream& operator<<(std::ostream& os, plonk::stdlib::types::NativeTypes::Proof const& data)
+{
+    return os << data.proof_data;
+}
+} // namespace std
