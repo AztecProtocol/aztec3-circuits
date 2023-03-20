@@ -79,8 +79,33 @@ export class MembershipWitness<N extends number> {
   }
 }
 
+export class AggregationObject {
+  public hasData: false = false;
+  constructor(
+    public p0: G1,
+    public p1: G1,
+    public publicInputs: Fr[],
+    public proofWitnessIndices: UInt32[]
+  ) {}
+
+  toBuffer() {
+    serializeToBuffer(
+      this.p0,
+      this.p1,
+      this.publicInputs,
+      this.proofWitnessIndices,
+      this.hasData
+    );
+  }
+}
+
 export type UInt32 = number;
+
+// TODO: Define proper type for AztecAddress
+export type AztecAddress = Fr;
+
+// TODO: What is a Curve::G1?
+export type G1 = Fr;
+
 export type Proof = Buffer;
 export type VK = Buffer;
-export type AztecAddress = Buffer;
-export type AggregationObject = Buffer;
