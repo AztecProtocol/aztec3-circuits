@@ -68,11 +68,11 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, ConstantBaseRollup
 
 template <typename NCT> std::ostream& operator<<(std::ostream& os, ConstantBaseRollupData<NCT> const& obj)
 {
-    return os << "start_tree_of_historic_private_data_tree_roots_snapshot: "
+    return os << "start_tree_of_historic_private_data_tree_roots_snapshot:\n "
               << obj.start_tree_of_historic_private_data_tree_roots_snapshot << "\n"
-              << "start_tree_of_historic_contract_tree_roots_snapshot: "
+              << "start_tree_of_historic_contract_tree_roots_snapshot:\n"
               << obj.start_tree_of_historic_contract_tree_roots_snapshot << "\n"
-              << "tree_of_historic_l1_to_l2_msg_tree_roots_snapshot: "
+              << "tree_of_historic_l1_to_l2_msg_tree_roots_snapshot:\n"
               << obj.tree_of_historic_l1_to_l2_msg_tree_roots_snapshot << "\n"
               << "private_kernel_vk_tree_root: " << obj.private_kernel_vk_tree_root << "\n"
               << "public_kernel_vk_tree_root: " << obj.public_kernel_vk_tree_root << "\n"

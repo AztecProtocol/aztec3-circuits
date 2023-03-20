@@ -1,3 +1,4 @@
+import { assertLength, FieldsOf } from "../utils/jsUtils.js";
 import { serializeToBuffer } from "../wasm/serialize.js";
 import {
   CONTRACT_TREE_ROOTS_TREE_HEIGHT,
@@ -7,7 +8,6 @@ import {
 } from "./constants.js";
 import { PreviousKernelData } from "./kernel.js";
 import { AggregationObject, Fr, MembershipWitness, UInt32 } from "./shared.js";
-import { checkLength } from "./utils.js";
 
 export class NullifierLeafPreimage {
   constructor(
@@ -43,16 +43,28 @@ export class ConstantBaseRollupData {
     public mergeRollupVkHash: Fr
   ) {}
 
-  toBuffer() {
-    return serializeToBuffer(
-      this.startTreeOfHistoricPrivateDataTreeRootsSnapshot,
-      this.startTreeOfHistoricContractTreeRootsSnapshot,
-      this.treeOfHistoricL1ToL2MsgTreeRootsSnapshot,
-      this.privateKernelVkTreeRoot,
-      this.publicKernelVkTreeRoot,
-      this.baseRollupVkHash,
-      this.mergeRollupVkHash
+  static from(
+    fields: FieldsOf<ConstantBaseRollupData>
+  ): ConstantBaseRollupData {
+    return new ConstantBaseRollupData(
+      ...ConstantBaseRollupData.getFields(fields)
     );
+  }
+
+  static getFields(fields: FieldsOf<ConstantBaseRollupData>) {
+    return [
+      fields.startTreeOfHistoricPrivateDataTreeRootsSnapshot,
+      fields.startTreeOfHistoricContractTreeRootsSnapshot,
+      fields.treeOfHistoricL1ToL2MsgTreeRootsSnapshot,
+      fields.privateKernelVkTreeRoot,
+      fields.publicKernelVkTreeRoot,
+      fields.baseRollupVkHash,
+      fields.mergeRollupVkHash,
+    ] as const;
+  }
+
+  toBuffer() {
+    return serializeToBuffer(...ConstantBaseRollupData.getFields(this));
   }
 }
 
@@ -82,29 +94,38 @@ export class BaseRollupInputs {
 
     public proverId: Fr
   ) {
-    checkLength(
-      this.lowNullifierLeafPreimages,
-      2 * KERNEL_NEW_NULLIFIERS_LENGTH,
-      "lowNullifierLeafPreimages"
+    assertLength(
+      this,
+      "lowNullifierLeafPreimages",
+      2 * KERNEL_NEW_NULLIFIERS_LENGTH
     );
-    checkLength(
-      this.lowNullifierMembershipWitness,
-      2 * KERNEL_NEW_NULLIFIERS_LENGTH,
-      "lowNullifierMembershipWitness"
+    assertLength(
+      this,
+      "lowNullifierMembershipWitness",
+      2 * KERNEL_NEW_NULLIFIERS_LENGTH
     );
   }
 
+  static from(fields: FieldsOf<BaseRollupInputs>): BaseRollupInputs {
+    return new BaseRollupInputs(...BaseRollupInputs.getFields(fields));
+  }
+
+  static getFields(fields: FieldsOf<BaseRollupInputs>) {
+    return [
+      fields.kernelData,
+      fields.startNullifierTreeSnapshot,
+      fields.lowNullifierLeafPreimages,
+      fields.lowNullifierMembershipWitness,
+      fields.historicPrivateDataTreeRootMembershipWitnesses,
+      fields.historicContractsTreeRootMembershipWitnesses,
+      fields.constants,
+      fields.proverId,
+    ] as const;
+  }
+
   toBuffer() {
-    return serializeToBuffer(
-      this.kernelData,
-      this.startNullifierTreeSnapshot,
-      this.lowNullifierLeafPreimages,
-      this.lowNullifierMembershipWitness,
-      this.historicPrivateDataTreeRootMembershipWitnesses,
-      this.historicContractsTreeRootMembershipWitnesses,
-      this.constants,
-      this.proverId
-    );
+    // TODO: Include kerneldata
+    return serializeToBuffer(...BaseRollupInputs.getFields(this).slice(1));
   }
 }
 

@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
-import { serializeToBuffer } from "../wasm/serialize.js";
-import { checkLength } from "./utils.js";
+import { checkLength, range } from "../utils/jsUtils.js";
+import { numToUInt32BE, serializeToBuffer } from "../wasm/serialize.js";
 
 export class Fr {
   static SIZE_IN_BYTES = 32;
@@ -76,6 +76,14 @@ export class MembershipWitness<N extends number> {
 
   toBuffer() {
     return serializeToBuffer(this.leafIndex, ...this.siblingPath);
+  }
+
+  static mock(size: number, start: number) {
+    return new MembershipWitness(
+      size,
+      start,
+      range(size, start).map((x) => new Fr(numToUInt32BE(x, 32)))
+    );
   }
 }
 

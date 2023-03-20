@@ -1,3 +1,4 @@
+import { checkLength } from "../utils/jsUtils.js";
 import { serializeToBuffer } from "../wasm/serialize.js";
 import {
   KERNEL_L1_MSG_STACK_LENGTH,
@@ -19,7 +20,6 @@ import {
   VK,
 } from "./shared.js";
 import { TxContext } from "./tx.js";
-import { checkLength } from "./utils.js";
 
 export class OldTreeRoots {
   constructor(

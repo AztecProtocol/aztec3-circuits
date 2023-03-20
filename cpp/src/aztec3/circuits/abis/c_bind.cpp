@@ -4,6 +4,7 @@
 #include "tx_request.hpp"
 #include "tx_context.hpp"
 #include "function_leaf_preimage.hpp"
+#include "base_rollup/base_rollup_inputs.hpp"
 
 #include <aztec3/constants.hpp>
 
@@ -143,5 +144,10 @@ WASM_EXPORT const char* abis__test_roundtrip_serialize_private_circuit_public_in
 WASM_EXPORT const char* abis__test_roundtrip_serialize_function_data(uint8_t const* function_data_buf, uint32_t* size)
 {
     return as_string_output<aztec3::circuits::abis::FunctionData<NT>>(function_data_buf, size);
+}
+WASM_EXPORT const char* abis__test_roundtrip_serialize_base_rollup_inputs(uint8_t const* function_data_buf,
+                                                                          uint32_t* size)
+{
+    return as_string_output<aztec3::circuits::abis::BaseRollupInputs<NT>>(function_data_buf, size);
 }
 } // extern "C"
