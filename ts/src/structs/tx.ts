@@ -39,6 +39,10 @@ export class TxContext {
     public contractDeploymentData: ContractDeploymentData
   ) {}
 
+  /**
+   * Serialize as a buffer.
+   * @returns The buffer.
+   */
   toBuffer() {
     return serializeToBuffer(
       this.isFeePaymentTx,

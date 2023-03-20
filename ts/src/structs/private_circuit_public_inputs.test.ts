@@ -1,6 +1,7 @@
 import { expectSerializeToMatchSnapshot } from "../tests/expectSerializeToMatchSnapshot.js";
-import { asBEBuffer, fr } from "../tests/testUtils.js";
+import { fr } from "../tests/testUtils.js";
 import { range } from "../utils/jsUtils.js";
+import { numToUInt32BE } from "../wasm/serialize.js";
 import { CallContext } from "./call_context.js";
 import {
   ARGS_LENGTH,
@@ -22,10 +23,10 @@ import { ContractDeploymentData } from "./tx.js";
  */
 function contractDeploymentData() {
   return new ContractDeploymentData(
-    new Fr(asBEBuffer(1)),
-    new Fr(asBEBuffer(2)),
-    new Fr(asBEBuffer(3)),
-    new Fr(asBEBuffer(4))
+    new Fr(numToUInt32BE(1, 32)),
+    new Fr(numToUInt32BE(2, 32)),
+    new Fr(numToUInt32BE(3, 32)),
+    new Fr(numToUInt32BE(4, 32))
   );
 }
 
@@ -36,24 +37,24 @@ function contractDeploymentData() {
 function privateCircuitPublicInputs() {
   return PrivateCircuitPublicInputs.from({
     callContext: new CallContext(
-      asBEBuffer(1),
-      asBEBuffer(2),
-      new EthAddress(asBEBuffer(3, /* eth address is 20 bytes */ 20)),
+      fr(1),
+      fr(2),
+      new EthAddress(numToUInt32BE(3, /* eth address is 20 bytes */ 20)),
       true,
       true,
       true
     ),
-    args: range(ARGS_LENGTH).map(fr),
-    emittedEvents: range(EMITTED_EVENTS_LENGTH, 0x100).map(fr), // TODO not in spec
-    returnValues: range(RETURN_VALUES_LENGTH, 0x200).map(fr),
-    newCommitments: range(NEW_COMMITMENTS_LENGTH, 0x300).map(fr),
-    newNullifiers: range(NEW_NULLIFIERS_LENGTH, 0x400).map(fr),
-    privateCallStack: range(PRIVATE_CALL_STACK_LENGTH, 0x500).map(fr),
-    publicCallStack: range(PUBLIC_CALL_STACK_LENGTH, 0x600).map(fr),
-    l1MsgStack: range(L1_MSG_STACK_LENGTH, 0x700).map(fr),
-    historicContractTreeRoot: new Fr(asBEBuffer(0x801)), // TODO not in spec
-    historicPrivateDataTreeRoot: new Fr(asBEBuffer(0x901)),
-    historicPrivateNullifierTreeRoot: new Fr(asBEBuffer(0x1001)), // TODO not in spec
+    args: range(ARGS_LENGTH, 0x100).map(fr),
+    emittedEvents: range(EMITTED_EVENTS_LENGTH, 0x200).map(fr), // TODO not in spec
+    returnValues: range(RETURN_VALUES_LENGTH, 0x300).map(fr),
+    newCommitments: range(NEW_COMMITMENTS_LENGTH, 0x400).map(fr),
+    newNullifiers: range(NEW_NULLIFIERS_LENGTH, 0x500).map(fr),
+    privateCallStack: range(PRIVATE_CALL_STACK_LENGTH, 0x600).map(fr),
+    publicCallStack: range(PUBLIC_CALL_STACK_LENGTH, 0x700).map(fr),
+    l1MsgStack: range(L1_MSG_STACK_LENGTH, 0x800).map(fr),
+    historicContractTreeRoot: new Fr(numToUInt32BE(0x900, 32)), // TODO not in spec
+    historicPrivateDataTreeRoot: new Fr(numToUInt32BE(0x1000, 32)),
+    historicPrivateNullifierTreeRoot: new Fr(numToUInt32BE(0x1100, 32)), // TODO not in spec
     contractDeploymentData: contractDeploymentData(),
   });
 }

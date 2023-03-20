@@ -63,7 +63,19 @@ export function numToUInt32LE(n: number, bufferSize = 4) {
 }
 
 /**
- * Cast a uint8 array to a number;
+ * For serializing numbers to 32 bit big-endian form.
+ * TODO move to foundation pkg.
+ * @param n - The number.
+ * @returns The endian-corrected number.
+ */
+export function numToUInt32BE(n: number, bufferSize = 4) {
+  const buf = Buffer.alloc(bufferSize);
+  buf.writeUInt32BE(n, bufferSize - 4);
+  return buf;
+}
+
+/**
+ * Cast a uint8 array to a number.
  * @param array - The uint8 array.
  * @returns The number.
  */
@@ -73,8 +85,8 @@ export function uint8ArrayToNum(array: Uint8Array) {
 }
 
 /**
- * For serializing booleans in structs for calling into wasm
- * @param bool value to serialize
+ * For serializing booleans in structs for calling into wasm.
+ * @param bool - Value to serialize.
  */
 export function boolToBuffer(value: boolean) {
   return Buffer.from([value ? 1 : 0]);
@@ -96,7 +108,12 @@ export type Bufferable =
   | boolean
   | Buffer
   | number
-  | { toBuffer: () => Buffer }
+  | {
+      /**
+       * Serialize to a buffer.
+       */
+      toBuffer: () => Buffer;
+    }
   | Bufferable[];
 
 /**
@@ -115,7 +132,7 @@ export function serializeToBufferArray(...objs: Bufferable[]): Buffer[] {
     } else if (typeof obj === "boolean") {
       ret.push(boolToBuffer(obj));
     } else if (typeof obj === "number") {
-      ret.push(numToUInt32LE(obj)); // TODO: Are we always passsing numbers as UInt32?
+      ret.push(numToUInt32BE(obj)); // TODO: Are we always passsing numbers as UInt32?
     } else {
       ret.push(obj.toBuffer());
     }
