@@ -1,4 +1,4 @@
-import { assertLength, checkLength, range } from "../utils/jsUtils.js";
+import { assertLength, checkLength } from "../utils/jsUtils.js";
 import { serializeToBuffer } from "../wasm/serialize.js";
 import {
   KERNEL_L1_MSG_STACK_LENGTH,
@@ -76,9 +76,9 @@ export class OptionallyRevealedData {
     public payFeeFromL1: boolean,
     public payFeeFromPublicL2: boolean,
     public calledFromL1: boolean,
-    public calledFromPublicL2: boolean,
+    public calledFromPublicL2: boolean
   ) {
-    assertLength(this, 'emittedEvents', EMITTED_EVENTS_LENGTH);
+    assertLength(this, "emittedEvents", EMITTED_EVENTS_LENGTH);
   }
 
   toBuffer() {
@@ -91,7 +91,7 @@ export class OptionallyRevealedData {
       this.payFeeFromL1,
       this.payFeeFromPublicL2,
       this.calledFromL1,
-      this.calledFromPublicL2,
+      this.calledFromPublicL2
     );
   }
 }
@@ -113,13 +113,17 @@ export class AccumulatedData {
 
     public optionallyRevealedData: OptionallyRevealedData[]
   ) {
-    assertLength(this, 'newCommitments', KERNEL_NEW_COMMITMENTS_LENGTH);
-    assertLength(this, 'newNullifiers', KERNEL_NEW_NULLIFIERS_LENGTH);
-    assertLength(this, 'privateCallStack', KERNEL_PRIVATE_CALL_STACK_LENGTH);
-    assertLength(this, 'publicCallStack', KERNEL_PUBLIC_CALL_STACK_LENGTH);
-    assertLength(this, 'l1MsgStack',  KERNEL_L1_MSG_STACK_LENGTH,);
-    assertLength(this, 'newContracts',  KERNEL_NEW_CONTRACTS_LENGTH,);
-    assertLength(this, 'optionallyRevealedData', KERNEL_OPTIONALLY_REVEALED_DATA_LENGTH);
+    assertLength(this, "newCommitments", KERNEL_NEW_COMMITMENTS_LENGTH);
+    assertLength(this, "newNullifiers", KERNEL_NEW_NULLIFIERS_LENGTH);
+    assertLength(this, "privateCallStack", KERNEL_PRIVATE_CALL_STACK_LENGTH);
+    assertLength(this, "publicCallStack", KERNEL_PUBLIC_CALL_STACK_LENGTH);
+    assertLength(this, "l1MsgStack", KERNEL_L1_MSG_STACK_LENGTH);
+    assertLength(this, "newContracts", KERNEL_NEW_CONTRACTS_LENGTH);
+    assertLength(
+      this,
+      "optionallyRevealedData",
+      KERNEL_OPTIONALLY_REVEALED_DATA_LENGTH
+    );
   }
 
   toBuffer() {
@@ -170,7 +174,7 @@ export class PreviousKernelData {
       this.proof,
       // this.vk, // TODO: Serialize VK
       this.vkIndex,
-      this.vkSiblingPath,
+      this.vkSiblingPath
     );
   }
 }

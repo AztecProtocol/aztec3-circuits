@@ -4,21 +4,24 @@ import { numToUInt32BE, serializeToBuffer } from "../wasm/serialize.js";
 
 export class Fr {
   static SIZE_IN_BYTES = 32;
-  static CURVE_PRIME = 0x30644E72E131A029B85045B68181585D2833E84879B9709143E1F593F0000001n;
+  static CURVE_PRIME =
+    0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001n;
 
   private buffer: Buffer;
 
   constructor(input: Buffer | number) {
     if (Buffer.isBuffer(input)) {
-      if (input.length != EthAddress.SIZE_IN_BYTES) {
+      if (input.length != Fr.SIZE_IN_BYTES) {
         throw new Error(
-          `Unexpected buffer size ${input.length} (expected ${EthAddress.SIZE_IN_BYTES} bytes)`
+          `Unexpected buffer size ${input.length} (expected ${Fr.SIZE_IN_BYTES} bytes)`
         );
       }
       this.buffer = input;
     } else {
       if (input >= Fr.CURVE_PRIME) {
-        throw new Error(`Input value ${input} too large (expected ${Fr.CURVE_PRIME})`);
+        throw new Error(
+          `Input value ${input} too large (expected ${Fr.CURVE_PRIME})`
+        );
       }
       this.buffer = numToUInt32BE(input);
     }
@@ -120,12 +123,9 @@ export class AggregationObject {
 
 export class DynamicSizeBuffer {
   constructor(public buffer: Buffer) {}
-  
+
   toBuffer() {
-    return serializeToBuffer(
-      this.buffer.length,
-      this.buffer,
-    )
+    return serializeToBuffer(this.buffer.length, this.buffer);
   }
 }
 
