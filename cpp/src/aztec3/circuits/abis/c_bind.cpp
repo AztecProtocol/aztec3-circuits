@@ -157,6 +157,11 @@ WASM_EXPORT const char* abis__test_roundtrip_serialize_function_data(uint8_t con
     return as_string_output<aztec3::circuits::abis::FunctionData<NT>>(function_data_buf, size);
 }
 
+WASM_EXPORT const char* abis__test_roundtrip_serialize_base_rollup_inputs(uint8_t const* rollup_inputs_buf,
+                                                                          uint32_t* size)
+{
+    return as_string_output<aztec3::circuits::abis::BaseRollupInputs<NT>>(rollup_inputs_buf, size);
+}
 WASM_EXPORT const char* abis__test_roundtrip_serialize_previous_kernel_data(uint8_t const* kernel_data_buf,
                                                                             uint32_t* size)
 {
