@@ -4,16 +4,17 @@
 
 #include <aztec3/constants.hpp>
 
-#include <stdlib/merkle_tree/membership.hpp>
-#include <stdlib/types/native_types.hpp>
-#include <crypto/keccak/keccak.hpp>
-#include <common/serialize.hpp>
+#include <aztec3/utils/types/native_types.hpp>
+#include <barretenberg/stdlib/merkle_tree/membership.hpp>
+#include <barretenberg/stdlib/types/native_types.hpp>
+#include <barretenberg/crypto/keccak/keccak.hpp>
+#include <barretenberg/common/serialize.hpp>
 
 namespace {
 
 using aztec3::circuits::abis::FunctionLeafPreimage;
 using aztec3::circuits::abis::TxRequest;
-using NT = plonk::stdlib::types::NativeTypes;
+using NT = aztec3::utils::types::NativeTypes;
 
 // Cbind helper functions
 /**
@@ -56,6 +57,7 @@ NT::fr compute_root_of_partial_left_tree(uint8_t const* leaves_buf, uint8_t num_
     // compute the root of this complete tree, return
     return plonk::stdlib::merkle_tree::compute_tree_root_native(leaves);
 }
+
 } // namespace
 
 #define WASM_EXPORT __attribute__((visibility("default")))
