@@ -4,9 +4,6 @@ import { Fr } from "./shared.js";
 /**
  * Contract deployment data in a @TxContext.
  * cpp/src/aztec3/circuits/abis/contract_deployment_data.hpp
- *
- * @todo Used the Cpp type as source of truth, which does not match the specification.
- * Spec includes constructorVkHash but does not have contract_data_hash nor constructor_hash.
  */
 export class ContractDeploymentData {
   constructor(
