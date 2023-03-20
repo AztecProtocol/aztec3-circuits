@@ -66,7 +66,7 @@ export class NewContractData {
 
 export class AccumulatedData {
   constructor(
-    public aggragationObject: AggregationObject, // Contains the aggregated proof of all previous kernel iterations
+    public aggregationObject: AggregationObject, // Contains the aggregated proof of all previous kernel iterations
 
     public privateCallCount: Fr,
 
@@ -112,7 +112,7 @@ export class AccumulatedData {
 
   toBuffer() {
     return serializeToBuffer(
-      this.aggragationObject,
+      this.aggregationObject,
       this.privateCallCount,
       ...this.newCommitments,
       ...this.newNullifiers,

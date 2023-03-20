@@ -89,7 +89,7 @@ export class AggregationObject {
   ) {}
 
   toBuffer() {
-    serializeToBuffer(
+    return serializeToBuffer(
       this.p0,
       this.p1,
       this.publicInputs,
