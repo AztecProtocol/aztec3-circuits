@@ -14,6 +14,10 @@ export class CallContext {
     public isStaticCall: boolean,
     public isContractDeployment: boolean
   ) {}
+  /**
+   * Serialize this as a buffer.
+   * @returns The buffer.
+   */
   toBuffer(): Buffer {
     return serializeToBuffer(
       this.msgSender,

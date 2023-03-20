@@ -148,6 +148,10 @@ export class PreviousKernelData {
     checkLength(this.vkSiblingPath, VK_TREE_HEIGHT, "vkSiblingPath");
   }
 
+  /**
+   * Serialize this as a buffer.
+   * @returns The buffer.
+   */
   toBuffer() {
     return serializeToBuffer(
       this.publicInputs,
