@@ -72,8 +72,10 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, PreviousKernelData
 
 template <typename NCT> std::ostream& operator<<(std::ostream& os, PreviousKernelData<NCT> const& kernel_data)
 {
-    return os << "public_inputs: " << kernel_data.public_inputs << "\n"
-              << "proof: " << kernel_data.proof << "\n"
+    return os << "public_inputs: " << kernel_data.public_inputs
+              << "\n"
+              // TODO: Use << operator from cpp/src/aztec3/circuits/abis/barretenberg/proof.hpp instead of inlining
+              << "proof: " << kernel_data.proof.proof_data << "\n"
               << "vk: " << kernel_data.vk << "\n"
               << "vk_index: " << kernel_data.vk_index << "\n"
               << "vk_path: " << kernel_data.vk_path << "\n";

@@ -175,8 +175,15 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, AccumulatedData<NC
 
 template <typename NCT> std::ostream& operator<<(std::ostream& os, AccumulatedData<NCT> const& accum_data)
 {
+    // TODO: Use definition from cpp/src/aztec3/circuits/abis/barretenberg/aggregation_object.hpp instead of inlining
     return os << "aggregation_object:\n"
-              << accum_data.aggregation_object << "\n"
+              << "P0: " << accum_data.aggregation_object.P0 << "\n"
+              << "P1: " << accum_data.aggregation_object.P1 << "\n"
+              << "public_inputs:\n"
+              << accum_data.aggregation_object.public_inputs << "\n"
+              << "proof_witness_indices:\n"
+              << accum_data.aggregation_object.proof_witness_indices << "\n"
+              << "has_data: " << accum_data.aggregation_object.has_data << "\n"
               << "private_call_count: " << accum_data.private_call_count << "\n"
               << "new_commitments:\n"
               << accum_data.new_commitments << "\n"
