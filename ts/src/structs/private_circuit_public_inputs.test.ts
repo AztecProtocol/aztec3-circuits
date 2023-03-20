@@ -1,5 +1,5 @@
 import { expectSerializeToMatchSnapshot } from "../tests/expectSerializeToMatchSnapshot.js";
-import { fr } from "../tests/testUtils.js";
+import { fr } from "../tests/factories.js";
 import { range } from "../utils/jsUtils.js";
 import { numToUInt32BE } from "../wasm/serialize.js";
 import { CallContext } from "./call_context.js";

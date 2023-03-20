@@ -1,5 +1,6 @@
 #pragma once
 #include "public_inputs.hpp"
+#include "../barretenberg/proof.hpp"
 #include <stdlib/primitives/witness/witness.hpp>
 #include <stdlib/types/native_types.hpp>
 #include <stdlib/types/circuit_types.hpp>
@@ -15,6 +16,7 @@ using std::is_same;
 template <typename NCT> struct PreviousKernelData {
     typedef typename NCT::fr fr;
     typedef typename NCT::VK VK;
+    typedef typename NCT::uint32 uint32;
 
     PublicInputs<NCT> public_inputs; // TODO: not needed as already contained in proof?
     NativeTypes::Proof proof;        // TODO: how to express proof as native/circuit type when it gets used as a buffer?
@@ -22,7 +24,7 @@ template <typename NCT> struct PreviousKernelData {
 
     // TODO: this index and path are meant to be those of a leaf within the tree of _kernel circuit_ vks; not the tree
     // of functions within the contract tree.
-    fr vk_index;
+    uint32 vk_index;
     std::array<fr, VK_TREE_HEIGHT> vk_path;
 
     // WARNING: the `proof` does NOT get converted!
@@ -52,7 +54,7 @@ template <typename NCT> void read(uint8_t const*& it, PreviousKernelData<NCT>& k
 
     read(it, kernel_data.public_inputs);
     read(it, kernel_data.proof);
-    read(it, kernel_data.vk);
+    // read(it, kernel_data.vk); // TODO: Serialize VK
     read(it, kernel_data.vk_index);
     read(it, kernel_data.vk_path);
 };
@@ -63,7 +65,7 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, PreviousKernelData
 
     write(buf, kernel_data.public_inputs);
     write(buf, kernel_data.proof);
-    write(buf, kernel_data.vk);
+    // write(buf, kernel_data.vk); // TODO: Serialize VK
     write(buf, kernel_data.vk_index);
     write(buf, kernel_data.vk_path);
 };

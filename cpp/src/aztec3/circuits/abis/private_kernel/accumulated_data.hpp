@@ -1,5 +1,6 @@
 #pragma once
 #include "../optionally_revealed_data.hpp"
+#include "../barretenberg/aggregation_object.hpp"
 #include "./new_contract_data.hpp"
 #include <common/map.hpp>
 #include <stdlib/primitives/witness/witness.hpp>
@@ -174,15 +175,23 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, AccumulatedData<NC
 
 template <typename NCT> std::ostream& operator<<(std::ostream& os, AccumulatedData<NCT> const& accum_data)
 {
-    return os << "aggregation_object: " << accum_data.aggregation_object << "\n"
+    return os << "aggregation_object:\n"
+              << accum_data.aggregation_object << "\n"
               << "private_call_count: " << accum_data.private_call_count << "\n"
-              << "new_commitments: " << accum_data.new_commitments << "\n"
-              << "new_nullifiers: " << accum_data.new_nullifiers << "\n"
-              << "private_call_stack: " << accum_data.private_call_stack << "\n"
-              << "public_call_stack: " << accum_data.public_call_stack << "\n"
-              << "l1_msg_stack: " << accum_data.l1_msg_stack << "\n"
-              << "new_contracts: " << accum_data.new_contracts << "\n"
-              << "optionally_revealed_data: " << accum_data.optionally_revealed_data << "\n";
+              << "new_commitments:\n"
+              << accum_data.new_commitments << "\n"
+              << "new_nullifiers:\n"
+              << accum_data.new_nullifiers << "\n"
+              << "private_call_stack:\n"
+              << accum_data.private_call_stack << "\n"
+              << "public_call_stack:\n"
+              << accum_data.public_call_stack << "\n"
+              << "l1_msg_stack:\n"
+              << accum_data.l1_msg_stack << "\n"
+              << "new_contracts:\n"
+              << accum_data.new_contracts << "\n"
+              << "optionally_revealed_data:\n"
+              << accum_data.optionally_revealed_data << "\n";
 }
 
 } // namespace aztec3::circuits::abis::private_kernel

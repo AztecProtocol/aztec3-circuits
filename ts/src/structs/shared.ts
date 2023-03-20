@@ -4,12 +4,23 @@ import { numToUInt32BE, serializeToBuffer } from "../wasm/serialize.js";
 
 export class Fr {
   static SIZE_IN_BYTES = 32;
+  static CURVE_PRIME = 0x30644E72E131A029B85045B68181585D2833E84879B9709143E1F593F0000001n;
 
-  constructor(private buffer: Buffer) {
-    if (buffer.length != Fr.SIZE_IN_BYTES) {
-      throw new Error(
-        `Unexpected buffer size ${buffer.length} (expected ${Fr.SIZE_IN_BYTES} bytes)`
-      );
+  private buffer: Buffer;
+
+  constructor(input: Buffer | number) {
+    if (Buffer.isBuffer(input)) {
+      if (input.length != EthAddress.SIZE_IN_BYTES) {
+        throw new Error(
+          `Unexpected buffer size ${input.length} (expected ${EthAddress.SIZE_IN_BYTES} bytes)`
+        );
+      }
+      this.buffer = input;
+    } else {
+      if (input >= Fr.CURVE_PRIME) {
+        throw new Error(`Input value ${input} too large (expected ${Fr.CURVE_PRIME})`);
+      }
+      this.buffer = numToUInt32BE(input);
     }
   }
 
@@ -107,6 +118,17 @@ export class AggregationObject {
   }
 }
 
+export class DynamicSizeBuffer {
+  constructor(public buffer: Buffer) {}
+  
+  toBuffer() {
+    return serializeToBuffer(
+      this.buffer.length,
+      this.buffer,
+    )
+  }
+}
+
 export type UInt32 = number;
 
 // TODO: Define proper type for AztecAddress
@@ -114,9 +136,6 @@ export type AztecAddress = Fr;
 
 // TODO: What is a Curve::G1?
 export type G1 = Fr;
-
-// TODO: Proof is variable-length, how to serialize?
-export type Proof = Buffer;
 
 // TODO: Adapt from cpp/barretenberg/cpp/src/aztec/proof_system/verification_key/verification_key.hpp
 export type VK = Buffer;

@@ -86,8 +86,10 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, PublicInputs<NCT> 
 
 template <typename NCT> std::ostream& operator<<(std::ostream& os, PublicInputs<NCT> const& public_inputs)
 {
-    return os << "end: " << public_inputs.end << "\n"
-              << "constants: " << public_inputs.constants << "\n"
+    return os << "end:\n"
+              << public_inputs.end << "\n"
+              << "constants:\n"
+              << public_inputs.constants << "\n"
               << "is_private: " << public_inputs.is_private << "\n";
 }
 

@@ -1,4 +1,4 @@
-import { checkLength } from "../utils/jsUtils.js";
+import { assertLength, checkLength, range } from "../utils/jsUtils.js";
 import { serializeToBuffer } from "../wasm/serialize.js";
 import {
   KERNEL_L1_MSG_STACK_LENGTH,
@@ -9,13 +9,15 @@ import {
   KERNEL_PUBLIC_CALL_STACK_LENGTH,
   KERNEL_OPTIONALLY_REVEALED_DATA_LENGTH,
   VK_TREE_HEIGHT,
+  EMITTED_EVENTS_LENGTH,
 } from "./constants.js";
+import { FunctionData } from "./function_data.js";
 import {
   AggregationObject,
   AztecAddress,
   EthAddress,
   Fr,
-  Proof,
+  DynamicSizeBuffer,
   UInt32,
   VK,
 } from "./shared.js";
@@ -64,6 +66,36 @@ export class NewContractData {
   }
 }
 
+export class OptionallyRevealedData {
+  constructor(
+    public callStackItemHash: Fr,
+    public functionData: FunctionData,
+    public emittedEvents: Fr[],
+    public vkHash: Fr,
+    public portalContractAddress: EthAddress,
+    public payFeeFromL1: boolean,
+    public payFeeFromPublicL2: boolean,
+    public calledFromL1: boolean,
+    public calledFromPublicL2: boolean,
+  ) {
+    assertLength(this, 'emittedEvents', EMITTED_EVENTS_LENGTH);
+  }
+
+  toBuffer() {
+    return serializeToBuffer(
+      this.callStackItemHash,
+      this.functionData,
+      this.emittedEvents,
+      this.vkHash,
+      this.portalContractAddress,
+      this.payFeeFromL1,
+      this.payFeeFromPublicL2,
+      this.calledFromL1,
+      this.calledFromPublicL2,
+    );
+  }
+}
+
 export class AccumulatedData {
   constructor(
     public aggregationObject: AggregationObject, // Contains the aggregated proof of all previous kernel iterations
@@ -79,48 +111,28 @@ export class AccumulatedData {
 
     public newContracts: NewContractData[],
 
-    public optionallyRevealedData: Fr[] // TODO
+    public optionallyRevealedData: OptionallyRevealedData[]
   ) {
-    checkLength(
-      this.newCommitments,
-      KERNEL_NEW_COMMITMENTS_LENGTH,
-      "newCommitments"
-    );
-    checkLength(
-      this.newNullifiers,
-      KERNEL_NEW_NULLIFIERS_LENGTH,
-      "newNullifiers"
-    );
-    checkLength(
-      this.privateCallStack,
-      KERNEL_PRIVATE_CALL_STACK_LENGTH,
-      "privateCallStack"
-    );
-    checkLength(
-      this.publicCallStack,
-      KERNEL_PUBLIC_CALL_STACK_LENGTH,
-      "publicCallStack"
-    );
-    checkLength(this.l1MsgStack, KERNEL_L1_MSG_STACK_LENGTH, "l1MsgStack");
-    checkLength(this.newContracts, KERNEL_NEW_CONTRACTS_LENGTH, "newContracts");
-    checkLength(
-      this.optionallyRevealedData,
-      KERNEL_OPTIONALLY_REVEALED_DATA_LENGTH,
-      "optionallyRevealedData"
-    );
+    assertLength(this, 'newCommitments', KERNEL_NEW_COMMITMENTS_LENGTH);
+    assertLength(this, 'newNullifiers', KERNEL_NEW_NULLIFIERS_LENGTH);
+    assertLength(this, 'privateCallStack', KERNEL_PRIVATE_CALL_STACK_LENGTH);
+    assertLength(this, 'publicCallStack', KERNEL_PUBLIC_CALL_STACK_LENGTH);
+    assertLength(this, 'l1MsgStack',  KERNEL_L1_MSG_STACK_LENGTH,);
+    assertLength(this, 'newContracts',  KERNEL_NEW_CONTRACTS_LENGTH,);
+    assertLength(this, 'optionallyRevealedData', KERNEL_OPTIONALLY_REVEALED_DATA_LENGTH);
   }
 
   toBuffer() {
     return serializeToBuffer(
       this.aggregationObject,
       this.privateCallCount,
-      ...this.newCommitments,
-      ...this.newNullifiers,
-      ...this.privateCallStack,
-      ...this.publicCallStack,
-      ...this.l1MsgStack,
-      ...this.newContracts,
-      ...this.optionallyRevealedData
+      this.newCommitments,
+      this.newNullifiers,
+      this.privateCallStack,
+      this.publicCallStack,
+      this.l1MsgStack,
+      this.newContracts,
+      this.optionallyRevealedData
     );
   }
 }
@@ -140,7 +152,7 @@ export class PrivateKernelPublicInputs {
 export class PreviousKernelData {
   constructor(
     public publicInputs: PrivateKernelPublicInputs,
-    public proof: Proof,
+    public proof: DynamicSizeBuffer,
     public vk: VK,
     public vkIndex: UInt32, // the index of the kernel circuit's vk in a big tree of kernel circuit vks
     public vkSiblingPath: Fr[]
@@ -156,9 +168,9 @@ export class PreviousKernelData {
     return serializeToBuffer(
       this.publicInputs,
       this.proof,
-      this.vk,
+      // this.vk, // TODO: Serialize VK
       this.vkIndex,
-      ...this.vkSiblingPath
+      this.vkSiblingPath,
     );
   }
 }

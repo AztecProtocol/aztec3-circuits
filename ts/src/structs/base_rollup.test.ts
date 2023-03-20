@@ -1,5 +1,5 @@
 import { expectSerializeToMatchSnapshot } from "../tests/expectSerializeToMatchSnapshot.js";
-import { fr } from "../tests/testUtils.js";
+import { fr } from "../tests/factories.js";
 import { range } from "../utils/jsUtils.js";
 import {
   AppendOnlyTreeSnapshot,
