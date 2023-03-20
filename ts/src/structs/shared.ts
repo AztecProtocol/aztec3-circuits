@@ -31,10 +31,37 @@ export class Fr {
     }
   }
 
-  static random() {
-    return new Fr(
-      Buffer.concat([Buffer.alloc(1, 0), randomBytes(Fr.SIZE_IN_BYTES - 1)])
-    );
+  toString() {
+    return "0x" + this.buffer.toString("hex");
+  }
+
+  toBuffer() {
+    return this.buffer;
+  }
+}
+
+export class Fq {
+  static SIZE_IN_BYTES = 32;
+  static MAX_SIZE = 2 ** 256; // TODO: Check max size for an Fq
+
+  private buffer: Buffer;
+
+  constructor(input: Buffer | number) {
+    if (Buffer.isBuffer(input)) {
+      if (input.length != Fq.SIZE_IN_BYTES) {
+        throw new Error(
+          `Unexpected buffer size ${input.length} (expected ${Fr.SIZE_IN_BYTES} bytes)`
+        );
+      }
+      this.buffer = input;
+    } else {
+      if (input >= Fq.MAX_SIZE) {
+        throw new Error(
+          `Input value ${input} too large (expected ${Fq.MAX_SIZE})`
+        );
+      }
+      this.buffer = numToUInt32BE(input);
+    }
   }
 
   toString() {
@@ -112,8 +139,8 @@ export class AggregationObject {
   public proofWitnessIndices: Vector<UInt32>;
 
   constructor(
-    public p0: G1,
-    public p1: G1,
+    public p0: AffineElement,
+    public p1: AffineElement,
     publicInputsData: Fr[],
     proofWitnessIndicesData: UInt32[]
   ) {
@@ -153,8 +180,19 @@ export type UInt32 = number;
 // TODO: Define proper type for AztecAddress
 export type AztecAddress = Fr;
 
-// TODO: What is a Curve::G1?
-export type G1 = Fr;
+/**
+ * Affine element of G1, a group defined over Bn254
+ * cpp/barretenberg/cpp/src/aztec/stdlib/types/native_types.hpp
+ * cpp/barretenberg/cpp/src/aztec/ecc/curves/bn254/g1.hpp
+ * cpp/barretenberg/cpp/src/aztec/ecc/groups/affine_element.hpp
+ */
+export class AffineElement {
+  constructor(public x: Fq, public y: Fq) {}
+
+  toBuffer() {
+    return serializeToBuffer(this.x, this.y);
+  }
+}
 
 // TODO: Adapt from cpp/barretenberg/cpp/src/aztec/proof_system/verification_key/verification_key.hpp
 export type VK = Buffer;

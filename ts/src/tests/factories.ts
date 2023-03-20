@@ -20,8 +20,10 @@ import {
   PrivateKernelPublicInputs,
 } from "../structs/kernel.js";
 import {
+  AffineElement,
   AggregationObject,
   EthAddress,
+  Fq,
   Fr,
   MembershipWitness,
   UInt8Vector,
@@ -86,8 +88,8 @@ export function makeOptionallyRevealedData(
 
 export function makeAggregationObject(seed: number = 1): AggregationObject {
   return new AggregationObject(
-    fr(seed),
-    fr(seed + 1),
+    new AffineElement(new Fq(seed), new Fq(seed + 1)),
+    new AffineElement(new Fq(seed + 0x100), new Fq(seed + 0x101)),
     range(4, seed + 2).map(fr),
     range(6, seed + 6)
   );
