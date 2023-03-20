@@ -107,5 +107,8 @@ export type AztecAddress = Fr;
 // TODO: What is a Curve::G1?
 export type G1 = Fr;
 
+// TODO: Proof is variable-length, how to serialize?
 export type Proof = Buffer;
+
+// TODO: Adapt from cpp/barretenberg/cpp/src/aztec/proof_system/verification_key/verification_key.hpp
 export type VK = Buffer;
