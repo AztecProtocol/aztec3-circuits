@@ -6,7 +6,6 @@
 
 #include <aztec3/utils/types/native_types.hpp>
 #include <barretenberg/stdlib/merkle_tree/membership.hpp>
-#include <barretenberg/stdlib/types/native_types.hpp>
 #include <barretenberg/crypto/keccak/keccak.hpp>
 #include <barretenberg/common/serialize.hpp>
 
