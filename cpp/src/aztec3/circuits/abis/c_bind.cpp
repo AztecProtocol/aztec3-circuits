@@ -119,18 +119,6 @@ WASM_EXPORT void abis__compute_function_leaf(uint8_t const* function_leaf_preima
     NT::fr::serialize_to_buffer(leaf_preimage.hash(), output);
 }
 
-WASM_EXPORT uint32_t abis__inspect_tx_context(uint8_t const* tx_context_buf, uint8_t* output)
-{
-    TxContext<NT> tx_context;
-    read(tx_context_buf, tx_context);
-
-    std::ostringstream stream;
-    stream << tx_context;
-    std::string inspected = stream.str();
-    inspected.copy((char*)output, 1024);
-    return (uint32_t)inspected.size();
-}
-
 WASM_EXPORT const char* abis__test_roundtrip_serialize_tx_context(uint8_t const* tx_context_buf, uint32_t* size)
 {
     return as_string_output<TxContext<NT>>(tx_context_buf, size);
