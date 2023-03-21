@@ -128,7 +128,7 @@ export class BaseRollupInputs {
   }
 }
 
-enum RollupTypes {
+export enum RollupTypes {
   Base = 0,
   Rollup = 1,
 }
@@ -138,7 +138,7 @@ enum RollupTypes {
  */
 export class BaseRollupPublicInputs {
   constructor(
-    public rollupType: RollupTypes.Base,
+    public rollupType: RollupTypes,
 
     public endAggregationObject: AggregationObject,
     public constants: ConstantBaseRollupData,
@@ -169,7 +169,7 @@ export class BaseRollupPublicInputs {
    */
   toBuffer() {
     return serializeToBuffer(
-      this.rollupType.valueOf(), // TODO: Check the size of the enum in cpp land
+      this.rollupType.valueOf(),
       this.endAggregationObject,
       this.constants,
 

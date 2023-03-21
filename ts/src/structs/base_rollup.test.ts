@@ -1,13 +1,13 @@
 import { expectSerializeToMatchSnapshot } from "../tests/expectSerializeToMatchSnapshot.js";
-import { fr, makePreviousKernelData } from "../tests/factories.js";
+import { fr, makeAggregationObject, makeAppendOnlyTreeSnapshot, makeConstantBaseRollupData, makePreviousKernelData } from "../tests/factories.js";
 import { writeGlobalVerifierReferenceString } from "../tests/writeGlobalVerifierReferenceString";
 import { range } from "../utils/jsUtils.js";
 import { CircuitsWasm } from "../wasm/circuits_wasm.js";
 import {
-  AppendOnlyTreeSnapshot,
   BaseRollupInputs,
-  ConstantBaseRollupData,
+  BaseRollupPublicInputs,
   NullifierLeafPreimage,
+  RollupTypes,
 } from "./base_rollup.js";
 import {
   CONTRACT_TREE_ROOTS_TREE_HEIGHT,
@@ -19,16 +19,13 @@ import { PreviousKernelData } from "./kernel.js";
 import { MembershipWitness } from "./shared.js";
 
 describe("structs/base_rollup", () => {
-  it(`serializes and prints object`, async () => {
+  it(`serializes and prints BaseRollupInputs`, async () => {
     const kernelData: [PreviousKernelData, PreviousKernelData] = [
       makePreviousKernelData(0x100),
       makePreviousKernelData(0x200),
     ];
 
-    const startNullifierTreeSnapshot = new AppendOnlyTreeSnapshot(
-      fr(0x100),
-      0x100
-    );
+    const startNullifierTreeSnapshot = makeAppendOnlyTreeSnapshot(0x100);
 
     const lowNullifierLeafPreimages = range(
       2 * KERNEL_NEW_NULLIFIERS_LENGTH,
@@ -52,22 +49,7 @@ describe("structs/base_rollup", () => {
         MembershipWitness.mock(CONTRACT_TREE_ROOTS_TREE_HEIGHT, 0x6000),
       ];
 
-    const constants = ConstantBaseRollupData.from({
-      startTreeOfHistoricPrivateDataTreeRootsSnapshot:
-        new AppendOnlyTreeSnapshot(fr(0x100), 0x100),
-      startTreeOfHistoricContractTreeRootsSnapshot: new AppendOnlyTreeSnapshot(
-        fr(0x200),
-        0x200
-      ),
-      treeOfHistoricL1ToL2MsgTreeRootsSnapshot: new AppendOnlyTreeSnapshot(
-        fr(0x300),
-        0x300
-      ),
-      privateKernelVkTreeRoot: fr(0x400),
-      publicKernelVkTreeRoot: fr(0x500),
-      baseRollupVkHash: fr(0x600),
-      mergeRollupVkHash: fr(0x700),
-    });
+    const constants = makeConstantBaseRollupData(0x100);
 
     const proverId = fr(0x42);
 
@@ -93,4 +75,28 @@ describe("structs/base_rollup", () => {
       wasm
     );
   });
+
+  it(`serializes and prints BaseRollupPublicInputs`, async () => {
+    const baseRollupPublicInputs = new BaseRollupPublicInputs(
+      RollupTypes.Base,
+      makeAggregationObject(0x100),
+      makeConstantBaseRollupData(0x200),
+      makeAppendOnlyTreeSnapshot(0x300),
+      makeAppendOnlyTreeSnapshot(0x400),
+      fr(0x501),
+      fr(0x502),
+      fr(0x503),
+      fr(0x601),
+      fr(0x602),
+      fr(0x603),
+      fr(0x604),
+      fr(0x605),
+    );
+
+    await expectSerializeToMatchSnapshot(
+      baseRollupPublicInputs.toBuffer(),
+      "abis__test_roundtrip_serialize_base_rollup_public_inputs",
+    );
+  });
 });
+

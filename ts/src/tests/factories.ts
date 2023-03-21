@@ -1,3 +1,4 @@
+import { AppendOnlyTreeSnapshot, ConstantBaseRollupData } from "../structs/base_rollup.js";
 import {
   EMITTED_EVENTS_LENGTH,
   KERNEL_L1_MSG_STACK_LENGTH,
@@ -142,6 +143,22 @@ export function makePreviousKernelData(seed: number = 1): PreviousKernelData {
     0x42,
     range(VK_TREE_HEIGHT, 0x1000).map(fr)
   );
+}
+
+export function makeConstantBaseRollupData(seed: number = 1): ConstantBaseRollupData {
+  return ConstantBaseRollupData.from({
+    startTreeOfHistoricPrivateDataTreeRootsSnapshot: makeAppendOnlyTreeSnapshot(seed),
+    startTreeOfHistoricContractTreeRootsSnapshot: makeAppendOnlyTreeSnapshot(seed + 0x100),
+    treeOfHistoricL1ToL2MsgTreeRootsSnapshot: makeAppendOnlyTreeSnapshot(seed + 0x200),
+    privateKernelVkTreeRoot: fr(seed + 0x301),
+    publicKernelVkTreeRoot: fr(seed + 0x302),
+    baseRollupVkHash: fr(seed + 0x303),
+    mergeRollupVkHash: fr(seed + 0x304),
+  });
+}
+
+export function makeAppendOnlyTreeSnapshot(seed: number = 1): AppendOnlyTreeSnapshot {
+  return new AppendOnlyTreeSnapshot(fr(seed), seed);
 }
 
 export function makeEthAddress(seed: number = 1): EthAddress {
