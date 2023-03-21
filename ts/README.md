@@ -1,6 +1,6 @@
-# Barretenberg.js
+# Circuits.js
 
-Javascript bindings for barretenberg WASM.
+Javascript bindings for aztec3-circuits WASM.
 
 ## To run:
 
