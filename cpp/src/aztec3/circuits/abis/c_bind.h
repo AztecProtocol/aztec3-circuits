@@ -26,4 +26,10 @@ WASM_EXPORT void abis__compute_contract_address(uint8_t const* deployer_address_
                                                 uint8_t const* constructor_hash_buf,
                                                 uint8_t* output);
 
+WASM_EXPORT void abis__compute_contract_leaf(uint8_t const* contract_leaf_preimage_buf,
+                                             uint8_t* output);
+
+WASM_EXPORT void abis__compute_contract_tree_root(uint8_t const* contract_leaves_buf,
+                                                  uint8_t num_leaves, uint8_t* output);
+
 }

@@ -1,6 +1,7 @@
 #include "c_bind.h"
 #include "barretenberg/srs/reference_string/mem_reference_string.hpp"
 #include "aztec3/circuits/abis/function_data.hpp"
+#include "aztec3/circuits/abis/private_kernel/new_contract_data.hpp"
 #include "aztec3/circuits/abis/barretenberg/verifier_reference_string.hpp"
 #include "private_circuit_public_inputs.hpp"
 #include "tx_request.hpp"
@@ -21,6 +22,7 @@ namespace {
 using aztec3::circuits::abis::FunctionLeafPreimage;
 using aztec3::circuits::abis::TxContext;
 using aztec3::circuits::abis::TxRequest;
+using aztec3::circuits::abis::private_kernel::NewContractData;
 using NT = aztec3::utils::types::NativeTypes;
 
 // Cbind helper functions
@@ -268,6 +270,53 @@ WASM_EXPORT void abis__compute_contract_address(uint8_t const* deployer_address_
 
     NT::address contract_address = NT::fr(NT::compress(inputs, aztec3::GeneratorIndex::CONTRACT_ADDRESS));
     NT::fr::serialize_to_buffer(contract_address, output);
+}
+
+/**
+ * @brief Generates a function tree leaf from its preimage.
+ * This is a WASM-export that can be called from Typescript.
+ *
+ * @details given a `uint8_t const*` buffer representing a function leaf's prieimage,
+ * construct a NewContractData instance, hash, and return the serialized results
+ * in the `output` buffer.
+ *
+ * @param contract_leaf_preimage_buf a buffer of bytes representing the contract leaf's preimage
+ * contents (`contract_address`, `portal_contract_address`, `function_tree_root`)
+ * @param output buffer that will contain the output. The hashed and serialized contract leaf.
+ */
+WASM_EXPORT void abis__compute_contract_leaf(uint8_t const* contract_leaf_preimage_buf, uint8_t* output)
+{
+    NewContractData<NT> leaf_preimage;
+    read(contract_leaf_preimage_buf, leaf_preimage);
+    leaf_preimage.hash();
+    NT::fr::serialize_to_buffer(leaf_preimage.hash(), output);
+}
+
+/**
+ * @brief Compute a contract tree root from its leaves.
+ * This is a WASM-export that can be called from Typescript.
+ *
+ * @details given a `uint8_t const*` buffer representing a contract tree's leaves,
+ * compute the corresponding tree's root and return the serialized results
+ * in the `output` buffer.
+ *
+ * @param contract_leaves_buf a buffer of bytes representing the contract leaves of the
+ * tree for which the root is being computed
+ * @param contract_leaves_buf a buffer of bytes representing the leaves of the contract tree,
+ * where each leaf is assumed to be a serialized field
+ * @param num_leaves the number of leaves in leaves_buf
+ * @param output buffer that will contain the output. The serialized contract tree root.
+ */
+WASM_EXPORT void abis__compute_contract_tree_root(uint8_t const* contract_leaves_buf,
+                                                  uint8_t num_leaves,
+                                                  uint8_t* output)
+{
+    NT::fr zero_leaf = NewContractData<NT>().hash(); // hash of empty/0 preimage
+    NT::fr root =
+        compute_root_of_partial_left_tree<aztec3::CONTRACT_TREE_HEIGHT>(contract_leaves_buf, num_leaves, zero_leaf);
+
+    // serialize and return root
+    NT::fr::serialize_to_buffer(root, output);
 }
 
 // TODO(AD): After Milestone 1, rewrite this with better injection mechanism.
