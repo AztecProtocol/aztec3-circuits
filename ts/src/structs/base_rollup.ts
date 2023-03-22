@@ -31,10 +31,7 @@ export class AppendOnlyTreeSnapshot {
 
   static fromBuffer(buffer: Buffer | BufferReader): AppendOnlyTreeSnapshot {
     const reader = BufferReader.asReader(buffer);
-    return new AppendOnlyTreeSnapshot(
-      reader.readFr(),
-      reader.readNumber(),
-    );
+    return new AppendOnlyTreeSnapshot(reader.readFr(), reader.readNumber());
   }
 }
 
@@ -69,7 +66,7 @@ export class ConstantBaseRollupData {
       reader.readFr(),
       reader.readFr(),
       reader.readFr(),
-      reader.readFr(),
+      reader.readFr()
     );
   }
 
@@ -182,8 +179,8 @@ export class BaseRollupPublicInputs {
   ) {}
 
   /**
-   * Deserializes from a buffer or reader, corresponding to a write in cpp
-   * @param bufferReader Buffer to read from
+   * Deserializes from a buffer or reader, corresponding to a write in cpp.
+   * @param bufferReader - Buffer to read from.
    */
   static fromBuffer(buffer: Buffer | BufferReader): BaseRollupPublicInputs {
     const reader = BufferReader.asReader(buffer);
@@ -200,7 +197,7 @@ export class BaseRollupPublicInputs {
       reader.readFr(),
       reader.readFr(),
       reader.readFr(),
-      reader.readFr(),
+      reader.readFr()
     );
   }
 

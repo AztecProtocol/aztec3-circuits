@@ -2,16 +2,18 @@ import { Fq, Fr } from "../structs/shared.js";
 
 export class BufferReader {
   private index: number;
-  constructor(private buffer: Buffer, offset: number = 0) {
+  constructor(private buffer: Buffer, offset = 0) {
     this.index = offset;
   }
 
-  public static asReader(bufferOrReader: Buffer | BufferReader){
-    return Buffer.isBuffer(bufferOrReader) ? new BufferReader(bufferOrReader) : bufferOrReader;
+  public static asReader(bufferOrReader: Buffer | BufferReader) {
+    return Buffer.isBuffer(bufferOrReader)
+      ? new BufferReader(bufferOrReader)
+      : bufferOrReader;
   }
 
   public readNumber(): number {
-    this.index += 4
+    this.index += 4;
     return this.buffer.readUint32BE(this.index - 4);
   }
 
@@ -34,10 +36,14 @@ export class BufferReader {
   }
 
   public readNumberVector(): number[] {
-    return this.readVector({ fromBuffer: (reader: BufferReader) => reader.readNumber() });
+    return this.readVector({
+      fromBuffer: (reader: BufferReader) => reader.readNumber(),
+    });
   }
-  
-  public readVector<T>(itemDeserializer: { fromBuffer: (reader: BufferReader) => T }): T[] {
+
+  public readVector<T>(itemDeserializer: {
+    fromBuffer: (reader: BufferReader) => T;
+  }): T[] {
     const size = this.readNumber();
     const result = new Array<T>(size);
     for (let i = 0; i < size; i++) {
@@ -46,7 +52,13 @@ export class BufferReader {
     return result;
   }
 
-  public readObject<T>(deserializer: { fromBuffer: (reader: BufferReader) => T }) : T {
+  public readObject<T>(deserializer: {
+    fromBuffer: (reader: BufferReader) => T;
+  }): T {
     return deserializer.fromBuffer(this);
+  }
+
+  public peekBytes(n?: number): Buffer {
+    return this.buffer.subarray(this.index, n ? this.index + n : undefined);
   }
 }

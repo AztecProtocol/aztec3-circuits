@@ -1,4 +1,9 @@
-import { AppendOnlyTreeSnapshot, BaseRollupPublicInputs, ConstantBaseRollupData, RollupTypes } from "../structs/base_rollup.js";
+import {
+  AppendOnlyTreeSnapshot,
+  BaseRollupPublicInputs,
+  ConstantBaseRollupData,
+  RollupTypes,
+} from "../structs/base_rollup.js";
 import {
   EMITTED_EVENTS_LENGTH,
   KERNEL_L1_MSG_STACK_LENGTH,
@@ -53,11 +58,11 @@ export function makeOldTreeRoots(seed: number): OldTreeRoots {
   return new OldTreeRoots(fr(seed), fr(seed + 1), fr(seed + 2), fr(seed + 3));
 }
 
-export function makeConstantData(seed: number = 1): ConstantData {
+export function makeConstantData(seed = 1): ConstantData {
   return new ConstantData(makeOldTreeRoots(seed), makeTxContext(seed + 4));
 }
 
-export function makeAccumulatedData(seed: number = 1): AccumulatedData {
+export function makeAccumulatedData(seed = 1): AccumulatedData {
   return new AccumulatedData(
     makeAggregationObject(seed),
     fr(seed + 12),
@@ -73,13 +78,11 @@ export function makeAccumulatedData(seed: number = 1): AccumulatedData {
   );
 }
 
-export function makeNewContractData(seed: number = 1): NewContractData {
+export function makeNewContractData(seed = 1): NewContractData {
   return new NewContractData(fr(seed), makeEthAddress(seed + 1), fr(seed + 2));
 }
 
-export function makeOptionallyRevealedData(
-  seed: number = 1
-): OptionallyRevealedData {
+export function makeOptionallyRevealedData(seed = 1): OptionallyRevealedData {
   return new OptionallyRevealedData(
     fr(seed),
     new FunctionData(seed + 1, true, true),
@@ -93,7 +96,7 @@ export function makeOptionallyRevealedData(
   );
 }
 
-export function makeAggregationObject(seed: number = 1): AggregationObject {
+export function makeAggregationObject(seed = 1): AggregationObject {
   return new AggregationObject(
     new AffineElement(new Fq(seed), new Fq(seed + 1)),
     new AffineElement(new Fq(seed + 0x100), new Fq(seed + 0x101)),
@@ -103,7 +106,7 @@ export function makeAggregationObject(seed: number = 1): AggregationObject {
 }
 
 export function makePrivateKernelPublicInputs(
-  seed: number = 1
+  seed = 1
 ): PrivateKernelPublicInputs {
   return new PrivateKernelPublicInputs(
     makeAccumulatedData(seed),
@@ -135,7 +138,7 @@ export function makeVerificationKey(): VerificationKey {
     range(5, 400)
   );
 }
-export function makePreviousKernelData(seed: number = 1): PreviousKernelData {
+export function makePreviousKernelData(seed = 1): PreviousKernelData {
   return new PreviousKernelData(
     makePrivateKernelPublicInputs(seed),
     makeDynamicSizeBuffer(16, seed + 0x80),
@@ -145,11 +148,16 @@ export function makePreviousKernelData(seed: number = 1): PreviousKernelData {
   );
 }
 
-export function makeConstantBaseRollupData(seed: number = 1): ConstantBaseRollupData {
+export function makeConstantBaseRollupData(seed = 1): ConstantBaseRollupData {
   return ConstantBaseRollupData.from({
-    startTreeOfHistoricPrivateDataTreeRootsSnapshot: makeAppendOnlyTreeSnapshot(seed),
-    startTreeOfHistoricContractTreeRootsSnapshot: makeAppendOnlyTreeSnapshot(seed + 0x100),
-    treeOfHistoricL1ToL2MsgTreeRootsSnapshot: makeAppendOnlyTreeSnapshot(seed + 0x200),
+    startTreeOfHistoricPrivateDataTreeRootsSnapshot:
+      makeAppendOnlyTreeSnapshot(seed),
+    startTreeOfHistoricContractTreeRootsSnapshot: makeAppendOnlyTreeSnapshot(
+      seed + 0x100
+    ),
+    treeOfHistoricL1ToL2MsgTreeRootsSnapshot: makeAppendOnlyTreeSnapshot(
+      seed + 0x200
+    ),
     privateKernelVkTreeRoot: fr(seed + 0x301),
     publicKernelVkTreeRoot: fr(seed + 0x302),
     baseRollupVkHash: fr(seed + 0x303),
@@ -157,15 +165,15 @@ export function makeConstantBaseRollupData(seed: number = 1): ConstantBaseRollup
   });
 }
 
-export function makeAppendOnlyTreeSnapshot(seed: number = 1): AppendOnlyTreeSnapshot {
+export function makeAppendOnlyTreeSnapshot(seed = 1): AppendOnlyTreeSnapshot {
   return new AppendOnlyTreeSnapshot(fr(seed), seed);
 }
 
-export function makeEthAddress(seed: number = 1): EthAddress {
+export function makeEthAddress(seed = 1): EthAddress {
   return new EthAddress(Buffer.alloc(20, seed));
 }
 
-export function makeBaseRollupPublicInputs(seed: number = 0) {
+export function makeBaseRollupPublicInputs(seed = 0) {
   return new BaseRollupPublicInputs(
     RollupTypes.Base,
     makeAggregationObject(seed + 0x100),
@@ -179,7 +187,7 @@ export function makeBaseRollupPublicInputs(seed: number = 0) {
     fr(seed + 0x602),
     fr(seed + 0x603),
     fr(seed + 0x604),
-    fr(seed + 0x605),
+    fr(seed + 0x605)
   );
 }
 

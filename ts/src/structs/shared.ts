@@ -29,7 +29,7 @@ abstract class Field {
     }
   }
 
-  abstract maxValue(): BigInt;
+  abstract maxValue(): bigint;
 
   toString() {
     return "0x" + this.buffer.toString("hex");
@@ -42,7 +42,7 @@ abstract class Field {
 
 export class Fr extends Field {
   /**
-   * Maximum represntable value in a field is the curve prime minus one
+   * Maximum represntable value in a field is the curve prime minus one.
    * @returns 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000000n
    */
   maxValue() {
@@ -51,7 +51,7 @@ export class Fr extends Field {
     );
   }
 
-  static fromBuffer(buffer : Buffer | BufferReader) {
+  static fromBuffer(buffer: Buffer | BufferReader) {
     const reader = BufferReader.asReader(buffer);
     return new this(reader.readBytes(this.SIZE_IN_BYTES));
   }
@@ -59,8 +59,8 @@ export class Fr extends Field {
 
 export class Fq extends Field {
   /**
-   * Maximum represntable vaue in a field is the curve prime minus one
-   * TODO: Find out actual max value for Fq
+   * Maximum represntable vaue in a field is the curve prime minus one.
+   * TODO: Find out actual max value for Fq.
    * @returns 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000000n
    */
   maxValue() {
@@ -69,7 +69,7 @@ export class Fq extends Field {
     );
   }
 
-  static fromBuffer(buffer : Buffer | BufferReader) {
+  static fromBuffer(buffer: Buffer | BufferReader) {
     const reader = BufferReader.asReader(buffer);
     return new this(reader.readBytes(this.SIZE_IN_BYTES));
   }
@@ -139,7 +139,7 @@ export class AggregationObject {
     public p1: AffineElement,
     publicInputsData: Fr[],
     proofWitnessIndicesData: UInt32[],
-    public hasData = false,
+    public hasData = false
   ) {
     this.publicInputs = new Vector(publicInputsData);
     this.proofWitnessIndices = new Vector(proofWitnessIndicesData);
@@ -162,7 +162,7 @@ export class AggregationObject {
       reader.readObject(AffineElement),
       reader.readVector(Fr),
       reader.readNumberVector(),
-      reader.readBoolean(),
+      reader.readBoolean()
     );
   }
 }
@@ -189,7 +189,7 @@ export type UInt32 = number;
 export type AztecAddress = Fr;
 
 /**
- * Affine element of a group, composed of two elements in Fq
+ * Affine element of a group, composed of two elements in Fq.
  * cpp/barretenberg/cpp/src/aztec/ecc/groups/affine_element.hpp
  * cpp/barretenberg/cpp/src/aztec/ecc/curves/bn254/g1.hpp
  */
@@ -202,10 +202,7 @@ export class AffineElement {
 
   static fromBuffer(buffer: Buffer | BufferReader): AffineElement {
     const reader = BufferReader.asReader(buffer);
-    return new AffineElement(
-      reader.readFq(),
-      reader.readFq(),
-    );
+    return new AffineElement(reader.readFq(), reader.readFq());
   }
 }
 
