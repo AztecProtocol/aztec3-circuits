@@ -252,26 +252,4 @@ TEST(abi_tests, compute_contract_leaf)
     EXPECT_EQ(got_leaf, preimage.hash());
 }
 
-TEST(abi_tests, compute_contract_tree_root)
-{
-    constexpr size_t CONTRACT_TREE_NUM_LEAVES = 2 << (aztec3::CONTRACT_TREE_HEIGHT - 1); // leaves = 2 ^ height
-
-    NT::fr zero_leaf = NewContractData<NT>().hash(); // hash of empty/0 preimage
-    std::vector<NT::fr> leaves_frs(CONTRACT_TREE_NUM_LEAVES, zero_leaf);
-    for (size_t i = 0; i < CONTRACT_TREE_NUM_LEAVES / 2; ++i) {
-        leaves_frs[i] = NT::fr::random_element();
-    }
-
-    std::array<uint8_t, sizeof(NT::fr)* CONTRACT_TREE_NUM_LEAVES> leaves_buf = { 0 };
-    for (size_t i = 0; i < CONTRACT_TREE_NUM_LEAVES; ++i) {
-        NT::fr::serialize_to_buffer(leaves_frs[i], leaves_buf.data() + i * sizeof(NT::fr));
-    }
-
-    std::array<uint8_t, sizeof(NT::fr)> output = { 0 };
-    abis__compute_contract_tree_root(leaves_buf.data(), CONTRACT_TREE_NUM_LEAVES, output.data());
-
-    NT::fr got_root = NT::fr::serialize_from_buffer(output.data());
-    EXPECT_EQ(got_root, plonk::stdlib::merkle_tree::compute_tree_root_native(leaves_frs));
-}
-
 } // namespace aztec3::circuits::abis

@@ -292,33 +292,6 @@ WASM_EXPORT void abis__compute_contract_leaf(uint8_t const* contract_leaf_preima
     NT::fr::serialize_to_buffer(leaf_preimage.hash(), output);
 }
 
-/**
- * @brief Compute a contract tree root from its leaves.
- * This is a WASM-export that can be called from Typescript.
- *
- * @details given a `uint8_t const*` buffer representing a contract tree's leaves,
- * compute the corresponding tree's root and return the serialized results
- * in the `output` buffer.
- *
- * @param contract_leaves_buf a buffer of bytes representing the contract leaves of the
- * tree for which the root is being computed
- * @param contract_leaves_buf a buffer of bytes representing the leaves of the contract tree,
- * where each leaf is assumed to be a serialized field
- * @param num_leaves the number of leaves in leaves_buf
- * @param output buffer that will contain the output. The serialized contract tree root.
- */
-WASM_EXPORT void abis__compute_contract_tree_root(uint8_t const* contract_leaves_buf,
-                                                  uint8_t num_leaves,
-                                                  uint8_t* output)
-{
-    NT::fr zero_leaf = NewContractData<NT>().hash(); // hash of empty/0 preimage
-    NT::fr root =
-        compute_root_of_partial_left_tree<aztec3::CONTRACT_TREE_HEIGHT>(contract_leaves_buf, num_leaves, zero_leaf);
-
-    // serialize and return root
-    NT::fr::serialize_to_buffer(root, output);
-}
-
 // TODO(AD): After Milestone 1, rewrite this with better injection mechanism.
 WASM_EXPORT void abis__set_global_verifier_reference_string(uint8_t* data)
 {
