@@ -1,4 +1,4 @@
-import { AppendOnlyTreeSnapshot, ConstantBaseRollupData } from "../structs/base_rollup.js";
+import { AppendOnlyTreeSnapshot, BaseRollupPublicInputs, ConstantBaseRollupData, RollupTypes } from "../structs/base_rollup.js";
 import {
   EMITTED_EVENTS_LENGTH,
   KERNEL_L1_MSG_STACK_LENGTH,
@@ -163,6 +163,24 @@ export function makeAppendOnlyTreeSnapshot(seed: number = 1): AppendOnlyTreeSnap
 
 export function makeEthAddress(seed: number = 1): EthAddress {
   return new EthAddress(Buffer.alloc(20, seed));
+}
+
+export function makeBaseRollupPublicInputs(seed: number = 0) {
+  return new BaseRollupPublicInputs(
+    RollupTypes.Base,
+    makeAggregationObject(seed + 0x100),
+    makeConstantBaseRollupData(seed + 0x200),
+    makeAppendOnlyTreeSnapshot(seed + 0x300),
+    makeAppendOnlyTreeSnapshot(seed + 0x400),
+    fr(seed + 0x501),
+    fr(seed + 0x502),
+    fr(seed + 0x503),
+    fr(seed + 0x601),
+    fr(seed + 0x602),
+    fr(seed + 0x603),
+    fr(seed + 0x604),
+    fr(seed + 0x605),
+  );
 }
 
 /**

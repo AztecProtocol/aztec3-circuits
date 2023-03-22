@@ -1,3 +1,4 @@
+import { BufferReader } from "../wasm/buffer_reader.js";
 import { checkLength, range } from "../utils/jsUtils.js";
 import {
   Bufferable,
@@ -6,7 +7,7 @@ import {
 } from "../wasm/serialize.js";
 
 abstract class Field {
-  static SIZE_IN_BYTES = 32;
+  public static SIZE_IN_BYTES = 32;
 
   private buffer: Buffer;
 
@@ -49,6 +50,11 @@ export class Fr extends Field {
       0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001n - 1n
     );
   }
+
+  static fromBuffer(buffer : Buffer | BufferReader) {
+    const reader = BufferReader.asReader(buffer);
+    return new this(reader.readBytes(this.SIZE_IN_BYTES));
+  }
 }
 
 export class Fq extends Field {
@@ -61,6 +67,11 @@ export class Fq extends Field {
     return (
       0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001n - 1n
     );
+  }
+
+  static fromBuffer(buffer : Buffer | BufferReader) {
+    const reader = BufferReader.asReader(buffer);
+    return new this(reader.readBytes(this.SIZE_IN_BYTES));
   }
 }
 
@@ -120,8 +131,6 @@ export class MembershipWitness<N extends number> {
 }
 
 export class AggregationObject {
-  public hasData: false = false;
-
   public publicInputs: Vector<Fr>;
   public proofWitnessIndices: Vector<UInt32>;
 
@@ -129,7 +138,8 @@ export class AggregationObject {
     public p0: AffineElement,
     public p1: AffineElement,
     publicInputsData: Fr[],
-    proofWitnessIndicesData: UInt32[]
+    proofWitnessIndicesData: UInt32[],
+    public hasData = false,
   ) {
     this.publicInputs = new Vector(publicInputsData);
     this.proofWitnessIndices = new Vector(proofWitnessIndicesData);
@@ -142,6 +152,17 @@ export class AggregationObject {
       this.publicInputs,
       this.proofWitnessIndices,
       this.hasData
+    );
+  }
+
+  static fromBuffer(buffer: Buffer | BufferReader): AggregationObject {
+    const reader = BufferReader.asReader(buffer);
+    return new AggregationObject(
+      reader.readObject(AffineElement),
+      reader.readObject(AffineElement),
+      reader.readVector(Fr),
+      reader.readNumberVector(),
+      reader.readBoolean(),
     );
   }
 }
@@ -177,6 +198,14 @@ export class AffineElement {
 
   toBuffer() {
     return serializeToBuffer(this.x, this.y);
+  }
+
+  static fromBuffer(buffer: Buffer | BufferReader): AffineElement {
+    const reader = BufferReader.asReader(buffer);
+    return new AffineElement(
+      reader.readFq(),
+      reader.readFq(),
+    );
   }
 }
 

@@ -1,19 +1,18 @@
-import { expectSerializeToMatchSnapshot } from "../tests/expectSerializeToMatchSnapshot.js";
-import { fr, makeAggregationObject, makeAppendOnlyTreeSnapshot, makeConstantBaseRollupData, makePreviousKernelData } from "../tests/factories.js";
-import { writeGlobalVerifierReferenceString } from "../tests/writeGlobalVerifierReferenceString";
+import { expectReserializeToMatchObject, expectSerializeToMatchSnapshot } from "../tests/expectSerialize.js";
+import { fr, makeAppendOnlyTreeSnapshot, makeBaseRollupPublicInputs, makeConstantBaseRollupData, makePreviousKernelData } from "../tests/factories.js";
+import { writeGlobalVerifierReferenceString } from "../tests/writeGlobalVerifierReferenceString.js";
 import { range } from "../utils/jsUtils.js";
 import { CircuitsWasm } from "../wasm/circuits_wasm.js";
 import {
   BaseRollupInputs,
   BaseRollupPublicInputs,
-  NullifierLeafPreimage,
-  RollupTypes,
+  NullifierLeafPreimage
 } from "./base_rollup.js";
 import {
   CONTRACT_TREE_ROOTS_TREE_HEIGHT,
   KERNEL_NEW_NULLIFIERS_LENGTH,
   NULLIFIER_TREE_HEIGHT,
-  PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT,
+  PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT
 } from "./constants.js";
 import { PreviousKernelData } from "./kernel.js";
 import { MembershipWitness } from "./shared.js";
@@ -77,25 +76,21 @@ describe("structs/base_rollup", () => {
   });
 
   it(`serializes and prints BaseRollupPublicInputs`, async () => {
-    const baseRollupPublicInputs = new BaseRollupPublicInputs(
-      RollupTypes.Base,
-      makeAggregationObject(0x100),
-      makeConstantBaseRollupData(0x200),
-      makeAppendOnlyTreeSnapshot(0x300),
-      makeAppendOnlyTreeSnapshot(0x400),
-      fr(0x501),
-      fr(0x502),
-      fr(0x503),
-      fr(0x601),
-      fr(0x602),
-      fr(0x603),
-      fr(0x604),
-      fr(0x605),
-    );
+    const baseRollupPublicInputs = makeBaseRollupPublicInputs();
 
     await expectSerializeToMatchSnapshot(
       baseRollupPublicInputs.toBuffer(),
       "abis__test_roundtrip_serialize_base_rollup_public_inputs",
+    );
+  });
+
+  it(`serializes and deserializes BaseRollupPublicInputs`, async () => {
+    const baseRollupPublicInputs = makeBaseRollupPublicInputs();
+
+    await expectReserializeToMatchObject(
+      baseRollupPublicInputs,
+      "abis__test_roundtrip_serialize_base_rollup_public_inputs",
+      BaseRollupPublicInputs.fromBuffer
     );
   });
 });
