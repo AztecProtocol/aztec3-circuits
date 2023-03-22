@@ -60,6 +60,7 @@ template <typename NCT> void read(uint8_t const*& it, BaseRollupPublicInputs<NCT
     read(it, obj.end_nullifier_tree_snapshots);
     read(it, obj.new_commitments_subtree_root);
     read(it, obj.new_nullifiers_subtree_root);
+    read(it, obj.new_contract_leaves_subtree_root);
     read(it, obj.new_commitments_hash);
     read(it, obj.new_nullifiers_hash);
     read(it, obj.new_l1_msgs_hash);
@@ -78,6 +79,7 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, BaseRollupPublicIn
     write(buf, obj.end_nullifier_tree_snapshots);
     write(buf, obj.new_commitments_subtree_root);
     write(buf, obj.new_nullifiers_subtree_root);
+    write(buf, obj.new_contract_leaves_subtree_root);
     write(buf, obj.new_commitments_hash);
     write(buf, obj.new_nullifiers_hash);
     write(buf, obj.new_l1_msgs_hash);
@@ -106,6 +108,9 @@ template <typename NCT> std::ostream& operator<<(std::ostream& os, BaseRollupPub
               << "\n"
                  "new_nullifiers_subtree_root: "
               << obj.new_nullifiers_subtree_root
+              << "\n"
+                 "new_contract_leaves_subtree_root: "
+              << obj.new_contract_leaves_subtree_root
               << "\n"
                  "new_commitments_hash: "
               << obj.new_commitments_hash

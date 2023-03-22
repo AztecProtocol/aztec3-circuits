@@ -531,10 +531,11 @@ next_available_leaf_index: 1024
 
 new_commitments_subtree_root: 0x501
 new_nullifiers_subtree_root: 0x502
-new_commitments_hash: 0x503
-new_nullifiers_hash: 0x601
-new_l1_msgs_hash: 0x602
-new_contract_data_hash: 0x603
-prover_contributions_hash: 0x604
+new_contract_leaves_subtree_root: 0x503
+new_commitments_hash: 0x601
+new_nullifiers_hash: 0x602
+new_l1_msgs_hash: 0x603
+new_contract_data_hash: 0x604
+prover_contributions_hash: 0x605
 "
 `;
