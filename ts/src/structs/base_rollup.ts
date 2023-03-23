@@ -10,6 +10,7 @@ import {
 import { PreviousKernelData } from "./kernel.js";
 import {
   AggregationObject,
+  Bytes32,
   Fr,
   MembershipWitness,
   RollupTypes,
@@ -172,10 +173,7 @@ export class BaseRollupPublicInputs {
     public newContractLeavesSubtreeRoot: Fr,
 
     // Hashes (probably sha256) to make public inputs constant-sized (to then be unpacked on-chain)
-    public newCommitmentsHash: Fr,
-    public newNullifiersHash: Fr,
-    public newL1MsgsHash: Fr,
-    public newContractDataHash: Fr,
+    public calldataHash: Bytes32,
     public proverContributionsHash: Fr
   ) {}
 
@@ -194,10 +192,7 @@ export class BaseRollupPublicInputs {
       reader.readFr(),
       reader.readFr(),
       reader.readFr(),
-      reader.readFr(),
-      reader.readFr(),
-      reader.readFr(),
-      reader.readFr(),
+      new Bytes32(reader.readBytes(32)),
       reader.readFr()
     );
   }
@@ -218,11 +213,8 @@ export class BaseRollupPublicInputs {
       this.newCommitmentsSubtreeRoot,
       this.newNullifiersSubtreeRoot,
       this.newContractLeavesSubtreeRoot,
-
-      this.newCommitmentsHash,
-      this.newNullifiersHash,
-      this.newL1MsgsHash,
-      this.newContractDataHash,
+      
+      this.calldataHash,
       this.proverContributionsHash
     );
   }

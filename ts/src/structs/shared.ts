@@ -185,6 +185,20 @@ export class UInt8Vector {
 
 export type UInt32 = number;
 
+export class Bytes32 {
+  constructor(private buffer: Buffer) {
+    if (buffer.length != 32) {
+      throw new Error(
+        `Unexpected buffer size ${buffer.length} (expected 32 bytes)`
+      );
+    }
+  }
+
+  toBuffer() {
+    return serializeToBuffer(this.buffer.length, this.buffer);
+  }
+}
+
 // TODO: Define proper type for AztecAddress
 export type AztecAddress = Fr;
 
