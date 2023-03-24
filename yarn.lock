@@ -19,8 +19,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@aztec/circuits-workspce@workspace:."
   dependencies:
-    "@aztec/foundation": "file:.yalc/@aztec/foundation"
-    "@aztec/wasm": "file:.yalc/@aztec/wasm"
     eslint: ^8.21.0
     eslint-config-prettier: ^8.8.0
     prettier: ^2.7.1
@@ -54,17 +52,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@aztec/foundation@file:.yalc/@aztec/foundation::locator=%40aztec%2Fcircuits-workspce%40workspace%3A.":
-  version: 0.0.0
-  resolution: "@aztec/foundation@file:.yalc/@aztec/foundation#.yalc/@aztec/foundation::hash=e4cce2&locator=%40aztec%2Fcircuits-workspce%40workspace%3A."
-  dependencies:
-    cross-fetch: ^3.1.5
-    debug: ^4.3.4
-    detect-node: ^2.1.0
-  checksum: 4740b44d5d4501995317eabeeeb94697a8b55ae4179bb3986bf4eb9d7cfd7531dc71ee48f46c1cbde8f1b8895b031e1f3e08c1f1304e47c6ac0c1005643d464d
-  languageName: node
-  linkType: hard
-
 "@aztec/foundation@workspace:.yalc/@aztec/foundation, @aztec/foundation@workspace:^":
   version: 0.0.0-use.local
   resolution: "@aztec/foundation@workspace:.yalc/@aztec/foundation"
@@ -74,21 +61,6 @@ __metadata:
     detect-node: ^2.1.0
   languageName: unknown
   linkType: soft
-
-"@aztec/wasm@file:.yalc/@aztec/wasm::locator=%40aztec%2Fcircuits-workspce%40workspace%3A.":
-  version: 0.0.0
-  resolution: "@aztec/wasm@file:.yalc/@aztec/wasm#.yalc/@aztec/wasm::hash=6e77b0&locator=%40aztec%2Fcircuits-workspce%40workspace%3A."
-  dependencies:
-    "@aztec/foundation": "workspace:^"
-    "@types/leveldown": ^4.0.3
-    detect-node: ^2.1.0
-    leveldown: ^6.1.1
-    levelup: ^5.1.1
-    memdown: ^6.1.1
-    tslib: ^2.4.0
-  checksum: 3c1f78f75f9ce37afcdfbbe7573818b9f1b7e2c84c1b80b5e242c66b168d59bf19090af3d4ad82b33cd83059f969986e71891ef18d9262d0e3e78a81d591527d
-  languageName: node
-  linkType: hard
 
 "@aztec/wasm@workspace:.yalc/@aztec/wasm, @aztec/wasm@workspace:^":
   version: 0.0.0-use.local
