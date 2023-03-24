@@ -1,9 +1,0 @@
-{
-  "version": "v1",
-  "packages": {
-    "@aztec/foundation": {
-      "signature": "6fbabe5e1e3b5094c9842e160930d04a",
-      "file": true
-    }
-  }
-}

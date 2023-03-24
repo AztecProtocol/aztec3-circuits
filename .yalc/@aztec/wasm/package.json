@@ -30,7 +30,7 @@
     "rootDir": "./src"
   },
   "dependencies": {
-    "@aztec/log": "*",
+    "@aztec/foundation": "workspace:^",
     "@types/leveldown": "^4.0.3",
     "detect-node": "^2.1.0",
     "leveldown": "^6.1.1",

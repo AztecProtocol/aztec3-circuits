@@ -20,7 +20,9 @@ __metadata:
   resolution: "@aztec/circuits-workspce@workspace:."
   dependencies:
     "@aztec/foundation": "file:.yalc/@aztec/foundation"
+    "@aztec/wasm": "file:.yalc/@aztec/wasm"
     eslint: ^8.21.0
+    eslint-config-prettier: ^8.8.0
     prettier: ^2.7.1
     typedoc: ^0.23.26
     typescript: ^4.9.5
@@ -31,12 +33,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@aztec/circuits.js@workspace:ts"
   dependencies:
-    "@aztec/eslint-config": "workspace:^"
-    "@aztec/log": "workspace:^"
+    "@aztec/foundation": "workspace:^"
     "@aztec/wasm": "workspace:^"
-    "@aztec/wasm-worker": "workspace:^"
     "@jest/globals": ^29.4.3
-    "@rushstack/eslint-patch": ^1.1.4
     "@types/detect-node": ^2.0.0
     "@types/jest": ^29.4.0
     "@types/node": ^18.7.23
@@ -55,39 +54,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@aztec/eslint-config@link:../../../yarn-project/eslint-config::locator=%40aztec%2Feslint-config%40workspace%3A.yalc%2F%40aztec%2Feslint-config":
-  version: 0.0.0-use.local
-  resolution: "@aztec/eslint-config@link:../../../yarn-project/eslint-config::locator=%40aztec%2Feslint-config%40workspace%3A.yalc%2F%40aztec%2Feslint-config"
-  languageName: node
-  linkType: soft
-
-"@aztec/eslint-config@workspace:.yalc/@aztec/eslint-config, @aztec/eslint-config@workspace:^":
-  version: 0.0.0-use.local
-  resolution: "@aztec/eslint-config@workspace:.yalc/@aztec/eslint-config"
-  dependencies:
-    "@aztec/eslint-config": "link:../../../yarn-project/eslint-config"
-    "@aztec/wasm-worker": "link:../../../yarn-project/wasm-worker"
-    "@typescript-eslint/eslint-plugin": ^5.38.0
-    "@typescript-eslint/parser": ^5.38.0
-    eslint: ^8.21.0
-    eslint-config-prettier: ^8.5.0
-    eslint-plugin-jsdoc: ^40.0.0
-    eslint-plugin-tsdoc: ^0.2.17
-  languageName: unknown
-  linkType: soft
-
 "@aztec/foundation@file:.yalc/@aztec/foundation::locator=%40aztec%2Fcircuits-workspce%40workspace%3A.":
   version: 0.0.0
-  resolution: "@aztec/foundation@file:.yalc/@aztec/foundation#.yalc/@aztec/foundation::hash=33f654&locator=%40aztec%2Fcircuits-workspce%40workspace%3A."
+  resolution: "@aztec/foundation@file:.yalc/@aztec/foundation#.yalc/@aztec/foundation::hash=e4cce2&locator=%40aztec%2Fcircuits-workspce%40workspace%3A."
   dependencies:
     cross-fetch: ^3.1.5
     debug: ^4.3.4
     detect-node: ^2.1.0
-  checksum: f5d39fabaca4c4684a2883cea18c20c426b290ebccf01b8f3105b5eea07367881a8fe2fc3d535ff7f85f1e0a93dba5dc8984214d4e879842ffed5824d4b08e2a
+  checksum: 4740b44d5d4501995317eabeeeb94697a8b55ae4179bb3986bf4eb9d7cfd7531dc71ee48f46c1cbde8f1b8895b031e1f3e08c1f1304e47c6ac0c1005643d464d
   languageName: node
   linkType: hard
 
-"@aztec/foundation@workspace:.yalc/@aztec/foundation":
+"@aztec/foundation@workspace:.yalc/@aztec/foundation, @aztec/foundation@workspace:^":
   version: 0.0.0-use.local
   resolution: "@aztec/foundation@workspace:.yalc/@aztec/foundation"
   dependencies:
@@ -97,37 +75,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@aztec/log@*, @aztec/log@workspace:.yalc/@aztec/log, @aztec/log@workspace:^":
-  version: 0.0.0-use.local
-  resolution: "@aztec/log@workspace:.yalc/@aztec/log"
-  languageName: unknown
-  linkType: soft
-
-"@aztec/wasm-worker@link:../../../yarn-project/wasm-worker::locator=%40aztec%2Feslint-config%40workspace%3A.yalc%2F%40aztec%2Feslint-config":
-  version: 0.0.0-use.local
-  resolution: "@aztec/wasm-worker@link:../../../yarn-project/wasm-worker::locator=%40aztec%2Feslint-config%40workspace%3A.yalc%2F%40aztec%2Feslint-config"
-  languageName: node
-  linkType: soft
-
-"@aztec/wasm-worker@workspace:.yalc/@aztec/wasm-worker, @aztec/wasm-worker@workspace:^":
-  version: 0.0.0-use.local
-  resolution: "@aztec/wasm-worker@workspace:.yalc/@aztec/wasm-worker"
+"@aztec/wasm@file:.yalc/@aztec/wasm::locator=%40aztec%2Fcircuits-workspce%40workspace%3A.":
+  version: 0.0.0
+  resolution: "@aztec/wasm@file:.yalc/@aztec/wasm#.yalc/@aztec/wasm::hash=6e77b0&locator=%40aztec%2Fcircuits-workspce%40workspace%3A."
   dependencies:
-    "@aztec/log": "*"
+    "@aztec/foundation": "workspace:^"
     "@types/leveldown": ^4.0.3
     detect-node: ^2.1.0
     leveldown: ^6.1.1
     levelup: ^5.1.1
     memdown: ^6.1.1
     tslib: ^2.4.0
-  languageName: unknown
-  linkType: soft
+  checksum: 3c1f78f75f9ce37afcdfbbe7573818b9f1b7e2c84c1b80b5e242c66b168d59bf19090af3d4ad82b33cd83059f969986e71891ef18d9262d0e3e78a81d591527d
+  languageName: node
+  linkType: hard
 
 "@aztec/wasm@workspace:.yalc/@aztec/wasm, @aztec/wasm@workspace:^":
   version: 0.0.0-use.local
   resolution: "@aztec/wasm@workspace:.yalc/@aztec/wasm"
   dependencies:
-    "@aztec/log": "*"
+    "@aztec/foundation": "workspace:^"
     "@types/leveldown": ^4.0.3
     detect-node: ^2.1.0
     leveldown: ^6.1.1
@@ -538,17 +505,6 @@ __metadata:
   dependencies:
     "@jridgewell/trace-mapping": 0.3.9
   checksum: 5718f267085ed8edb3e7ef210137241775e607ee18b77d95aa5bd7514f47f5019aa2d82d96b3bf342ef7aa890a346fa1044532ff7cc3009e7d24fce3ce6200fa
-  languageName: node
-  linkType: hard
-
-"@es-joy/jsdoccomment@npm:~0.37.0":
-  version: 0.37.0
-  resolution: "@es-joy/jsdoccomment@npm:0.37.0"
-  dependencies:
-    comment-parser: 1.3.1
-    esquery: ^1.4.0
-    jsdoc-type-pratt-parser: ~4.0.0
-  checksum: 949c0d164573f189998a7ad7ace936639535e1cacf495d7daa893142dbe9e947f146602615732eaa3174b7ca08af9eea5d9fa97a68fdfe0aa14213ab0f319b13
   languageName: node
   linkType: hard
 
@@ -1042,25 +998,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@microsoft/tsdoc-config@npm:0.16.2":
-  version: 0.16.2
-  resolution: "@microsoft/tsdoc-config@npm:0.16.2"
-  dependencies:
-    "@microsoft/tsdoc": 0.14.2
-    ajv: ~6.12.6
-    jju: ~1.4.0
-    resolve: ~1.19.0
-  checksum: 12b0d703154076bcaac75ca42e804e4fc292672396441e54346d7eadd0d6b57f90980eda2b1bab89b224af86da34a2389f9054002e282011e795ca5919a4386f
-  languageName: node
-  linkType: hard
-
-"@microsoft/tsdoc@npm:0.14.2":
-  version: 0.14.2
-  resolution: "@microsoft/tsdoc@npm:0.14.2"
-  checksum: b167c89e916ba73ee20b9c9d5dba6aa3a0de25ed3d50050e8a344dca7cd43cb2e1059bd515c820369b6e708901dd3fda476a42bc643ca74a35671ce77f724a3a
-  languageName: node
-  linkType: hard
-
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -1105,13 +1042,6 @@ __metadata:
     mkdirp: ^1.0.4
     rimraf: ^3.0.2
   checksum: 52dc02259d98da517fae4cb3a0a3850227bdae4939dda1980b788a7670636ca2b4a01b58df03dd5f65c1e3cb70c50fa8ce5762b582b3f499ec30ee5ce1fd9380
-  languageName: node
-  linkType: hard
-
-"@rushstack/eslint-patch@npm:^1.1.4":
-  version: 1.2.0
-  resolution: "@rushstack/eslint-patch@npm:1.2.0"
-  checksum: faa749faae0e83c26ae9eb00ad36a897ac78f3cf27da8e8ff21c00bcf7973b598d823d8f2b3957ef66079288bcf577f94df831eae2d65f3f68d8ca32f18b6aff
   languageName: node
   linkType: hard
 
@@ -1360,7 +1290,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/eslint-plugin@npm:^5.38.0, @typescript-eslint/eslint-plugin@npm:^5.54.1":
+"@typescript-eslint/eslint-plugin@npm:^5.54.1":
   version: 5.56.0
   resolution: "@typescript-eslint/eslint-plugin@npm:5.56.0"
   dependencies:
@@ -1384,7 +1314,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:^5.38.0, @typescript-eslint/parser@npm:^5.54.1":
+"@typescript-eslint/parser@npm:^5.54.1":
   version: 5.56.0
   resolution: "@typescript-eslint/parser@npm:5.56.0"
   dependencies:
@@ -1557,7 +1487,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ajv@npm:^6.10.0, ajv@npm:^6.12.4, ajv@npm:~6.12.6":
+"ajv@npm:^6.10.0, ajv@npm:^6.12.4":
   version: 6.12.6
   resolution: "ajv@npm:6.12.6"
   dependencies:
@@ -2024,13 +1954,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"comment-parser@npm:1.3.1":
-  version: 1.3.1
-  resolution: "comment-parser@npm:1.3.1"
-  checksum: 421e6a113a3afd548500e7174ab46a2049dccf92e82bbaa3b209031b1bdf97552aabfa1ae2a120c0b62df17e1ba70e0d8b05d68504fee78e1ef974c59bcfe718
-  languageName: node
-  linkType: hard
-
 "concat-map@npm:0.0.1":
   version: 0.0.1
   resolution: "concat-map@npm:0.0.1"
@@ -2277,7 +2200,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-config-prettier@npm:^8.5.0":
+"eslint-config-prettier@npm:^8.8.0":
   version: 8.8.0
   resolution: "eslint-config-prettier@npm:8.8.0"
   peerDependencies:
@@ -2285,33 +2208,6 @@ __metadata:
   bin:
     eslint-config-prettier: bin/cli.js
   checksum: 1e94c3882c4d5e41e1dcfa2c368dbccbfe3134f6ac7d40101644d3bfbe3eb2f2ffac757f3145910b5eacf20c0e85e02b91293d3126d770cbf3dc390b3564681c
-  languageName: node
-  linkType: hard
-
-"eslint-plugin-jsdoc@npm:^40.0.0":
-  version: 40.1.0
-  resolution: "eslint-plugin-jsdoc@npm:40.1.0"
-  dependencies:
-    "@es-joy/jsdoccomment": ~0.37.0
-    comment-parser: 1.3.1
-    debug: ^4.3.4
-    escape-string-regexp: ^4.0.0
-    esquery: ^1.5.0
-    semver: ^7.3.8
-    spdx-expression-parse: ^3.0.1
-  peerDependencies:
-    eslint: ^7.0.0 || ^8.0.0
-  checksum: 58e7d5b5d44af92dff844b3012e46fd52c8afea1f44ac1837ed85a6f5ff02cbd1bc4df04f84d47afce8ec69ae2aa8e137cd89b6cb39e3c389dbe978f260aa6ea
-  languageName: node
-  linkType: hard
-
-"eslint-plugin-tsdoc@npm:^0.2.17":
-  version: 0.2.17
-  resolution: "eslint-plugin-tsdoc@npm:0.2.17"
-  dependencies:
-    "@microsoft/tsdoc": 0.14.2
-    "@microsoft/tsdoc-config": 0.16.2
-  checksum: d143a5f1c5967812d75f246ae2776cb030f6e7966b981406c9df9352a9ab02b035f294cedb30054eac2c4a217ee4ab2ed9fb76292bdccda9438e54d2d7b0146e
   languageName: node
   linkType: hard
 
@@ -2413,7 +2309,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esquery@npm:^1.4.0, esquery@npm:^1.4.2, esquery@npm:^1.5.0":
+"esquery@npm:^1.4.2":
   version: 1.5.0
   resolution: "esquery@npm:1.5.0"
   dependencies:
@@ -2976,7 +2872,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-core-module@npm:^2.1.0, is-core-module@npm:^2.9.0":
+"is-core-module@npm:^2.9.0":
   version: 2.11.0
   resolution: "is-core-module@npm:2.11.0"
   dependencies:
@@ -3687,13 +3583,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jju@npm:~1.4.0":
-  version: 1.4.0
-  resolution: "jju@npm:1.4.0"
-  checksum: 3790481bd2b7827dd6336e6e3dc2dcc6d425679ba7ebde7b679f61dceb4457ea0cda330972494de608571f4973c6dfb5f70fab6f3c5037dbab19ac449a60424f
-  languageName: node
-  linkType: hard
-
 "js-sdsl@npm:^4.1.4":
   version: 4.4.0
   resolution: "js-sdsl@npm:4.4.0"
@@ -3728,13 +3617,6 @@ __metadata:
   bin:
     js-yaml: bin/js-yaml.js
   checksum: c7830dfd456c3ef2c6e355cc5a92e6700ceafa1d14bba54497b34a99f0376cecbb3e9ac14d3e5849b426d5a5140709a66237a8c991c675431271c4ce5504151a
-  languageName: node
-  linkType: hard
-
-"jsdoc-type-pratt-parser@npm:~4.0.0":
-  version: 4.0.0
-  resolution: "jsdoc-type-pratt-parser@npm:4.0.0"
-  checksum: af0629c9517e484be778d8564440fec8de5b7610e0c9c88a3ba4554321364faf72b46689c8d8845faa12c0718437a9ed97e231977efc0f2d50e8a2dbad807eb3
   languageName: node
   linkType: hard
 
@@ -4426,7 +4308,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"path-parse@npm:^1.0.6, path-parse@npm:^1.0.7":
+"path-parse@npm:^1.0.7":
   version: 1.0.7
   resolution: "path-parse@npm:1.0.7"
   checksum: 49abf3d81115642938a8700ec580da6e830dde670be21893c62f4e10bd7dd4c3742ddc603fe24f898cba7eb0c6bc1777f8d9ac14185d34540c6d4d80cd9cae8a
@@ -4618,16 +4500,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"resolve@npm:~1.19.0":
-  version: 1.19.0
-  resolution: "resolve@npm:1.19.0"
-  dependencies:
-    is-core-module: ^2.1.0
-    path-parse: ^1.0.6
-  checksum: a05b356e47b85ad3613d9e2a39a824f3c27f4fcad9c9ff6c7cc71a2e314c5904a90ab37481ad0069d03cab9eaaac6eb68aca1bc3355fdb05f1045cd50e2aacea
-  languageName: node
-  linkType: hard
-
 "resolve@patch:resolve@^1.20.0#~builtin<compat/resolve>":
   version: 1.22.1
   resolution: "resolve@patch:resolve@npm%3A1.22.1#~builtin<compat/resolve>::version=1.22.1&hash=c3c19d"
@@ -4638,16 +4510,6 @@ __metadata:
   bin:
     resolve: bin/resolve
   checksum: 5656f4d0bedcf8eb52685c1abdf8fbe73a1603bb1160a24d716e27a57f6cecbe2432ff9c89c2bd57542c3a7b9d14b1882b73bfe2e9d7849c9a4c0b8b39f02b8b
-  languageName: node
-  linkType: hard
-
-"resolve@patch:resolve@~1.19.0#~builtin<compat/resolve>":
-  version: 1.19.0
-  resolution: "resolve@patch:resolve@npm%3A1.19.0#~builtin<compat/resolve>::version=1.19.0&hash=c3c19d"
-  dependencies:
-    is-core-module: ^2.1.0
-    path-parse: ^1.0.6
-  checksum: 2443b94d347e6946c87c85faf13071f605e609e0b54784829b0ed2b917d050bfc1cbaf4ecc6453f224cfa7d0c5dcd97cbb273454cd210bee68e4af15c1a5abc9
   languageName: node
   linkType: hard
 
@@ -4699,7 +4561,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:7.x, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.3.8":
+"semver@npm:7.x, semver@npm:^7.3.5, semver@npm:^7.3.7":
   version: 7.3.8
   resolution: "semver@npm:7.3.8"
   dependencies:
@@ -4817,30 +4679,6 @@ __metadata:
   version: 0.6.1
   resolution: "source-map@npm:0.6.1"
   checksum: 59ce8640cf3f3124f64ac289012c2b8bd377c238e316fb323ea22fbfe83da07d81e000071d7242cad7a23cd91c7de98e4df8830ec3f133cb6133a5f6e9f67bc2
-  languageName: node
-  linkType: hard
-
-"spdx-exceptions@npm:^2.1.0":
-  version: 2.3.0
-  resolution: "spdx-exceptions@npm:2.3.0"
-  checksum: cb69a26fa3b46305637123cd37c85f75610e8c477b6476fa7354eb67c08128d159f1d36715f19be6f9daf4b680337deb8c65acdcae7f2608ba51931540687ac0
-  languageName: node
-  linkType: hard
-
-"spdx-expression-parse@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "spdx-expression-parse@npm:3.0.1"
-  dependencies:
-    spdx-exceptions: ^2.1.0
-    spdx-license-ids: ^3.0.0
-  checksum: a1c6e104a2cbada7a593eaa9f430bd5e148ef5290d4c0409899855ce8b1c39652bcc88a725259491a82601159d6dc790bedefc9016c7472f7de8de7361f8ccde
-  languageName: node
-  linkType: hard
-
-"spdx-license-ids@npm:^3.0.0":
-  version: 3.0.13
-  resolution: "spdx-license-ids@npm:3.0.13"
-  checksum: 3469d85c65f3245a279fa11afc250c3dca96e9e847f2f79d57f466940c5bb8495da08a542646086d499b7f24a74b8d0b42f3fc0f95d50ff99af1f599f6360ad7
   languageName: node
   linkType: hard
 

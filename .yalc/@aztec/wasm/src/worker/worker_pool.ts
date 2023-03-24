@@ -1,13 +1,17 @@
-import { createDebugLogger } from '@aztec/log';
-import { WasmWorker } from './wasm_worker.js';
+import { createDebugLogger } from "@aztec/foundation";
+import { WasmWorker } from "./wasm_worker.js";
 
-const debug = createDebugLogger('bb:worker_pool');
+const debug = createDebugLogger("bb:worker_pool");
 
 /**
  * Type of a worker factory.
  * Used to customize WorkerPool worker construction.
  */
-export type CreateWorker = (name: string, minMem: number, maxMem: number) => WasmWorker;
+export type CreateWorker = (
+  name: string,
+  minMem: number,
+  maxMem: number
+) => WasmWorker;
 /**
  * Allocates a pool of WasmWorker's.
  * Worker 0 is allocated MAX_PAGES memory pages. This is because worker 0 will need to hold the proving key
@@ -52,13 +56,23 @@ export class WorkerPool {
    * @param poolSize - Pool size.
    * @param maxMem - Max memory pages.
    */
-  public async init(createWorker: CreateWorker, poolSize: number, maxMem = WorkerPool.MAX_PAGES) {
+  public async init(
+    createWorker: CreateWorker,
+    poolSize: number,
+    maxMem = WorkerPool.MAX_PAGES
+  ) {
     debug(`creating ${poolSize} workers...`);
     const start = new Date().getTime();
     this.workers = await Promise.all(
       Array(poolSize)
         .fill(0)
-        .map((_, i) => createWorker(`${i}`, i === 0 ? Math.min(WorkerPool.MAX_PAGES, maxMem) : 768, maxMem)),
+        .map((_, i) =>
+          createWorker(
+            `${i}`,
+            i === 0 ? Math.min(WorkerPool.MAX_PAGES, maxMem) : 768,
+            maxMem
+          )
+        )
     );
 
     debug(`created workers: ${new Date().getTime() - start}ms`);
@@ -68,6 +82,6 @@ export class WorkerPool {
    * Tell all workers in the pool to stop processing.
    */
   public async destroy() {
-    await Promise.all(this.workers.map(w => w.destroyWorker()));
+    await Promise.all(this.workers.map((w) => w.destroyWorker()));
   }
 }

@@ -1,8 +1,8 @@
-import { createDebugLogger, DebugLogger } from '@aztec/log';
-import { Buffer } from 'buffer';
-import { MemoryFifo } from '../memory_fifo.js';
-import { getEmptyWasiSdk } from './empty_wasi_sdk.js';
-import { randomBytes } from 'crypto';
+import { createDebugLogger, DebugLogger } from "@aztec/foundation";
+import { Buffer } from "buffer";
+import { MemoryFifo } from "../memory_fifo.js";
+import { getEmptyWasiSdk } from "./empty_wasi_sdk.js";
+import { randomBytes } from "crypto";
 
 /**
  * WasmModule:
@@ -28,7 +28,7 @@ export class WasmModule {
   constructor(
     private module: WebAssembly.Module | Buffer,
     private importFn: (module: WasmModule) => any,
-    loggerName = 'wasm',
+    loggerName = "wasm"
   ) {
     this.debug = createDebugLogger(loggerName);
     this.mutexQ.put(true);
@@ -49,9 +49,9 @@ export class WasmModule {
    */
   public async init(initial = 20, maximum = 8192) {
     this.debug(
-      `initial mem: ${initial} pages, ${(initial * 2 ** 16) / (1024 * 1024)}mb. max mem: ${maximum} pages, ${
-        (maximum * 2 ** 16) / (1024 * 1024)
-      }mb`,
+      `initial mem: ${initial} pages, ${
+        (initial * 2 ** 16) / (1024 * 1024)
+      }mb. max mem: ${maximum} pages, ${(maximum * 2 ** 16) / (1024 * 1024)}mb`
     );
     this.memory = new WebAssembly.Memory({ initial, maximum });
     // Create a view over the memory buffer.
@@ -82,7 +82,10 @@ export class WasmModule {
     if (this.module instanceof WebAssembly.Module) {
       this.instance = await WebAssembly.instantiate(this.module, importObj);
     } else {
-      const { instance } = await WebAssembly.instantiate(this.module, importObj);
+      const { instance } = await WebAssembly.instantiate(
+        this.module,
+        importObj
+      );
       this.instance = instance;
     }
   }
@@ -93,7 +96,7 @@ export class WasmModule {
    */
   public exports(): any {
     if (!this.instance) {
-      throw new Error('WasmModule: not initialized!');
+      throw new Error("WasmModule: not initialized!");
     }
     return this.instance.exports;
   }
@@ -198,7 +201,7 @@ export class WasmModule {
     const m = this.getMemory();
     let i = addr;
     for (; m[i] !== 0; ++i);
-    return Buffer.from(m.slice(addr, i)).toString('ascii');
+    return Buffer.from(m.slice(addr, i)).toString("ascii");
   }
 
   /**
@@ -216,7 +219,7 @@ export class WasmModule {
    */
   public release() {
     if (this.mutexQ.length() !== 0) {
-      throw new Error('Release called but not acquired.');
+      throw new Error("Release called but not acquired.");
     }
     this.mutexQ.put(true);
   }
