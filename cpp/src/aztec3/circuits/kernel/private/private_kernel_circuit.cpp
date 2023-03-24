@@ -255,6 +255,13 @@ void validate_inputs(PrivateInputs<CT> const& private_inputs)
         // TODO (later): membership proof of VK
     };
     is_recursive_case.must_imply(recursive_case_conditions);
+
+    // validate constructor hash
+    // generate contract address
+    // generate contract address nullifier and add to list
+    // create new contract data and add to list
+    // MAYBE: check other contract deployment data:
+    //        function tree, contracts root
 }
 
 // NOTE: THIS IS A VERY UNFINISHED WORK IN PROGRESS.
@@ -293,4 +300,4 @@ void private_kernel_circuit(Composer& composer, PrivateInputs<NT> const& _privat
     // public_inputs.set_public();
 };
 
-} // namespace aztec3::circuits::kernel::private_kernel
+// } // namespace aztec3::circuits::kernel::private_kernel
