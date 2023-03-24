@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "docs": "typedoc --out docs/dist && cd docs && yarn serve",
+    "test": "cd ts && yarn test",
     "build": "cd ts && yarn build",
     "formatting": "cd ts && yarn formatting",
     "formatting:fix": "cd ts && yarn formatting:fix"
@@ -22,9 +23,5 @@
   },
   "comments": {
     "purpose": "Workspace for circuits/ts. Provides dependencies, while allowing ts/ to be cleanly symlinked."
-  },
-  "dependencies": {
-    "@aztec/foundation": "file:.yalc/@aztec/foundation",
-    "@aztec/wasm": "file:.yalc/@aztec/wasm"
   }
 }
