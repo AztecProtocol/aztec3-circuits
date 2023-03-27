@@ -42,13 +42,13 @@ NT::fr get_prover_contribution_hash()
     return NT::fr(0);
 }
 
-MergeRollupPublicInputs merge_rollup_circuit(MergeRollupInputs mergeRollupInputs)
+RollupPublicInputs merge_rollup_circuit(MergeRollupInputs mergeRollupInputs)
 {
     // Verify the previous rollup proofs
 
     AggregationObject aggregation_object = aggregate_proofs(mergeRollupInputs);
 
-    MergeRollupPublicInputs public_inputs = {};
+    RollupPublicInputs public_inputs = {};
     return public_inputs;
 }
 
