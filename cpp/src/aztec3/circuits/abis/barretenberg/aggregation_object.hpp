@@ -30,7 +30,7 @@ inline void write(std::vector<uint8_t>& buf, aztec3::utils::types::NativeTypes::
 
 namespace std {
 
-inline std::ostream& operator<<(std::ostream& os, stdlib::recursion::native_recursion_output const& obj)
+inline std::ostream& operator<<(std::ostream& os, stdlib::recursion::native_aggregation_state const& obj)
 {
     return os << "P0: " << obj.P0 << "\n"
               << "P1: " << obj.P1 << "\n"
