@@ -34,6 +34,7 @@ constexpr size_t NULLIFIER_TREE_HEIGHT = 8;
 
 constexpr size_t PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT = 8;
 constexpr size_t CONTRACT_TREE_ROOTS_TREE_HEIGHT = 8;
+constexpr size_t ROLLUP_VK_TREE_HEIGHT = 8; // TODO: update
 
 constexpr size_t FUNCTION_SELECTOR_NUM_BYTES = 31; // must be <= 31
 
