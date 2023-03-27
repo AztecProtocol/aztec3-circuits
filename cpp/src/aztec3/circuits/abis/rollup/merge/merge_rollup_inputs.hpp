@@ -13,8 +13,6 @@ using aztec3::utils::types::NativeTypes;
 using std::is_same;
 
 template <typename NCT> struct MergeRollupInputs {
-    typedef typename NCT::fr fr;
-
     std::array<PreviousRollupData<NCT>, 2> previous_rollup_data;
 
     bool operator==(MergeRollupInputs<NCT> const&) const = default;

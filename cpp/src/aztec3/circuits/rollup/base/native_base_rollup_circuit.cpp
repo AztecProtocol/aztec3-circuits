@@ -237,7 +237,7 @@ void perform_historical_contract_data_tree_membership_checks(ConstantRollupData 
 //   - BaseRollupPublicInputs - where we want to put our return values
 //
 // TODO: replace auto
-RollupPublicInputs base_rollup_circuit(ConstantRollupData constantBaseRollupData, BaseRollupInputs baseRollupInputs)
+BaseRollupPublicInputs base_rollup_circuit(ConstantRollupData constantBaseRollupData, BaseRollupInputs baseRollupInputs)
 {
 
     // First we compute the contract tree leaves
@@ -276,7 +276,7 @@ RollupPublicInputs base_rollup_circuit(ConstantRollupData constantBaseRollupData
 
     NT::fr prover_contribution_hash = get_prover_contribution_hash(); // TODO: implement
 
-    RollupPublicInputs public_inputs = {
+    BaseRollupPublicInputs public_inputs = {
         .end_aggregation_object = aggregation_object,
         .constants = constantBaseRollupData,
         .start_nullifier_tree_snapshot = mockNullifierStartSnapshot, // TODO: implement:
