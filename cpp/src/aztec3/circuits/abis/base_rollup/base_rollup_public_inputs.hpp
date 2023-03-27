@@ -13,14 +13,9 @@ using aztec3::utils::types::CircuitTypes;
 using aztec3::utils::types::NativeTypes;
 using std::is_same;
 
-const uint32_t BASE_ROLLUP_TYPE = 0;
-const uint32_t MERGE_ROLLUP_TYPE = 1;
-
 template <typename NCT> struct BaseRollupPublicInputs {
     typedef typename NCT::fr fr;
     typedef typename NCT::AggregationObject AggregationObject;
-
-    uint32_t rollup_type;
 
     AggregationObject end_aggregation_object;
 
@@ -40,10 +35,7 @@ template <typename NCT> struct BaseRollupPublicInputs {
     // bottom-right of here.
     // TODO I've put `fr`, but these hash values' types might need to be two fields if we want all 256-bits, for
     // security purposes.
-    fr new_commitments_hash;
-    fr new_nullifiers_hash;
-    fr new_l1_msgs_hash;
-    fr new_contract_data_hash;
+    fr calldata_hash;
     fr prover_contributions_hash;
 
     bool operator==(BaseRollupPublicInputs<NCT> const&) const = default;
