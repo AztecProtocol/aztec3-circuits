@@ -268,12 +268,12 @@ void validate_inputs(PrivateInputs<CT> const& private_inputs)
 // TODO: decide what to return.
 // TODO: is there a way to identify whether an input has not been used by ths circuit? This would help us more-safely
 // ensure we're constraining everything.
-void private_kernel_circuit(Composer& composer, PrivateInputs<NT> const& _private_inputs)
+PublicInputs<NT> private_kernel_circuit(Composer& composer, PrivateInputs<NT> const& _private_inputs)
 {
     const PrivateInputs<CT> private_inputs = _private_inputs.to_circuit_type(composer);
 
     // We'll be pushing data to this during execution of this circuit.
-    PublicInputs<CT> public_inputs{};
+    PublicInputs<CT> public_inputs = PublicInputs<NT>{}.to_circuit_type(composer);
 
     // Do this before any functions can modify the inputs.
     initialise_end_values(private_inputs, public_inputs);
@@ -297,7 +297,9 @@ void private_kernel_circuit(Composer& composer, PrivateInputs<NT> const& _privat
 
     public_inputs.end.aggregation_object = aggregation_object;
 
-    // public_inputs.set_public();
+    public_inputs.set_public();
+
+    return public_inputs.to_native_type<Composer>();
 };
 
-// } // namespace aztec3::circuits::kernel::private_kernel
+} // namespace aztec3::circuits::kernel::private_kernel
