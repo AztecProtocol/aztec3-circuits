@@ -3,9 +3,10 @@
 #include <aztec3/utils/types/native_types.hpp>
 #include <aztec3/utils/types/circuit_types.hpp>
 #include <aztec3/utils/types/convert.hpp>
-#include "../append_only_tree_snapshot.hpp"
-#include "../append_only_tree_snapshot.hpp"
-#include "./constant_base_rollup_data.hpp"
+#include "../../append_only_tree_snapshot.hpp"
+#include "../../append_only_tree_snapshot.hpp"
+#include "../../barretenberg/aggregation_object.hpp"
+#include "../constant_rollup_data.hpp"
 
 namespace aztec3::circuits::abis {
 
@@ -19,7 +20,7 @@ template <typename NCT> struct BaseRollupPublicInputs {
 
     AggregationObject end_aggregation_object;
 
-    ConstantBaseRollupData<NCT> constants;
+    ConstantRollupData<NCT> constants;
 
     // The only tree root actually updated in this circuit is the nullifier tree, because earlier leaves (of
     // low_nullifiers) must be updated to point to the new nullifiers in this circuit.

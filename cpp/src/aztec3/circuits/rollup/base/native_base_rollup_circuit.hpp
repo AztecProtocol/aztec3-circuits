@@ -8,13 +8,13 @@
 #include <aztec3/utils/types/circuit_types.hpp>
 #include <aztec3/utils/types/native_types.hpp>
 
-#include <aztec3/circuits/abis/base_rollup/base_rollup_inputs.hpp>
-#include <aztec3/circuits/abis/base_rollup/base_rollup_public_inputs.hpp>
-#include <aztec3/circuits/abis/base_rollup/nullifier_leaf_preimage.hpp>
-#include <aztec3/circuits/abis/base_rollup/constant_base_rollup_data.hpp>
+#include <aztec3/circuits/abis/rollup/base/base_rollup_inputs.hpp>
+#include <aztec3/circuits/abis/rollup/base/base_rollup_public_inputs.hpp>
+#include <aztec3/circuits/abis/rollup/nullifier_leaf_preimage.hpp>
+#include <aztec3/circuits/abis/rollup/constant_rollup_data.hpp>
 
 namespace aztec3::circuits::rollup::native_base_rollup {
 
-void base_rollup_circuit(ConstantBaseRollupData constantRollupData, BaseRollupInputs baseRollupInputs);
+void base_rollup_circuit(ConstantRollupData constantRollupData, BaseRollupInputs baseRollupInputs);
 
 } // namespace aztec3::circuits::rollup::native_base_rollup

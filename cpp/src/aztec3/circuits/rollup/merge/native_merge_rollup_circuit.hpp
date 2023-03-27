@@ -8,7 +8,7 @@
 #include <aztec3/utils/types/circuit_types.hpp>
 #include <aztec3/utils/types/native_types.hpp>
 
-#include <aztec3/circuits/abis/merge_rollup/merge_rollup_inputs.hpp>
+#include <aztec3/circuits/abis/rollup/merge/merge_rollup_inputs.hpp>
 
 namespace aztec3::circuits::rollup::native_merge_rollup {
 
