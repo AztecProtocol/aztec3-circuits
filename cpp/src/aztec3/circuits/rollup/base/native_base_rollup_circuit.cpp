@@ -10,10 +10,9 @@
 
 #include <algorithm>
 #include <array>
-#include <aztec3/circuits/abis/base_rollup/base_rollup_inputs.hpp>
-#include <aztec3/circuits/abis/base_rollup/base_rollup_public_inputs.hpp>
-#include <aztec3/circuits/abis/base_rollup/constant_base_rollup_data.hpp>
-#include <aztec3/circuits/abis/base_rollup/nullifier_leaf_preimage.hpp>
+#include <aztec3/circuits/abis/rollup/base/base_rollup_inputs.hpp>
+#include <aztec3/circuits/abis/rollup/base/base_rollup_public_inputs.hpp>
+#include <aztec3/circuits/abis/rollup/nullifier_leaf_preimage.hpp>
 #include <cstdint>
 #include <tuple>
 #include <vector>
@@ -205,14 +204,12 @@ void check_membership(NT::fr root,
  * @param constantBaseRollupData
  * @param baseRollupInputs
  */
-void perform_historical_private_data_tree_membership_checks(ConstantBaseRollupData constantBaseRollupData,
+void perform_historical_private_data_tree_membership_checks(ConstantRollupData constantBaseRollupData,
                                                             BaseRollupInputs baseRollupInputs)
 {
     // For each of the historic_private_data_tree_membership_checks, we need to do an inclusion proof
     // against the historical root provided in the rollup constants
     auto historic_root = constantBaseRollupData.start_tree_of_historic_private_data_tree_roots_snapshot.root;
-
-    // TODO: why are there two witnesses per historic data root witness?
 
     for (size_t i = 0; i < 2; i++) {
         NT::fr leaf = baseRollupInputs.kernel_data[i].public_inputs.constants.old_tree_roots.private_data_tree_root;
@@ -223,12 +220,10 @@ void perform_historical_private_data_tree_membership_checks(ConstantBaseRollupDa
     }
 }
 
-void perform_historical_contract_data_tree_membership_checks(ConstantBaseRollupData constantBaseRollupData,
+void perform_historical_contract_data_tree_membership_checks(ConstantRollupData constantBaseRollupData,
                                                              BaseRollupInputs baseRollupInputs)
 {
     auto historic_root = constantBaseRollupData.start_tree_of_historic_contract_tree_roots_snapshot.root;
-
-    // TODO: why are there two witnesses per historic data root witness?
 
     for (size_t i = 0; i < 2; i++) {
         NT::fr leaf = baseRollupInputs.kernel_data[i].public_inputs.constants.old_tree_roots.contract_tree_root;
@@ -242,8 +237,7 @@ void perform_historical_contract_data_tree_membership_checks(ConstantBaseRollupD
 //   - BaseRollupPublicInputs - where we want to put our return values
 //
 // TODO: replace auto
-BaseRollupPublicInputs base_rollup_circuit(ConstantBaseRollupData constantBaseRollupData,
-                                           BaseRollupInputs baseRollupInputs)
+BaseRollupPublicInputs base_rollup_circuit(ConstantRollupData constantBaseRollupData, BaseRollupInputs baseRollupInputs)
 {
 
     // First we compute the contract tree leaves
@@ -264,7 +258,7 @@ BaseRollupPublicInputs base_rollup_circuit(ConstantBaseRollupData constantBaseRo
     // Calculate the overall calldata hash
     NT::fr calldata_hash = calculate_calldata_hash(baseRollupInputs, contract_leaves);
 
-    // TODO: do a membership check that the notes provided exist within the historic trees data
+    // Perform membership checks that the notes provided exist within the historic trees data
     perform_historical_private_data_tree_membership_checks(constantBaseRollupData, baseRollupInputs);
     perform_historical_contract_data_tree_membership_checks(constantBaseRollupData, baseRollupInputs);
 

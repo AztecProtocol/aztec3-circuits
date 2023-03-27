@@ -2,9 +2,9 @@
 #pragma once
 
 #include "aztec3/circuits/abis/append_only_tree_snapshot.hpp"
-#include "aztec3/circuits/abis/rollup/base/base_rollup_inputs.hpp"
 #include "aztec3/circuits/abis/rollup/constant_rollup_data.hpp"
-#include "aztec3/circuits/abis/rollup/base/base_rollup_public_inputs.hpp"
+#include "aztec3/circuits/abis/rollup/merge/merge_rollup_public_inputs.hpp"
+#include "aztec3/circuits/abis/rollup/merge/merge_rollup_inputs.hpp"
 #include <aztec3/circuits/recursion/aggregator.hpp>
 #include <aztec3/circuits/abis/private_circuit_public_inputs.hpp>
 
@@ -14,16 +14,15 @@
 #include <aztec3/utils/types/circuit_types.hpp>
 #include <aztec3/utils/types/native_types.hpp>
 
-namespace aztec3::circuits::rollup::native_base_rollup {
+namespace aztec3::circuits::rollup::native_merge_rollup {
 
 using NT = aztec3::utils::types::NativeTypes;
 
 // Params
-using ConstantRollupData = abis::ConstantRollupData<NT>;
-using BaseRollupInputs = abis::BaseRollupInputs<NT>;
-using BaseRollupPublicInputs = abis::BaseRollupPublicInputs<NT>;
+using MergeRollupInputs = abis::MergeRollupInputs<NT>;
+using MergeRollupPublicInputs = abis::MergeRollupPublicInputs<NT>;
 
 using AggregationObject = stdlib::recursion::native_recursion_output;
 using AppendOnlySnapshot = abis::AppendOnlyTreeSnapshot<NT>;
 
-} // namespace aztec3::circuits::rollup::native_base_rollup
+} // namespace aztec3::circuits::rollup::native_merge_rollup
