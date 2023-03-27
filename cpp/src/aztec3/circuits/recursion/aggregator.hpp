@@ -18,30 +18,6 @@ using CT = aztec3::utils::types::CircuitTypes<Composer>;
 using NT = aztec3::utils::types::NativeTypes;
 using transcript::Manifest;
 
-// class Aggregator {
-//   public:
-//     // Circuit Types:
-//     using AggregationObject = aggregation_state<bn254>;
-
-//     // Native Types:
-//     using Proof = plonk::proof;
-//     using VK = std::shared_ptr<bonk::verification_key>;
-
-//     static AggregationObject aggregate(Composer* composer,
-//                                        const VK& vk,
-//                                        const Proof& proof,
-//                                        const AggregationObject previous_aggregation_output = AggregationObject())
-//     {
-//         std::shared_ptr<verification_key<bn254>> recursive_vk = verification_key<bn254>::from_witness(composer, vk);
-//         const transcript::Manifest recursive_manifest = Composer::create_manifest(vk->num_public_inputs);
-
-//         AggregationObject result = verify_proof<bn254, recursive_inner_verifier_settings<bn254>>(
-//             composer, recursive_vk, recursive_manifest, proof, previous_aggregation_output);
-
-//         return result;
-//     }
-// };
-
 class Aggregator {
   public:
     static CT::AggregationObject aggregate(
