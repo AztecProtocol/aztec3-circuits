@@ -15,9 +15,6 @@ using aztec3::utils::types::NativeTypes;
 using std::is_same;
 
 template <typename NCT> struct PreviousRollupData {
-    typedef typename NCT::fr fr;
-    typedef typename NCT::AggregationObject AggregationObject;
-
     MergeRollupPublicInputs<NCT> merge_rollup_public_inputs;
 
     NativeTypes::Proof proof;

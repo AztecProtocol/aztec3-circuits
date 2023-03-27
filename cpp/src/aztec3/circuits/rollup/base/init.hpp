@@ -20,8 +20,8 @@ using NT = aztec3::utils::types::NativeTypes;
 
 // Params
 using ConstantRollupData = abis::ConstantRollupData<NT>;
-using BaseRollupInputs = abis::MergeRollupInputs<NT>;
-using RollupPublicInputs = abis::BaseRollupPublicInputs<NT>;
+using BaseRollupInputs = abis::BaseRollupInputs<NT>;
+using BaseRollupPublicInputs = abis::BaseRollupPublicInputs<NT>;
 
 using AggregationObject = stdlib::recursion::native_recursion_output;
 using AppendOnlySnapshot = abis::AppendOnlyTreeSnapshot<NT>;
