@@ -141,7 +141,6 @@
     //
     // GTest adapter (not currently used)
     //
-    "gtest-adapter.debugConfig": ["(lldb) Launch Target"],
     "[cpp]": {
       "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
     }
