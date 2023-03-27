@@ -1,7 +1,9 @@
+#include "aztec3/constants.hpp"
 #include "barretenberg/crypto/pedersen_hash/pedersen.hpp"
 #include "barretenberg/crypto/sha256/sha256.hpp"
 #include "barretenberg/ecc/curves/bn254/fr.hpp"
 #include "barretenberg/stdlib/hash/pedersen/pedersen.hpp"
+#include "barretenberg/stdlib/merkle_tree/membership.hpp"
 #include "barretenberg/stdlib/merkle_tree/memory_tree.hpp"
 #include "barretenberg/stdlib/merkle_tree/merkle_tree.hpp"
 #include "init.hpp"
@@ -101,10 +103,9 @@ std::array<NT::fr, 3> calculate_new_subtrees(BaseRollupInputs baseRollupInputs, 
     for (size_t i = 0; i < 2; i++) {
 
         auto new_commitments = baseRollupInputs.kernel_data[i].public_inputs.end.new_commitments;
-        auto new_commitments_size = new_commitments.size();
 
         // Our commitments size MUST be 4 to calculate our subtrees correctly
-        assert(new_commitments_size == 4);
+        assert(new_commitments.size() == 4);
 
         for (size_t j = 0; j < new_commitments.size(); j++) {
             // todo: batch insert
@@ -178,6 +179,65 @@ NT::fr calculate_calldata_hash(BaseRollupInputs baseRollupInputs, std::vector<NT
     return sha256::sha256_to_field(calldata_hash_inputs_bytes_vec);
 }
 
+void check_membership(NT::fr root,
+                      NT::fr leaf,
+                      abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> witness)
+{
+    // Extract values
+    NT::uint32 leaf_index = witness.leaf_index;
+    auto sibling_path = witness.sibling_path;
+
+    // Perform merkle membership check with the provided sibling path up to the root
+    for (size_t i = 0; i < PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT; i++) {
+        if (leaf_index & (1 << i)) {
+            leaf = crypto::pedersen_hash::hash_multiple({ leaf, sibling_path[i] });
+        } else {
+            leaf = crypto::pedersen_hash::hash_multiple({ sibling_path[i], leaf });
+        }
+    }
+    if (leaf != root) {
+        throw std::runtime_error("Merkle membership check failed");
+    }
+}
+/**
+ * @brief Check all of the provided commitments against the historical tree roots
+ *
+ * @param constantBaseRollupData
+ * @param baseRollupInputs
+ */
+void perform_historical_private_data_tree_membership_checks(ConstantBaseRollupData constantBaseRollupData,
+                                                            BaseRollupInputs baseRollupInputs)
+{
+    // For each of the historic_private_data_tree_membership_checks, we need to do an inclusion proof
+    // against the historical root provided in the rollup constants
+    auto historic_root = constantBaseRollupData.start_tree_of_historic_private_data_tree_roots_snapshot.root;
+
+    // TODO: why are there two witnesses per historic data root witness?
+
+    for (size_t i = 0; i < 2; i++) {
+        NT::fr leaf = baseRollupInputs.kernel_data[i].public_inputs.constants.old_tree_roots.private_data_tree_root;
+        abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> historic_root_witness =
+            baseRollupInputs.historic_private_data_tree_root_membership_witnesses[i];
+
+        check_membership(historic_root, leaf, historic_root_witness);
+    }
+}
+
+void perform_historical_contract_data_tree_membership_checks(ConstantBaseRollupData constantBaseRollupData,
+                                                             BaseRollupInputs baseRollupInputs)
+{
+    auto historic_root = constantBaseRollupData.start_tree_of_historic_contract_tree_roots_snapshot.root;
+
+    // TODO: why are there two witnesses per historic data root witness?
+
+    for (size_t i = 0; i < 2; i++) {
+        NT::fr leaf = baseRollupInputs.kernel_data[i].public_inputs.constants.old_tree_roots.contract_tree_root;
+        abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> historic_root_witness =
+            baseRollupInputs.historic_contract_tree_root_membership_witnesses[i];
+
+        check_membership(historic_root, leaf, historic_root_witness);
+    }
+}
 // Important types:
 //   - BaseRollupPublicInputs - where we want to put our return values
 //
@@ -205,6 +265,8 @@ BaseRollupPublicInputs base_rollup_circuit(ConstantBaseRollupData constantBaseRo
     NT::fr calldata_hash = calculate_calldata_hash(baseRollupInputs, contract_leaves);
 
     // TODO: do a membership check that the notes provided exist within the historic trees data
+    perform_historical_private_data_tree_membership_checks(constantBaseRollupData, baseRollupInputs);
+    perform_historical_contract_data_tree_membership_checks(constantBaseRollupData, baseRollupInputs);
 
     AggregationObject aggregation_object = aggregate_proofs(baseRollupInputs);
 
