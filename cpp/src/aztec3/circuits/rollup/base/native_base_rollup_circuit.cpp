@@ -10,10 +10,9 @@
 
 #include <algorithm>
 #include <array>
-#include <aztec3/circuits/abis/base_rollup/base_rollup_inputs.hpp>
-#include <aztec3/circuits/abis/base_rollup/base_rollup_public_inputs.hpp>
-#include <aztec3/circuits/abis/base_rollup/constant_base_rollup_data.hpp>
-#include <aztec3/circuits/abis/base_rollup/nullifier_leaf_preimage.hpp>
+#include <aztec3/circuits/abis/rollup/base/base_rollup_inputs.hpp>
+#include <aztec3/circuits/abis/rollup/base/base_rollup_public_inputs.hpp>
+#include <aztec3/circuits/abis/rollup/nullifier_leaf_preimage.hpp>
 #include <cstdint>
 #include <tuple>
 #include <vector>
@@ -205,7 +204,7 @@ void check_membership(NT::fr root,
  * @param constantBaseRollupData
  * @param baseRollupInputs
  */
-void perform_historical_private_data_tree_membership_checks(ConstantBaseRollupData constantBaseRollupData,
+void perform_historical_private_data_tree_membership_checks(ConstantRollupData constantBaseRollupData,
                                                             BaseRollupInputs baseRollupInputs)
 {
     // For each of the historic_private_data_tree_membership_checks, we need to do an inclusion proof
@@ -221,7 +220,7 @@ void perform_historical_private_data_tree_membership_checks(ConstantBaseRollupDa
     }
 }
 
-void perform_historical_contract_data_tree_membership_checks(ConstantBaseRollupData constantBaseRollupData,
+void perform_historical_contract_data_tree_membership_checks(ConstantRollupData constantBaseRollupData,
                                                              BaseRollupInputs baseRollupInputs)
 {
     auto historic_root = constantBaseRollupData.start_tree_of_historic_contract_tree_roots_snapshot.root;
@@ -238,8 +237,7 @@ void perform_historical_contract_data_tree_membership_checks(ConstantBaseRollupD
 //   - BaseRollupPublicInputs - where we want to put our return values
 //
 // TODO: replace auto
-BaseRollupPublicInputs base_rollup_circuit(ConstantBaseRollupData constantBaseRollupData,
-                                           BaseRollupInputs baseRollupInputs)
+RollupPublicInputs base_rollup_circuit(ConstantRollupData constantBaseRollupData, BaseRollupInputs baseRollupInputs)
 {
 
     // First we compute the contract tree leaves
@@ -278,7 +276,7 @@ BaseRollupPublicInputs base_rollup_circuit(ConstantBaseRollupData constantBaseRo
 
     NT::fr prover_contribution_hash = get_prover_contribution_hash(); // TODO: implement
 
-    BaseRollupPublicInputs public_inputs = {
+    RollupPublicInputs public_inputs = {
         .end_aggregation_object = aggregation_object,
         .constants = constantBaseRollupData,
         .start_nullifier_tree_snapshot = mockNullifierStartSnapshot, // TODO: implement:

@@ -1,6 +1,6 @@
 #pragma once
 #include "aztec3/circuits/abis/append_only_tree_snapshot.hpp"
-#include "aztec3/circuits/abis/merge_rollup/previous_rollup_data.hpp"
+#include <aztec3/circuits/abis/rollup/merge/previous_rollup_data.hpp>
 #include <aztec3/utils/types/native_types.hpp>
 #include <aztec3/utils/types/circuit_types.hpp>
 #include <aztec3/utils/types/convert.hpp>
@@ -15,8 +15,7 @@ using std::is_same;
 template <typename NCT> struct MergeRollupInputs {
     typedef typename NCT::fr fr;
 
-    std::array<MergeRollupPublicInputs<NCT>, 2> previous_rollup_data;
-    fr prover_id;
+    std::array<PreviousRollupData<NCT>, 2> previous_rollup_data;
 
     bool operator==(MergeRollupInputs<NCT> const&) const = default;
 };
@@ -26,7 +25,6 @@ template <typename NCT> void read(uint8_t const*& it, MergeRollupInputs<NCT>& ob
     using serialize::read;
 
     read(it, obj.previous_rollup_data);
-    read(it, obj.prover_id);
 };
 
 template <typename NCT> void write(std::vector<uint8_t>& buf, MergeRollupInputs<NCT> const& obj)
@@ -34,13 +32,11 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, MergeRollupInputs<
     using serialize::write;
 
     write(buf, obj.previous_rollup_data);
-    write(buf, obj.prover_id);
 };
 
 template <typename NCT> std::ostream& operator<<(std::ostream& os, MergeRollupInputs<NCT> const& obj)
 {
-    return os << "previous_rollup_data: " << obj.previous_rollup_data << "\n"
-              << "prover_id: " << obj.prover_id << "\n";
+    return os << "previous_rollup_data: " << obj.previous_rollup_data << "\n";
 };
 
 } // namespace aztec3::circuits::abis
