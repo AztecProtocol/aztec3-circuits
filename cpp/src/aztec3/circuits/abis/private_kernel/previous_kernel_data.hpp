@@ -1,7 +1,6 @@
 #pragma once
-#include "../barretenberg/proof.hpp"
 #include "aztec3/circuits/abis/private_kernel/public_inputs.hpp"
-#include "aztec3/circuits/abis/barretenberg/proof.hpp"
+#include <barretenberg/plonk/proof_system/types/proof.hpp>
 #include <barretenberg/stdlib/primitives/witness/witness.hpp>
 #include <barretenberg/srs/reference_string/env_reference_string.hpp>
 #include <aztec3/utils/types/native_types.hpp>
