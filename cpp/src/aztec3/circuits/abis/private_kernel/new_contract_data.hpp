@@ -49,7 +49,7 @@ template <typename NCT> struct NewContractData {
         static_assert(!(std::is_same<NativeTypes, NCT>::value));
 
         contract_address.to_field().set_public();
-        portal_contract_address.to_field().set_public();
+        portal_contract_address.set_public();
         function_tree_root.set_public();
     }
 

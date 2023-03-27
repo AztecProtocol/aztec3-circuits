@@ -45,7 +45,6 @@ template <typename NCT> void read(uint8_t const*& it, BaseRollupPublicInputs<NCT
 {
     using serialize::read;
 
-    read(it, obj.rollup_type);
     read(it, obj.end_aggregation_object);
     read(it, obj.constants);
     read(it, obj.start_nullifier_tree_snapshot);
@@ -53,10 +52,7 @@ template <typename NCT> void read(uint8_t const*& it, BaseRollupPublicInputs<NCT
     read(it, obj.new_commitments_subtree_root);
     read(it, obj.new_nullifiers_subtree_root);
     read(it, obj.new_contract_leaves_subtree_root);
-    read(it, obj.new_commitments_hash);
-    read(it, obj.new_nullifiers_hash);
-    read(it, obj.new_l1_msgs_hash);
-    read(it, obj.new_contract_data_hash);
+    read(it, obj.calldata_hash);
     read(it, obj.prover_contributions_hash);
 };
 
@@ -64,7 +60,6 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, BaseRollupPublicIn
 {
     using serialize::write;
 
-    write(buf, obj.rollup_type);
     write(buf, obj.end_aggregation_object);
     write(buf, obj.constants);
     write(buf, obj.start_nullifier_tree_snapshot);
@@ -72,18 +67,13 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, BaseRollupPublicIn
     write(buf, obj.new_commitments_subtree_root);
     write(buf, obj.new_nullifiers_subtree_root);
     write(buf, obj.new_contract_leaves_subtree_root);
-    write(buf, obj.new_commitments_hash);
-    write(buf, obj.new_nullifiers_hash);
-    write(buf, obj.new_l1_msgs_hash);
-    write(buf, obj.new_contract_data_hash);
+    write(buf, obj.calldata_hash);
     write(buf, obj.prover_contributions_hash);
 };
 
 template <typename NCT> std::ostream& operator<<(std::ostream& os, BaseRollupPublicInputs<NCT> const& obj)
 {
-    return os << "rollup_type: " << obj.rollup_type
-              << "\n"
-                 "end_aggregation_object:\n"
+    return os << "end_aggregation_object:\n"
               << obj.end_aggregation_object
               << "\n"
                  "constants:\n"
@@ -104,17 +94,8 @@ template <typename NCT> std::ostream& operator<<(std::ostream& os, BaseRollupPub
                  "new_contract_leaves_subtree_root: "
               << obj.new_contract_leaves_subtree_root
               << "\n"
-                 "new_commitments_hash: "
-              << obj.new_commitments_hash
-              << "\n"
-                 "new_nullifiers_hash: "
-              << obj.new_nullifiers_hash
-              << "\n"
-                 "new_l1_msgs_hash: "
-              << obj.new_l1_msgs_hash
-              << "\n"
-                 "new_contract_data_hash: "
-              << obj.new_contract_data_hash
+                 "calldata_hash: "
+              << obj.calldata_hash
               << "\n"
                  "prover_contributions_hash: "
               << obj.prover_contributions_hash << "\n";
