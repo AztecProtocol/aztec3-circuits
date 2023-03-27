@@ -15,7 +15,7 @@ template <typename NCT> struct NewContractData {
     typedef typename NCT::fr fr;
 
     address contract_address;
-    address portal_contract_address;
+    fr portal_contract_address;
     fr function_tree_root;
 
     template <typename Composer> NewContractData<CircuitTypes<Composer>> to_circuit_type(Composer& composer) const
