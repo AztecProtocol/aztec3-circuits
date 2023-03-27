@@ -15,7 +15,7 @@ using std::is_same;
 template <typename NCT> struct MergeRollupInputs {
     typedef typename NCT::fr fr;
 
-    std::array<PreviousRollupData<NCT>, 2> previous_rollup_data;
+    std::array<MergeRollupPublicInputs<NCT>, 2> previous_rollup_data;
     fr prover_id;
 
     bool operator==(MergeRollupInputs<NCT> const&) const = default;

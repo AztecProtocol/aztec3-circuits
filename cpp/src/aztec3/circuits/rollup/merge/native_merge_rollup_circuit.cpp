@@ -18,13 +18,7 @@
 #include <tuple>
 #include <vector>
 
-namespace aztec3::circuits::rollup::native_base_rollup {
-
-// TODO: can we aggregate proofs if we do not have a working circuit impl
-
-// TODO: change the public inputs array - we wont be using this?
-
-// Access Native types through NT namespace
+namespace aztec3::circuits::rollup::native_merge_rollup {
 
 bool verify_merge_rollup_proof(NT::Proof merge_rollup_proof)
 {
@@ -51,7 +45,7 @@ AggregationObject aggregate_proofs(MergeRollupInputs mergeRollupInputs)
 {
 
     // TODO: NOTE: for now we simply return the aggregation object from the first proof
-    return mergeRollupInputs.previous_proofs[0].public_inputs.aggregation_object;
+    return mergeRollupInputs.previous_rollup_data[0].aggregation_object;
 }
 
 /** TODO: implement
@@ -64,15 +58,14 @@ NT::fr get_prover_contribution_hash()
     return NT::fr(0);
 }
 
-MergeRollupPublicInputs merge_rollup_circuit(ConstantMergeRollupData constantMergeRollupData,
-                                             MergeRollupData mergeRollupData, )
+MergeRollupPublicInputs merge_rollup_circuit(MergeRollupInputs mergeRollupInputs)
 {
     // Verify the previous rollup proofs
 
-    AggregationObject aggregation_object = aggregate_proofs(baseRollupInputs);
+    AggregationObject aggregation_object = aggregate_proofs(mergeRollupInputs);
 
     MergeRollupPublicInputs public_inputs = {};
     return public_inputs;
 }
 
-} // namespace aztec3::circuits::rollup::native_base_rollup
+} // namespace aztec3::circuits::rollup::native_merge_rollup
