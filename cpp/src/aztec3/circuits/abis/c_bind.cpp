@@ -379,7 +379,7 @@ WASM_EXPORT const char* abis__test_roundtrip_reserialize_base_rollup_public_inpu
 
 WASM_EXPORT const char* abis__test_roundtrip_serialize_private_kernel_inputs(uint8_t const* input, uint32_t* size)
 {
-    return as_serialized_output<aztec3::circuits::abis::private_kernel::PrivateInputs<NT>>(input, size);
+    return as_string_output<aztec3::circuits::abis::private_kernel::PrivateInputs<NT>>(input, size);
 }
 
 } // extern "C"

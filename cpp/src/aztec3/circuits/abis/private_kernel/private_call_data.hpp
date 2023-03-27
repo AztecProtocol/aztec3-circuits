@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aztec3/constants.hpp"
 #include "call_context_reconciliation_data.hpp"
 #include "../call_stack_item.hpp"
 #include "../membership_witness.hpp"
@@ -31,7 +32,7 @@ template <typename NCT> struct PrivateCallData {
     NativeTypes::Proof proof; // TODO: how to express proof as native/circuit type when it gets used as a buffer?
     std::shared_ptr<VK> vk;
 
-    MembershipWitness<NCT, NULLIFIER_TREE_HEIGHT> function_leaf_membership_witness;
+    MembershipWitness<NCT, FUNCTION_TREE_HEIGHT> function_leaf_membership_witness;
     MembershipWitness<NCT, CONTRACT_TREE_HEIGHT> contract_leaf_membership_witness;
 
     fr portal_contract_address; // an ETH address
@@ -86,7 +87,7 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, PrivateCallData<NC
     write(buf, obj.call_stack_item);
     write(buf, obj.private_call_stack_preimages);
     write(buf, obj.proof);
-    write(buf, obj.vk);
+    write(buf, *obj.vk);
     write(buf, obj.function_leaf_membership_witness);
     write(buf, obj.contract_leaf_membership_witness);
     write(buf, obj.portal_contract_address);

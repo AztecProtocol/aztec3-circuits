@@ -16,7 +16,6 @@ describe('structs/kernel', () => {
   it(`serializes and prints private_kernel_inputs`, async () => {
     const wasm = await CircuitsWasm.new();
     const kernelInputs = makePrivateKernelInputs();
-    await writeGlobalVerifierReferenceString(wasm, /* example circuit size */ 100);
     await expectSerializeToMatchSnapshot(
       kernelInputs.toBuffer(),
       'abis__test_roundtrip_serialize_private_kernel_inputs',
