@@ -203,7 +203,6 @@ class base_rollup_tests : public ::testing::Test {
         kernel_data[0].vk = mocked_kernel0.vk;
         kernel_data[1].proof = mocked_kernel1.proof;
         kernel_data[1].vk = mocked_kernel1.vk;
-        // @note If using VK when empty, it will fail with segfault.
 
         BaseRollupInputs baseRollupInputs = { .kernel_data = kernel_data,
                                               .start_private_data_tree_snapshot = AppendOnlyTreeSnapshot<NT>::empty(),
