@@ -4,14 +4,17 @@
 
 #include <aztec3/circuits/abis/private_kernel/private_inputs.hpp>
 #include <aztec3/circuits/abis/private_kernel/public_inputs.hpp>
+#include <aztec3/circuits/abis/private_kernel/new_contract_data.hpp>
 
 namespace aztec3::circuits::kernel::private_kernel {
 
+using aztec3::circuits::abis::private_kernel::NewContractData;
 using aztec3::circuits::abis::private_kernel::PrivateInputs;
 using aztec3::circuits::abis::private_kernel::PublicInputs;
 
 using plonk::stdlib::array_length;
 using plonk::stdlib::array_pop;
+using plonk::stdlib::array_push;
 using plonk::stdlib::is_array_empty;
 using plonk::stdlib::push_array_to_array;
 
@@ -69,7 +72,7 @@ void initialise_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs
     end.l1_msg_stack = start.l1_msg_stack;
 
     // TODO
-    // end.new_contracts = start.new_contracts;
+    end.new_contracts = start.new_contracts;
 
     end.optionally_revealed_data = start.optionally_revealed_data;
 }
@@ -87,17 +90,60 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
     const auto& new_commitments = private_call_public_inputs.new_commitments;
     const auto& new_nullifiers = private_call_public_inputs.new_nullifiers;
 
-    // TODO: const auto& new_contracts = private_call_public_inputs.new_contracts;
-
     const auto& is_static_call = private_call_public_inputs.call_context.is_static_call;
 
     // No state changes are allowed for static calls:
     is_static_call.must_imply(is_array_empty<Composer>(new_commitments) == true);
     is_static_call.must_imply(is_array_empty<Composer>(new_nullifiers) == true);
-    // TODO: is_static_call.must_imply(is_array_empty<Composer>(new_contracts) == true);
 
     // TODO: name change (just contract_address)
     const auto& storage_contract_address = private_call_public_inputs.call_context.storage_contract_address;
+    const auto& portal_contract_address = private_inputs.private_call.portal_contract_address;
+    const auto& deployer_address = private_call_public_inputs.call_context.msg_sender;
+    const auto& contract_deployment_data =
+        private_inputs.signed_tx_request.tx_request.tx_context.contract_deployment_data;
+
+    { // contracts
+        // input storage contract address must be 0 if its a constructor call and non-zero otherwise
+        auto is_contract_deployment = public_inputs.constants.tx_context.is_contract_deployment_tx;
+        is_contract_deployment.must_imply(storage_contract_address == CT::fr(0));
+        (!is_contract_deployment).must_imply(storage_contract_address != CT::fr(0));
+
+        auto private_call_vk_hash = private_inputs.private_call.vk->compress();
+        auto constructor_hash = CT::compress({ private_inputs.signed_tx_request.tx_request.function_data.hash(),
+                                               CT::compress<ARGS_LENGTH>(private_call_public_inputs.args),
+                                               private_call_vk_hash },
+                                             CONSTRUCTOR);
+
+        contract_deployment_data.constructor_vk_hash.assert_equal(
+            private_call_vk_hash, "constructor_vk_hash does not match private call vk hash");
+
+        // compute the contract address
+        auto contract_address = CT::compress({ deployer_address.to_field(),
+                                               contract_deployment_data.contract_address_salt,
+                                               contract_deployment_data.function_tree_root,
+                                               constructor_hash },
+                                             CONTRACT_ADDRESS);
+
+        // compute contract address nullifier
+        auto blake_input = CT::byte_array(contract_address);
+        auto contract_address_nullifier = CT::fr(CT::blake3s(blake_input));
+
+        // push the contract address nullifier to nullifier vector
+        array_push<Composer>(public_inputs.end.new_nullifiers, contract_address_nullifier);
+
+        // Add new contract data if its a contract deployment function
+        auto native_new_contract_data =
+            NewContractData<NT>{ .contract_address = NT::address(contract_address.get_value()),
+                                 .portal_contract_address = NT::address(portal_contract_address.get_value()),
+                                 .function_tree_root = contract_deployment_data.function_tree_root.get_value() };
+
+        auto context = new_commitments[0].get_context();
+        NewContractData<CT> new_contract_data = native_new_contract_data.to_circuit_type(*context);
+
+        array_push<Composer, NewContractData<CT>, KERNEL_NEW_CONTRACTS_LENGTH>(public_inputs.end.new_contracts,
+                                                                               new_contract_data);
+    }
 
     { // commitments, nullifiers, and contracts
         std::array<CT::fr, NEW_COMMITMENTS_LENGTH> siloed_new_commitments;
@@ -116,7 +162,6 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
                                            CT::compress({ storage_contract_address.to_field(), new_nullifiers[i] },
                                                         GeneratorIndex::OUTER_NULLIFIER));
         }
-        // TODO contracts
 
         // Add new commitments/etc to AggregatedData
         push_array_to_array<Composer>(siloed_new_commitments, public_inputs.end.new_commitments);
@@ -130,8 +175,6 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
         auto& this_private_call_stack = private_call_public_inputs.private_call_stack;
         push_array_to_array<Composer>(this_private_call_stack, public_inputs.end.private_call_stack);
     }
-
-    // const auto& portal_contract_address = private_inputs.private_call.portal_contract_address;
 
     // {
     //     const auto& l1_msg_stack = private_call_public_inputs.l1_msg_stack;
