@@ -23,7 +23,8 @@ using ConstantRollupData = abis::ConstantRollupData<NT>;
 using BaseRollupInputs = abis::BaseRollupInputs<NT>;
 using BaseRollupPublicInputs = abis::BaseRollupPublicInputs<NT>;
 
-using AggregationObject = stdlib::recursion::native_recursion_output;
+using Aggregator = aztec3::circuits::recursion::Aggregator;
+using AggregationObject = utils::types::NativeTypes::AggregationObject;
 using AppendOnlySnapshot = abis::AppendOnlyTreeSnapshot<NT>;
 
 } // namespace aztec3::circuits::rollup::native_base_rollup
