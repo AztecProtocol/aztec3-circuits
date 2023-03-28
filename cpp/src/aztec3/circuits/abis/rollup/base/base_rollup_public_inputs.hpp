@@ -62,7 +62,7 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, BaseRollupPublicIn
     write(buf, obj.start_private_data_tree_snapshot);
     write(buf, obj.end_private_data_tree_snapshot);
     write(buf, obj.start_nullifier_tree_snapshot);
-    write(buf, obj.end_nullifier_tree_snapshots);
+    write(buf, obj.end_nullifier_tree_snapshot);
     write(buf, obj.start_contract_tree_snapshot);
     write(buf, obj.end_contract_tree_snapshot);
     write(buf, obj.calldata_hash);
@@ -86,7 +86,7 @@ template <typename NCT> std::ostream& operator<<(std::ostream& os, BaseRollupPub
               << obj.start_nullifier_tree_snapshot
               << "\n"
                  "end_nullifier_tree_snapshots:\n"
-              << obj.end_nullifier_tree_snapshots
+              << obj.end_nullifier_tree_snapshot
               << "\n"
                  "start_contract_tree_snapshot:\n"
               << obj.start_contract_tree_snapshot

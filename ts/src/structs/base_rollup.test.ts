@@ -10,6 +10,7 @@ import { range } from '../utils/jsUtils.js';
 import { CircuitsWasm } from '../wasm/circuits_wasm.js';
 import { BaseRollupInputs, BaseRollupPublicInputs, NullifierLeafPreimage } from './base_rollup.js';
 import {
+  CONTRACT_TREE_HEIGHT,
   CONTRACT_TREE_ROOTS_TREE_HEIGHT,
   KERNEL_NEW_NULLIFIERS_LENGTH,
   NULLIFIER_TREE_HEIGHT,
@@ -40,8 +41,8 @@ describe('structs/base_rollup', () => {
     );
 
     const newCommitmentsSubtreeSiblingPath = range(PRIVATE_DATA_TREE_HEIGHT, 0x3000).map(x => fr(x));
-    const newNullifiersSubtreeSiblingPath = range(PRIVATE_DATA_TREE_HEIGHT, 0x4000).map(x => fr(x));
-    const newContractsSubtreeSiblingPath = range(PRIVATE_DATA_TREE_HEIGHT, 0x5000).map(x => fr(x));
+    const newNullifiersSubtreeSiblingPath = range(NULLIFIER_TREE_HEIGHT, 0x4000).map(x => fr(x));
+    const newContractsSubtreeSiblingPath = range(CONTRACT_TREE_HEIGHT, 0x5000).map(x => fr(x));
 
     const historicPrivateDataTreeRootMembershipWitnesses: BaseRollupInputs['historicPrivateDataTreeRootMembershipWitnesses'] =
       [
