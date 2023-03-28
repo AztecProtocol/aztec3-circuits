@@ -17,7 +17,7 @@ template <typename NCT, unsigned int N> struct MembershipWitness {
 
     bool operator==(MembershipWitness<NCT, N> const&) const = default;
 
-    static MembershipWitness<NCT, N> empty() { return { 0, std::array<fr, N>(0) }; };
+    static MembershipWitness<NCT, N> empty() { return { 0, { 0 } }; };
 };
 
 template <typename NCT, unsigned int N> void read(uint8_t const*& it, MembershipWitness<NCT, N>& obj)
