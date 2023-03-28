@@ -49,8 +49,6 @@ describe('structs/base_rollup', () => {
 
     const constants = makeConstantBaseRollupData(0x100);
 
-    const proverId = fr(0x42);
-
     const baseRollupInputs = BaseRollupInputs.from({
       kernelData,
       startNullifierTreeSnapshot,
@@ -59,7 +57,6 @@ describe('structs/base_rollup', () => {
       historicPrivateDataTreeRootMembershipWitnesses,
       historicContractsTreeRootMembershipWitnesses,
       constants,
-      proverId,
     });
 
     const wasm = await CircuitsWasm.new();

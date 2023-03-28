@@ -100,8 +100,6 @@ export class BaseRollupInputs {
     ],
 
     public constants: ConstantBaseRollupData,
-
-    public proverId: Fr,
   ) {
     assertLength(this, 'lowNullifierLeafPreimages', 2 * KERNEL_NEW_NULLIFIERS_LENGTH);
     assertLength(this, 'lowNullifierMembershipWitness', 2 * KERNEL_NEW_NULLIFIERS_LENGTH);
@@ -120,7 +118,6 @@ export class BaseRollupInputs {
       fields.historicPrivateDataTreeRootMembershipWitnesses,
       fields.historicContractsTreeRootMembershipWitnesses,
       fields.constants,
-      fields.proverId,
     ] as const;
   }
 
