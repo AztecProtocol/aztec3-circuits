@@ -76,15 +76,15 @@ WASM_EXPORT size_t private_kernel__init_verification_key(uint8_t const* pk_buf, 
     return vk_vec.size();
 }
 
-// WASM_EXPORT size_t private_kernel__get_default_previous_kernel(uint8_t const* signed_tx_request_buf
-
 // TODO comment about how public_inputs is a confusing name
+// returns size of public inputs
 WASM_EXPORT size_t private_kernel__create_proof(uint8_t const* signed_tx_request_buf,
                                                 uint8_t const* previous_kernel_buf,
                                                 uint8_t const* private_call_buf,
                                                 uint8_t const* pk_buf,
                                                 bool proverless,
                                                 uint8_t const** proof_data_buf,
+                                                size_t* proof_data_size,
                                                 uint8_t const** private_kernel_public_inputs_buf)
 {
     info(previous_kernel_buf);
@@ -151,6 +151,9 @@ WASM_EXPORT size_t private_kernel__create_proof(uint8_t const* signed_tx_request
     auto raw_proof_buf = (uint8_t*)malloc(private_kernel_proof.proof_data.size());
     memcpy(raw_proof_buf, (void*)private_kernel_proof.proof_data.data(), private_kernel_proof.proof_data.size());
     *proof_data_buf = raw_proof_buf;
+
+    // copy proof data size to output
+    *proof_data_size = private_kernel_proof.proof_data.size();
 
     // serialize public inputs to bytes vec
     std::vector<uint8_t> public_inputs_vec;

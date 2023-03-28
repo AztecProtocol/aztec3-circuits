@@ -100,7 +100,7 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, PrivateCallData<NC
     write(buf, pcd.call_stack_item);
     write(buf, pcd.private_call_stack_preimages);
     write(buf, pcd.proof.proof_data);
-    write(buf, pcd.vk);
+    write(buf, *pcd.vk);
     write(buf, pcd.function_leaf_index);
     write(buf, pcd.function_leaf_path);
     write(buf, pcd.contract_tree_root);
