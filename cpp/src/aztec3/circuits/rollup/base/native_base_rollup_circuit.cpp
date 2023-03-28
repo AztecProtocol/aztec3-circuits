@@ -20,6 +20,11 @@
 
 namespace aztec3::circuits::rollup::native_base_rollup {
 
+const uint COMMITMENTS_SUBTREE_DEPTH = 3;
+const uint CONTRACTS_SUBTREE_DEPTH = 1;
+const NT::fr EMPTY_COMMITMENTS_SUBTREE_ROOT = stdlib::merkle_tree::MemoryTree(COMMITMENTS_SUBTREE_DEPTH).root();
+const NT::fr EMPTY_CONTRACTS_SUBTREE_ROOT = stdlib::merkle_tree::MemoryTree(CONTRACTS_SUBTREE_DEPTH).root();
+
 // TODO: can we aggregate proofs if we do not have a working circuit impl
 
 // TODO: change the public inputs array - we wont be using this?
@@ -103,7 +108,7 @@ NT::fr iterate_through_tree_via_sibling_path(NT::fr leaf, NT::uint32 leafIndex, 
 }
 
 template <size_t N>
-void check_merkle_membership(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath, NT::fr root)
+void check_membership(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath, NT::fr root)
 {
     auto calculatedRoot = iterate_through_tree_via_sibling_path(leaf, leafIndex, siblingPath);
     if (calculatedRoot != root) {
@@ -112,62 +117,20 @@ void check_merkle_membership(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::f
 }
 
 template <size_t N>
-void check_membership_of_subtree_in_snapshot(NT::uint32 depth,
-                                             NT::uint32 nextAvailableLeafIndex,
-                                             std::array<NT::fr, N> siblingPath,
-                                             NT::fr snapshotRoot)
+AppendOnlySnapshot insert_subtree_to_snapshot_tree(std::array<NT::fr, N> siblingPath,
+                                                   NT::uint32 nextAvailableLeafIndex,
+                                                   NT::fr subtreeRootToInsert,
+                                                   uint subtreeDepth)
 {
-    stdlib::merkle_tree::MemoryTree empty_subtree = stdlib::merkle_tree::MemoryTree(depth);
-    auto leafToCheck = empty_subtree.root();
-    // next_available_leaf_index is at the leaf level. We need at the subtree level (say height 3). So divide by 8.
-    // (if leaf is at index x, its parent is at index floor(x/2))
-    auto leafIndex = nextAvailableLeafIndex / (NT::uint32(1) << depth);
-
-    check_merkle_membership(leafToCheck, leafIndex, siblingPath, snapshotRoot);
-}
-
-AppendOnlySnapshot insert_subtree_to_private_data_tree(BaseRollupInputs baseRollupInputs,
-                                                       NT::fr new_private_data_subtree_root)
-{
-    // 8 commitments added -> subtree of height 3.
-    // So to calculate the new root, we need to start hashing root of subtree with sibling path[2] onwards.
-    auto siblingPath = baseRollupInputs.new_commitments_subtree_sibling_path;
-    auto leafIndexToInsertAt = baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index;
-    auto newTreeSnapshot = baseRollupInputs.start_private_data_tree_snapshot;
-
     // TODO: Sanity check len of siblingPath > height of subtree
-    // TODO: Ensure height of subtree is 3 (or 8 commitments)
+    // TODO: Ensure height of subtree is correct (eg 3 for commitments, 1 for contracts)
+    auto leafIndexAtDepth = nextAvailableLeafIndex >> subtreeDepth;
+    auto new_root = iterate_through_tree_via_sibling_path(subtreeRootToInsert, leafIndexAtDepth, siblingPath);
+    // 2^subtreeDepth is the number of leaves added. 2^x = 2 << x-1
+    auto new_next_available_leaf_index = nextAvailableLeafIndex + (uint(2) << (subtreeDepth - 1));
 
-    // if leaf is at index 8, parent is at index floor(x/2)
-    auto leafIndexAtDepth3 = leafIndexToInsertAt / 8;
-    // now iterate normally:
-    newTreeSnapshot.root =
-        iterate_through_tree_via_sibling_path(new_private_data_subtree_root, leafIndexAtDepth3, siblingPath);
-
-    newTreeSnapshot.next_available_leaf_index = leafIndexToInsertAt + 8;
-
-    return newTreeSnapshot;
-}
-
-AppendOnlySnapshot insert_subtree_to_contracts_tree(BaseRollupInputs baseRollupInputs,
-                                                    NT::fr new_contracts_subtree_root)
-{
-    // 4 contracts added -> subtree of height 2.
-    // So to calculate the new root, we need to start hashing root of subtree with sibling path[1] onwards.
-    auto siblingPath = baseRollupInputs.new_contracts_subtree_sibling_path;
-    auto leafIndexToInsertAt = baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index;
-    auto newTreeSnapshot = baseRollupInputs.start_contract_tree_snapshot;
-
-    // TODO: Sanity check len of siblingPath > height of subtree
-    // TODO: Ensure height of subtree is 2 (or 4 leaves)
-
-    auto leafIndexAtDepth2 = leafIndexToInsertAt / 4;
-    // now iterate normally:
-    newTreeSnapshot.root =
-        iterate_through_tree_via_sibling_path(new_contracts_subtree_root, leafIndexAtDepth2, siblingPath);
-
-    newTreeSnapshot.next_available_leaf_index = leafIndexToInsertAt + 8;
-
+    AppendOnlySnapshot newTreeSnapshot = { .root = new_root,
+                                           .next_available_leaf_index = new_next_available_leaf_index };
     return newTreeSnapshot;
 }
 
@@ -179,8 +142,8 @@ std::array<NT::fr, 3> calculate_new_subtrees(BaseRollupInputs baseRollupInputs, 
 
     // TODO: we have at size two for now, but we will need
 
-    stdlib::merkle_tree::MemoryTree contracts_tree = stdlib::merkle_tree::MemoryTree(2);
-    stdlib::merkle_tree::MemoryTree commitments_tree = stdlib::merkle_tree::MemoryTree(3);
+    stdlib::merkle_tree::MemoryTree contracts_tree = stdlib::merkle_tree::MemoryTree(CONTRACTS_SUBTREE_DEPTH);
+    stdlib::merkle_tree::MemoryTree commitments_tree = stdlib::merkle_tree::MemoryTree(COMMITMENTS_SUBTREE_DEPTH);
     // TODO: nullifier tree will be a different tree impl - indexed merkle tree
     // stdlib::merkle_tree::MemoryTree nullifier_tree = stdlib::merkle_tree::MemoryTree(2);
 
@@ -285,8 +248,7 @@ void perform_historical_private_data_tree_membership_checks(BaseRollupInputs bas
         abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> historic_root_witness =
             baseRollupInputs.historic_private_data_tree_root_membership_witnesses[i];
 
-        check_merkle_membership(
-            leaf, historic_root_witness.leaf_index, historic_root_witness.sibling_path, historic_root);
+        check_membership(leaf, historic_root_witness.leaf_index, historic_root_witness.sibling_path, historic_root);
     }
 }
 
@@ -299,8 +261,7 @@ void perform_historical_contract_data_tree_membership_checks(BaseRollupInputs ba
         abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> historic_root_witness =
             baseRollupInputs.historic_contract_tree_root_membership_witnesses[i];
 
-        check_merkle_membership(
-            leaf, historic_root_witness.leaf_index, historic_root_witness.sibling_path, historic_root);
+        check_membership(leaf, historic_root_witness.leaf_index, historic_root_witness.sibling_path, historic_root);
     }
 }
 // Important types:
@@ -321,16 +282,24 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
     std::vector<NT::fr> contract_leaves = calculate_contract_leaves(baseRollupInputs);
 
     // Perform merkle membership check with the provided sibling path up to the root
+
     // check for commitments/private_data
-    check_membership_of_subtree_in_snapshot(3,
-                                            baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index,
-                                            baseRollupInputs.new_commitments_subtree_sibling_path,
-                                            baseRollupInputs.start_private_data_tree_snapshot.root);
+    // next_available_leaf_index is at the leaf level. We need at the subtree level (say height 3). So divide by 8.
+    // (if leaf is at index x, its parent is at index floor(x/2))
+    auto leafIndexAtSubtreeDepth = baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index /
+                                   (NT::uint32(1) << COMMITMENTS_SUBTREE_DEPTH);
+    check_membership(EMPTY_COMMITMENTS_SUBTREE_ROOT,
+                     leafIndexAtSubtreeDepth,
+                     baseRollupInputs.new_commitments_subtree_sibling_path,
+                     baseRollupInputs.start_private_data_tree_snapshot.root);
+
     // check for contracts
-    check_membership_of_subtree_in_snapshot(2,
-                                            baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index,
-                                            baseRollupInputs.new_contracts_subtree_sibling_path,
-                                            baseRollupInputs.start_contract_tree_snapshot.root);
+    leafIndexAtSubtreeDepth = baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index /
+                              (NT::uint32(1) << CONTRACTS_SUBTREE_DEPTH);
+    check_membership(EMPTY_CONTRACTS_SUBTREE_ROOT,
+                     leafIndexAtSubtreeDepth,
+                     baseRollupInputs.new_contracts_subtree_sibling_path,
+                     baseRollupInputs.start_contract_tree_snapshot.root);
 
     std::array<NT::fr, 3> new_subtrees = calculate_new_subtrees(baseRollupInputs, contract_leaves);
     NT::fr contracts_tree_subroot = new_subtrees[0];
@@ -339,8 +308,16 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
 
     // Insert subtrees to the tree:
     auto end_private_data_tree_snapshot =
-        insert_subtree_to_private_data_tree(baseRollupInputs, commitments_tree_subroot);
-    auto end_contract_tree_snapshot = insert_subtree_to_contracts_tree(baseRollupInputs, contracts_tree_subroot);
+        insert_subtree_to_snapshot_tree(baseRollupInputs.new_commitments_subtree_sibling_path,
+                                        baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index,
+                                        commitments_tree_subroot,
+                                        COMMITMENTS_SUBTREE_DEPTH);
+
+    auto end_contract_tree_snapshot =
+        insert_subtree_to_snapshot_tree(baseRollupInputs.new_contracts_subtree_sibling_path,
+                                        baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index,
+                                        contracts_tree_subroot,
+                                        CONTRACTS_SUBTREE_DEPTH);
 
     // TODO: Nullifiers tree insertion
 
