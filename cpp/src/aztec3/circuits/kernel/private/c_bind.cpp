@@ -26,6 +26,7 @@ using aztec3::circuits::abis::private_kernel::PrivateCallData;
 using aztec3::circuits::abis::private_kernel::PrivateInputs;
 using aztec3::circuits::abis::private_kernel::PublicInputs;
 using aztec3::circuits::kernel::private_kernel::private_kernel_circuit;
+using aztec3::circuits::kernel::private_kernel::private_kernel_native;
 using aztec3::circuits::mock::mock_kernel_circuit;
 
 using plonk::TurboComposer;
@@ -109,8 +110,9 @@ WASM_EXPORT size_t private_kernel__create_proof(uint8_t const* signed_tx_request
     mock_kernel_public_inputs.constants.tx_context = signed_tx_request.tx_request.tx_context;
     mock_kernel_public_inputs.is_private = true;
 
-    Composer mock_kernel_composer = Composer("../barretenberg/cpp/srs_db/ignition");
+    // FIXME composer doesn't work in wasm
     // Composer mock_kernel_composer = Composer(crs_factory);
+    Composer mock_kernel_composer = Composer("../barretenberg/cpp/srs_db/ignition");
     mock_kernel_circuit(mock_kernel_composer, mock_kernel_public_inputs);
 
     plonk::stdlib::types::Prover mock_kernel_prover = mock_kernel_composer.create_prover();
@@ -130,18 +132,19 @@ WASM_EXPORT size_t private_kernel__create_proof(uint8_t const* signed_tx_request
 
     };
 
-    // FIXME no composer if proverless
-    Composer private_kernel_composer = Composer("../barretenberg/cpp/srs_db/ignition");
-    // Composer private_kernel_composer = Composer(crs_factory);
-    // FIXME call native kernel if proverless
-    PublicInputs<NT> public_inputs = private_kernel_circuit(private_kernel_composer, private_inputs);
-
     NT::Proof private_kernel_proof;
+    PublicInputs<NT> public_inputs;
     if (proverless) {
-        plonk::stdlib::types::Prover private_kernel_prover = private_kernel_composer.create_prover();
-        private_kernel_proof = private_kernel_prover.construct_proof();
-    } else {
+        public_inputs = private_kernel_native(private_inputs);
+        // mocked proof - zeros
         private_kernel_proof = NT::Proof{ std::vector<uint8_t>(42, 0) };
+    } else {
+        // FIXME composer doesn't work in wasm
+        // Composer private_kernel_composer = Composer(crs_factory);
+        Composer private_kernel_composer = Composer("../barretenberg/cpp/srs_db/ignition");
+        plonk::stdlib::types::Prover private_kernel_prover = private_kernel_composer.create_prover();
+        public_inputs = private_kernel_circuit(private_kernel_composer, private_inputs);
+        private_kernel_proof = private_kernel_prover.construct_proof();
     }
 
     // copy proof data to output buffer
