@@ -20,8 +20,8 @@
 
 namespace aztec3::circuits::rollup::native_base_rollup {
 
-const uint COMMITMENTS_SUBTREE_DEPTH = 3;
-const uint CONTRACTS_SUBTREE_DEPTH = 1;
+const uint8_t COMMITMENTS_SUBTREE_DEPTH = 3;
+const uint8_t CONTRACTS_SUBTREE_DEPTH = 1;
 const NT::fr EMPTY_COMMITMENTS_SUBTREE_ROOT = stdlib::merkle_tree::MemoryTree(COMMITMENTS_SUBTREE_DEPTH).root();
 const NT::fr EMPTY_CONTRACTS_SUBTREE_ROOT = stdlib::merkle_tree::MemoryTree(CONTRACTS_SUBTREE_DEPTH).root();
 
@@ -120,14 +120,14 @@ template <size_t N>
 AppendOnlySnapshot insert_subtree_to_snapshot_tree(std::array<NT::fr, N> siblingPath,
                                                    NT::uint32 nextAvailableLeafIndex,
                                                    NT::fr subtreeRootToInsert,
-                                                   uint subtreeDepth)
+                                                   uint8_t subtreeDepth)
 {
     // TODO: Sanity check len of siblingPath > height of subtree
     // TODO: Ensure height of subtree is correct (eg 3 for commitments, 1 for contracts)
     auto leafIndexAtDepth = nextAvailableLeafIndex >> subtreeDepth;
     auto new_root = iterate_through_tree_via_sibling_path(subtreeRootToInsert, leafIndexAtDepth, siblingPath);
-    // 2^subtreeDepth is the number of leaves added. 2^x = 2 << x-1
-    auto new_next_available_leaf_index = nextAvailableLeafIndex + (uint(2) << (subtreeDepth - 1));
+    // 2^subtreeDepth is the number of leaves added. 2^x = 1 << x
+    auto new_next_available_leaf_index = nextAvailableLeafIndex + (uint8_t(1) << subtreeDepth);
 
     AppendOnlySnapshot newTreeSnapshot = { .root = new_root,
                                            .next_available_leaf_index = new_next_available_leaf_index };
@@ -282,6 +282,8 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
     std::vector<NT::fr> contract_leaves = calculate_contract_leaves(baseRollupInputs);
 
     // Perform merkle membership check with the provided sibling path up to the root
+    // Note - the subtree hasn't been created (i.e. it is empty) so you check that the sibling path corresponds to an
+    // empty tree
 
     // check for commitments/private_data
     // next_available_leaf_index is at the leaf level. We need at the subtree level (say height 3). So divide by 8.
