@@ -23,8 +23,8 @@ using aztec3::circuits::abis::private_kernel::PreviousKernelData;
 using aztec3::circuits::abis::private_kernel::PrivateCallData;
 using aztec3::circuits::abis::private_kernel::PrivateInputs;
 using aztec3::circuits::abis::private_kernel::PublicInputs;
+using aztec3::circuits::kernel::private_kernel::native_private_kernel_circuit;
 using aztec3::circuits::kernel::private_kernel::private_kernel_circuit;
-using aztec3::circuits::kernel::private_kernel::private_kernel_native;
 using aztec3::circuits::mock::mock_kernel_circuit;
 
 using plonk::TurboComposer;
@@ -115,9 +115,7 @@ WASM_EXPORT size_t private_kernel__sim(uint8_t const* signed_tx_request_buf,
 
     };
 
-    PublicInputs<NT> public_inputs;
-
-    public_inputs = private_kernel_native(private_inputs);
+    PublicInputs<NT> public_inputs = native_private_kernel_circuit(private_inputs);
 
     // serialize public inputs to bytes vec
     std::vector<uint8_t> public_inputs_vec;
