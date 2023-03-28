@@ -22,7 +22,8 @@ using NT = aztec3::utils::types::NativeTypes;
 using MergeRollupInputs = abis::MergeRollupInputs<NT>;
 using MergeRollupPublicInputs = abis::MergeRollupPublicInputs<NT>;
 
-using AggregationObject = stdlib::recursion::native_recursion_output;
+using Aggregator = aztec3::circuits::recursion::Aggregator;
+using AggregationObject = utils::types::NativeTypes::AggregationObject;
 using AppendOnlySnapshot = abis::AppendOnlyTreeSnapshot<NT>;
 
 } // namespace aztec3::circuits::rollup::native_merge_rollup

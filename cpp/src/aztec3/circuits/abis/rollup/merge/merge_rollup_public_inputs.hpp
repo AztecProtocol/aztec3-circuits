@@ -4,7 +4,6 @@
 #include <aztec3/utils/types/convert.hpp>
 #include "../../append_only_tree_snapshot.hpp"
 #include "../../append_only_tree_snapshot.hpp"
-#include "../../barretenberg/aggregation_object.hpp"
 #include "../constant_rollup_data.hpp"
 
 namespace aztec3::circuits::abis {
