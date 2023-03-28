@@ -42,7 +42,6 @@ import {
   Fr,
   MembershipWitness,
   UInt8Vector,
-  RollupTypes,
   AztecAddress,
   EcdsaSignature,
 } from '../structs/shared.js';
