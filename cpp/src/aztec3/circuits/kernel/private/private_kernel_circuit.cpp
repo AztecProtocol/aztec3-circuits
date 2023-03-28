@@ -166,8 +166,6 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
         // Add new commitments/etc to AggregatedData
         push_array_to_array<Composer>(siloed_new_commitments, public_inputs.end.new_commitments);
         push_array_to_array<Composer>(siloed_new_nullifiers, public_inputs.end.new_nullifiers);
-
-        // TODO contracts
     }
 
     { // call stacks
