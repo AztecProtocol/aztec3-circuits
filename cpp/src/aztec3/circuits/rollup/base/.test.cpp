@@ -256,7 +256,6 @@ TEST_F(base_rollup_tests, empty_block_calldata_hash)
     BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
 
     std::array<fr, 2> calldata_hash_fr = outputs.calldata_hash;
-    std::cout << "calldata_hash: " << calldata_hash_fr << std::endl;
     auto high_buffer = calldata_hash_fr[0].to_buffer();
     auto low_buffer = calldata_hash_fr[1].to_buffer();
 
