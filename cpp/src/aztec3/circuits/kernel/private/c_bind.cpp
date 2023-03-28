@@ -4,8 +4,8 @@
 
 #include <aztec3/constants.hpp>
 #include <aztec3/utils/types/native_types.hpp>
-//#include "private_circuit_public_inputs.hpp"
-//#include "private_kernel/previous_kernel_data.hpp"
+// #include "private_circuit_public_inputs.hpp"
+// #include "private_kernel/previous_kernel_data.hpp"
 #include "aztec3/circuits/abis/signed_tx_request.hpp"
 #include "aztec3/circuits/abis/private_kernel/private_call_data.hpp"
 #include <aztec3/circuits/abis/private_kernel/private_inputs.hpp>
@@ -16,7 +16,7 @@
 
 #include "barretenberg/common/serialize.hpp"
 #include "barretenberg/plonk/composer/turbo_composer.hpp"
-//#include "barretenberg/stdlib/types/types.hpp"
+// #include "barretenberg/stdlib/types/types.hpp"
 
 namespace {
 using NT = aztec3::utils::types::NativeTypes;
@@ -39,19 +39,7 @@ extern "C" {
 
 WASM_EXPORT size_t private_kernel__init_proving_key(uint8_t const** pk_buf)
 {
-    // TODO actual proving key
-    // auto crs_factory = std::make_unique<EnvReferenceStringFactory>();
-    // auto crs = std::make_shared<EnvReferenceString>();
-
-    //// TODO move proving_key[_data] into NativeTypes?
-    // std::vector<uint32_t> zero_vec(42, 0);
-    // auto zero_ps = PolynomialStore<barretenberg::fr>();
-    // bonk::proving_key_data pk_data = { 0, 0, 0, 0, zero_vec, zero_vec, zero_vec, zero_ps };
-
-    // auto proving_key = std::make_shared<bonk::proving_key>(std::move(pk_data), crs);
-
     std::vector<uint8_t> pk_vec(42, 0);
-    // write(pk_vec, pk_data);
 
     auto raw_buf = (uint8_t*)malloc(pk_vec.size());
     memcpy(raw_buf, (void*)pk_vec.data(), pk_vec.size());
@@ -90,8 +78,9 @@ WASM_EXPORT size_t private_kernel__create_proof(uint8_t const* signed_tx_request
     info(previous_kernel_buf);
     // TODO accept proving key and use that to initialize composers
     // this info is just to prevent error for unused pk_buf
+    // TODO do we want to accept it or just get it from our factory?
     info("Ignore this print ", pk_buf);
-    // auto crs_factory = std::make_shared<EnvReferenceStringFactory>();
+    auto crs_factory = std::make_shared<EnvReferenceStringFactory>();
 
     SignedTxRequest<NT> signed_tx_request;
     read(signed_tx_request_buf, signed_tx_request);
@@ -111,8 +100,7 @@ WASM_EXPORT size_t private_kernel__create_proof(uint8_t const* signed_tx_request
     mock_kernel_public_inputs.is_private = true;
 
     // FIXME composer doesn't work in wasm
-    // Composer mock_kernel_composer = Composer(crs_factory);
-    Composer mock_kernel_composer = Composer("../barretenberg/cpp/srs_db/ignition");
+    Composer mock_kernel_composer = Composer(crs_factory);
     mock_kernel_circuit(mock_kernel_composer, mock_kernel_public_inputs);
 
     plonk::stdlib::types::Prover mock_kernel_prover = mock_kernel_composer.create_prover();
@@ -139,9 +127,7 @@ WASM_EXPORT size_t private_kernel__create_proof(uint8_t const* signed_tx_request
         // mocked proof - zeros
         private_kernel_proof = NT::Proof{ std::vector<uint8_t>(42, 0) };
     } else {
-        // FIXME composer doesn't work in wasm
-        // Composer private_kernel_composer = Composer(crs_factory);
-        Composer private_kernel_composer = Composer("../barretenberg/cpp/srs_db/ignition");
+        Composer private_kernel_composer = Composer(crs_factory);
         plonk::stdlib::types::Prover private_kernel_prover = private_kernel_composer.create_prover();
         public_inputs = private_kernel_circuit(private_kernel_composer, private_inputs);
         private_kernel_proof = private_kernel_prover.construct_proof();
@@ -168,30 +154,6 @@ WASM_EXPORT size_t private_kernel__create_proof(uint8_t const* signed_tx_request
 
 WASM_EXPORT size_t private_kernel__verify_proof(uint8_t const* vk_buf, uint8_t const* proof, uint32_t length)
 {
-    //    bool verified = false;
-    //
-    //#ifndef __wasm__
-    //    try {
-    //#endif
-    //        auto crs = std::make_shared<EnvReferenceString>();
-    //        NT::VKData vk_data;
-    //        read(vk_buf, vk_data);
-    //        auto verification_key = std::make_shared<NT::VK>(std::move(vk_data), crs);
-    //
-    //        TurboComposer composer(nullptr, verification_key);
-    //        plonk::proof pp = { std::vector<uint8_t>(proof, proof + length) };
-    //
-    //        auto verifier = composer.create_verifier();
-    //
-    //        verified = verifier.verify_proof(pp);
-    //#ifndef __wasm__
-    //    } catch (const std::exception& e) {
-    //        verified = false;
-    //        info(e.what());
-    //    }
-    //#endif
-    //
-    //    return verified;
     info(vk_buf);
     info(proof);
     info(length);
