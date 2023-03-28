@@ -3,6 +3,7 @@
 #include "c_bind.h"
 
 // TODO remove these? present in init/index?
+#include <aztec3/utils/array.hpp>
 #include <aztec3/constants.hpp>
 #include <aztec3/utils/types/native_types.hpp>
 #include "aztec3/circuits/abis/signed_tx_request.hpp"
@@ -19,6 +20,10 @@
 namespace {
 using NT = aztec3::utils::types::NativeTypes;
 using aztec3::circuits::abis::SignedTxRequest;
+using aztec3::circuits::abis::TxContext;
+using aztec3::circuits::abis::private_kernel::AccumulatedData;
+using aztec3::circuits::abis::private_kernel::ConstantData;
+using aztec3::circuits::abis::private_kernel::OldTreeRoots;
 using aztec3::circuits::abis::private_kernel::PreviousKernelData;
 using aztec3::circuits::abis::private_kernel::PrivateCallData;
 using aztec3::circuits::abis::private_kernel::PrivateInputs;
@@ -26,16 +31,16 @@ using aztec3::circuits::abis::private_kernel::PublicInputs;
 using aztec3::circuits::kernel::private_kernel::native_private_kernel_circuit;
 using aztec3::circuits::kernel::private_kernel::private_kernel_circuit;
 using aztec3::circuits::mock::mock_kernel_circuit;
+using aztec3::utils::array_length;
 
 using plonk::TurboComposer;
 using namespace plonk::stdlib::types;
 
+// TODO dummy
 PreviousKernelData<NT> default_previous_kernel()
 {
     // TODO confirm this is the right way to initialize struct of 0s
     auto mock_kernel_public_inputs = PublicInputs<NT>();
-    mock_kernel_public_inputs.end.private_call_stack =
-        std::array<NT::fr, aztec3::KERNEL_PRIVATE_CALL_STACK_LENGTH>({ { 0 } }),
     mock_kernel_public_inputs.is_private = true;
 
     auto crs_factory = std::make_shared<EnvReferenceStringFactory>();
@@ -104,13 +109,19 @@ WASM_EXPORT size_t private_kernel__sim(uint8_t const* signed_tx_request_buf,
     PreviousKernelData<NT> previous_kernel;
     if (first_iteration) {
         previous_kernel = default_previous_kernel();
+
+        previous_kernel.public_inputs.end.private_call_stack[0] = private_call_data.call_stack_item.hash();
+        previous_kernel.public_inputs.constants.old_tree_roots.private_data_tree_root =
+            private_call_data.call_stack_item.public_inputs.historic_private_data_tree_root;
+        previous_kernel.public_inputs.constants.tx_context = signed_tx_request.tx_request.tx_context;
+        previous_kernel.public_inputs.is_private = true;
     } else {
         read(previous_kernel_buf, previous_kernel);
     }
 
     PrivateInputs<NT> private_inputs = PrivateInputs<NT>{
         .signed_tx_request = signed_tx_request,
-        .previous_kernel = default_previous_kernel(),
+        .previous_kernel = previous_kernel,
         .private_call = private_call_data,
 
     };
