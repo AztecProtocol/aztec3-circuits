@@ -73,4 +73,40 @@ template <typename NCT> struct PrivateCallData {
     };
 };
 
+template <typename NCT> void read(uint8_t const*& it, PrivateCallData<NCT>& private_call_data)
+{
+    using serialize::read;
+
+    PrivateCallData<NCT>& pcd = private_call_data;
+
+    read(it, pcd.call_stack_item);
+    read(it, pcd.private_call_stack_preimages);
+    read(it, pcd.proof.proof_data);
+    read(it, pcd.vk);
+    read(it, pcd.function_leaf_index);
+    read(it, pcd.function_leaf_path);
+    read(it, pcd.contract_tree_root);
+    read(it, pcd.contract_leaf_index);
+    read(it, pcd.contract_leaf_path);
+    read(it, pcd.portal_contract_address);
+};
+
+template <typename NCT> void write(std::vector<uint8_t>& buf, PrivateCallData<NCT> const& private_call_data)
+{
+    using serialize::write;
+
+    PrivateCallData<NCT> const& pcd = private_call_data;
+
+    write(buf, pcd.call_stack_item);
+    write(buf, pcd.private_call_stack_preimages);
+    write(buf, pcd.proof.proof_data);
+    write(buf, pcd.vk);
+    write(buf, pcd.function_leaf_index);
+    write(buf, pcd.function_leaf_path);
+    write(buf, pcd.contract_tree_root);
+    write(buf, pcd.contract_leaf_index);
+    write(buf, pcd.contract_leaf_path);
+    write(buf, pcd.portal_contract_address);
+};
+
 } // namespace aztec3::circuits::abis::private_kernel
