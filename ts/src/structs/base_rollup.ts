@@ -148,10 +148,7 @@ export class BaseRollupPublicInputs {
     public newContractLeavesSubtreeRoot: Fr,
 
     // Hashes (probably sha256) to make public inputs constant-sized (to then be unpacked on-chain)
-    public newCommitmentsHash: Fr,
-    public newNullifiersHash: Fr,
-    public newL1MsgsHash: Fr,
-    public newContractDataHash: Fr,
+    public calldataHash: Fr,
     public proverContributionsHash: Fr,
   ) {}
 
@@ -167,9 +164,6 @@ export class BaseRollupPublicInputs {
       reader.readObject(ConstantBaseRollupData),
       reader.readObject(AppendOnlyTreeSnapshot),
       reader.readObject(AppendOnlyTreeSnapshot),
-      reader.readFr(),
-      reader.readFr(),
-      reader.readFr(),
       reader.readFr(),
       reader.readFr(),
       reader.readFr(),
@@ -195,10 +189,7 @@ export class BaseRollupPublicInputs {
       this.newNullifiersSubtreeRoot,
       this.newContractLeavesSubtreeRoot,
 
-      this.newCommitmentsHash,
-      this.newNullifiersHash,
-      this.newL1MsgsHash,
-      this.newContractDataHash,
+      this.calldataHash,
       this.proverContributionsHash,
     );
   }
