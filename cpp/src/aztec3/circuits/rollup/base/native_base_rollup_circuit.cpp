@@ -229,12 +229,15 @@ void perform_historical_private_data_tree_membership_checks(BaseRollupInputs bas
 
 void perform_historical_contract_data_tree_membership_checks(BaseRollupInputs baseRollupInputs)
 {
-    NT::fr leaf = baseRollupInputs.kernel_data[i].public_inputs.constants.old_tree_roots.contract_tree_root;
-    abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> historic_root_witness =
-        baseRollupInputs.historic_contract_tree_root_membership_witnesses[i];
+    auto historic_root = baseRollupInputs.constants.start_tree_of_historic_contract_tree_roots_snapshot.root;
 
-    check_membership(historic_root, leaf, historic_root_witness);
-}
+    for (size_t i = 0; i < 2; i++) {
+        NT::fr leaf = baseRollupInputs.kernel_data[i].public_inputs.constants.old_tree_roots.contract_tree_root;
+        abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> historic_root_witness =
+            baseRollupInputs.historic_contract_tree_root_membership_witnesses[i];
+
+        check_membership(historic_root, leaf, historic_root_witness);
+    }
 }
 // Important types:
 //   - BaseRollupPublicInputs - where we want to put our return values
@@ -279,7 +282,7 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
 
     NT::fr prover_contribution_hash = get_prover_contribution_hash(); // TODO: implement
 
-    RollupPublicInputs public_inputs = {
+    BaseRollupPublicInputs public_inputs = {
         .end_aggregation_object = aggregation_object,
         .constants = baseRollupInputs.constants,
         .start_nullifier_tree_snapshot = mockNullifierStartSnapshot, // TODO: implement:

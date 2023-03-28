@@ -11,7 +11,7 @@ using aztec3::utils::types::CircuitTypes;
 using aztec3::utils::types::NativeTypes;
 using std::is_same;
 
-template <typename NCT> struct MergeRollupInputs {
+template <typename NCT> struct BaseRollupInputs {
 
     typedef typename NCT::fr fr;
 
@@ -32,7 +32,7 @@ template <typename NCT> struct MergeRollupInputs {
     bool operator==(BaseRollupInputs<NCT> const&) const = default;
 };
 
-template <typename NCT> void read(uint8_t const*& it, MergeRollupInputs<NCT>& obj)
+template <typename NCT> void read(uint8_t const*& it, BaseRollupInputs<NCT>& obj)
 {
     using serialize::read;
 
@@ -45,7 +45,7 @@ template <typename NCT> void read(uint8_t const*& it, MergeRollupInputs<NCT>& ob
     read(it, obj.constants);
 };
 
-template <typename NCT> void write(std::vector<uint8_t>& buf, MergeRollupInputs<NCT> const& obj)
+template <typename NCT> void write(std::vector<uint8_t>& buf, BaseRollupInputs<NCT> const& obj)
 {
     using serialize::write;
 
@@ -58,7 +58,7 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, MergeRollupInputs<
     write(buf, obj.constants);
 };
 
-template <typename NCT> std::ostream& operator<<(std::ostream& os, MergeRollupInputs<NCT> const& obj)
+template <typename NCT> std::ostream& operator<<(std::ostream& os, BaseRollupInputs<NCT> const& obj)
 {
     return os << "kernel_data:\n"
               << obj.kernel_data << "\n"
