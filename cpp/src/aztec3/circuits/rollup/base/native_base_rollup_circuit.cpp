@@ -1,3 +1,5 @@
+#include "aztec3/circuits/abis/append_only_tree_snapshot.hpp"
+#include "aztec3/circuits/abis/membership_witness.hpp"
 #include "aztec3/constants.hpp"
 #include "barretenberg/crypto/pedersen_hash/pedersen.hpp"
 #include "barretenberg/crypto/sha256/sha256.hpp"
@@ -231,6 +233,99 @@ NT::fr calculate_calldata_hash(BaseRollupInputs baseRollupInputs, std::vector<NT
     return sha256::sha256_to_field(calldata_hash_inputs_bytes_vec);
 }
 
+template <size_t N> NT::fr calculate_root(NT::fr leaf, abis::MembershipWitness<NT, N> witness)
+{
+    // Extract values
+    NT::uint32 leaf_index = witness.leaf_index;
+    auto sibling_path = witness.sibling_path;
+    // Perform merkle membership check with the provided sibling path up to the root
+    for (size_t i = 0; i < N; i++) {
+        if (leaf_index & (1 << i)) {
+            leaf = crypto::pedersen_hash::hash_multiple({ leaf, sibling_path[i] });
+        } else {
+            leaf = crypto::pedersen_hash::hash_multiple({ sibling_path[i], leaf });
+        }
+    }
+    return leaf;
+}
+
+template <size_t N> void check_membership(NT::fr root, NT::fr leaf, abis::MembershipWitness<NT, N> witness)
+{
+    NT::fr new_root = calculate_root<N>(leaf, witness);
+    if (new_root != root) {
+        // throw std::runtime_error("Merkle membership check failed");
+    }
+}
+
+/**
+ * @brief Check non membership of each of the generated nullifiers in the current tree
+ *
+ * @returns The end nullifier tree root
+ */
+AppendOnlySnapshot check_nullifier_tree_non_membership(BaseRollupInputs baseRollupInputs)
+{
+    // LADIES AND GENTLEMEN The P L A N ( is simple )
+    // 1. Get the previous nullifier set setup
+    // 2. Check for the first added nullifier that it doesnt exist
+    // 3. Update the nullifier set
+    // 4. Calculate a new root with the sibling path
+    // 5. Use that for the next nullifier check.
+    // 6. Iterate for all of em
+    // 7. le bosh (profit)
+
+    // This will update on each iteration
+    auto previous_nullifier_tree_root = baseRollupInputs.start_nullifier_tree_snapshot.root;
+
+    // This will increase with every insertion
+    auto new_index = baseRollupInputs.start_nullifier_tree_snapshot.next_available_leaf_index;
+
+    for (size_t i = 0; i < 2; i++) {
+        auto new_nullifiers = baseRollupInputs.kernel_data[i].public_inputs.end.new_nullifiers;
+        for (size_t j = 0; j < 4; j++) {
+
+            // Witness containing index and path
+            auto witness = baseRollupInputs.low_nullifier_membership_witness[i * 4 + j];
+            // Preimage of the lo-index required for a non-membership proof
+            auto low_nullifier_preimage = baseRollupInputs.low_nullifier_leaf_preimages[i * 4 + j];
+            // Newly created nullifier
+            auto nullifier = new_nullifiers[j];
+
+            // assert that the low_nullifier provided is the correct one by performing two range checks
+            auto is_less_than_nullifier = low_nullifier_preimage.leaf_value < nullifier;
+            auto is_next_greater_than = low_nullifier_preimage.next_value > nullifier;
+            if (!is_less_than_nullifier || !is_next_greater_than) {
+                // throw std::runtime_error("Low nullifier preimage is incorrect");
+            }
+
+            // Calculate the leaf hash
+            auto leaf = crypto::pedersen_hash::hash_multiple({ low_nullifier_preimage.leaf_value,
+                                                               low_nullifier_preimage.next_index,
+                                                               low_nullifier_preimage.next_value });
+
+            // perform (non) membership check for each of the provided paths
+            check_membership<NULLIFIER_TREE_HEIGHT>(previous_nullifier_tree_root, leaf, witness);
+
+            // against the new nullifier root, calculate the new leaf hash of the new low_nullifier_preimage
+            auto new_leaf =
+                crypto::pedersen_hash::hash_multiple({ low_nullifier_preimage.leaf_value, new_index, nullifier });
+
+            // increase new index for next insertion
+            new_index = new_index + 1;
+
+            // Use the existing sibling path to calculate the new root
+            NT::fr new_root = calculate_root<NULLIFIER_TREE_HEIGHT>(new_leaf, witness);
+            previous_nullifier_tree_root = new_root;
+        }
+    }
+
+    // Return the new state of the nullifier tree
+    abis::AppendOnlyTreeSnapshot<NT> end_nullifier_tree_snapshot = {
+        .root = previous_nullifier_tree_root,
+        .next_available_leaf_index = new_index,
+    };
+    return end_nullifier_tree_snapshot;
+}
+
 /**
  * @brief Check all of the provided commitments against the historical tree roots
  *
@@ -248,7 +343,7 @@ void perform_historical_private_data_tree_membership_checks(BaseRollupInputs bas
         abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> historic_root_witness =
             baseRollupInputs.historic_private_data_tree_root_membership_witnesses[i];
 
-        check_membership(leaf, historic_root_witness.leaf_index, historic_root_witness.sibling_path, historic_root);
+        check_membership<PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>(historic_root, leaf, historic_root_witness);
     }
 }
 
@@ -261,7 +356,7 @@ void perform_historical_contract_data_tree_membership_checks(BaseRollupInputs ba
         abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> historic_root_witness =
             baseRollupInputs.historic_contract_tree_root_membership_witnesses[i];
 
-        check_membership(leaf, historic_root_witness.leaf_index, historic_root_witness.sibling_path, historic_root);
+        check_membership<PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>(historic_root, leaf, historic_root_witness);
     }
 }
 // Important types:
@@ -328,27 +423,16 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
     perform_historical_private_data_tree_membership_checks(baseRollupInputs);
     perform_historical_contract_data_tree_membership_checks(baseRollupInputs);
 
-    AggregationObject aggregation_object = aggregate_proofs(baseRollupInputs);
+    abis::AppendOnlyTreeSnapshot<NT> end_nullifier_tree_snapshot =
+        check_nullifier_tree_non_membership(baseRollupInputs);
 
-    // TODO: update these mocks
-    AppendOnlySnapshot mockNullifierStartSnapshot = {
-        .root = NT::fr::one(),
-        .next_available_leaf_index = 0,
-    };
-    AppendOnlySnapshot mockNullifierEndSnapshot = {
-        .root = NT::fr::one(),
-        .next_available_leaf_index = 0,
-    };
+    AggregationObject aggregation_object = aggregate_proofs(baseRollupInputs);
 
     BaseRollupPublicInputs public_inputs = {
         .end_aggregation_object = aggregation_object,
         .constants = baseRollupInputs.constants,
-        .start_private_data_tree_snapshot = baseRollupInputs.start_private_data_tree_snapshot,
-        .end_private_data_tree_snapshot = end_private_data_tree_snapshot,
-        .start_nullifier_tree_snapshot = mockNullifierStartSnapshot, // TODO: implement:
-        .end_nullifier_tree_snapshot = mockNullifierEndSnapshot,     // TODO: implement:
-        .start_contract_tree_snapshot = baseRollupInputs.start_contract_tree_snapshot,
-        .end_contract_tree_snapshot = end_contract_tree_snapshot,
+        .start_nullifier_tree_snapshot = baseRollupInputs.start_nullifier_tree_snapshot,
+        .end_nullifier_tree_snapshot = end_nullifier_tree_snapshot,
         .calldata_hash = calldata_hash,
     };
     return public_inputs;
