@@ -29,9 +29,7 @@ template <typename NCT> struct MergeRollupInputs {
 
     ConstantRollupData<NCT> constants;
 
-    fr prover_id;
-
-    bool operator==(MergeRollupInputs<NCT> const&) const = default;
+    bool operator==(BaseRollupInputs<NCT> const&) const = default;
 };
 
 template <typename NCT> void read(uint8_t const*& it, MergeRollupInputs<NCT>& obj)
@@ -45,7 +43,6 @@ template <typename NCT> void read(uint8_t const*& it, MergeRollupInputs<NCT>& ob
     read(it, obj.historic_private_data_tree_root_membership_witnesses);
     read(it, obj.historic_contract_tree_root_membership_witnesses);
     read(it, obj.constants);
-    read(it, obj.prover_id);
 };
 
 template <typename NCT> void write(std::vector<uint8_t>& buf, MergeRollupInputs<NCT> const& obj)
@@ -59,7 +56,6 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, MergeRollupInputs<
     write(buf, obj.historic_private_data_tree_root_membership_witnesses);
     write(buf, obj.historic_contract_tree_root_membership_witnesses);
     write(buf, obj.constants);
-    write(buf, obj.prover_id);
 };
 
 template <typename NCT> std::ostream& operator<<(std::ostream& os, MergeRollupInputs<NCT> const& obj)
@@ -77,8 +73,7 @@ template <typename NCT> std::ostream& operator<<(std::ostream& os, MergeRollupIn
               << "historic_contract_tree_root_membership_witnesses:\n"
               << obj.historic_contract_tree_root_membership_witnesses << "\n"
               << "constants:\n"
-              << obj.constants << "\n"
-              << "prover_id: " << obj.prover_id << "\n";
+              << obj.constants << "\n";
 }
 
 } // namespace aztec3::circuits::abis

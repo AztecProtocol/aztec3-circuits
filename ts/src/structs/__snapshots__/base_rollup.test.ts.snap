@@ -474,64 +474,52 @@ private_kernel_vk_tree_root: 0x401
 public_kernel_vk_tree_root: 0x402
 base_rollup_vk_hash: 0x403
 merge_rollup_vk_hash: 0x404
-
-prover_id: 0x42
 "
 `;
 
 exports[`structs/base_rollup serializes and prints BaseRollupPublicInputs 1`] = `
-"rollup_type: 0
-end_aggregation_object:
+"end_aggregation_object:
 P0: { 0x100, 0x101 }
 P1: { 0x200, 0x201 }
 public_inputs: [
-  0: 0x102
-  1: 0x103
-  2: 0x104
-  3: 0x105
 ]
 proof_witness_indices: [
-  0: 262
-  1: 263
-  2: 264
-  3: 265
-  4: 266
-  5: 267
+  0: 0
+  1: 0
+  2: 0
+  3: 0
 has_data: 0
 
 constants:
 start_tree_of_historic_private_data_tree_roots_snapshot:
- root: 0x200
-next_available_leaf_index: 512
+ root: 0x1020000000000000000000000000000000000
+next_available_leaf_index: 0
 
 start_tree_of_historic_contract_tree_roots_snapshot:
-root: 0x300
-next_available_leaf_index: 768
+root: 0x103000000000000000000000000000000000000000000
+next_available_leaf_index: 0
 
 tree_of_historic_l1_to_l2_msg_tree_roots_snapshot:
-root: 0x400
-next_available_leaf_index: 1024
+root: 0x10400000000000000000000000000000000000000000000000000
+next_available_leaf_index: 0
 
-private_kernel_vk_tree_root: 0x501
-public_kernel_vk_tree_root: 0x502
-base_rollup_vk_hash: 0x503
-merge_rollup_vk_hash: 0x504
+private_kernel_vk_tree_root: 0x10500000006000001060000010700000108000001090000010a0000010b00
+public_kernel_vk_tree_root: 0x200
+base_rollup_vk_hash: 0x20000000000000000000000000000000000000000000000000000000000
+merge_rollup_vk_hash: 0x30000000300000000000000000000000000000000000000000000000000
 
 start_nullifier_tree_snapshot:
-root: 0x300
-next_available_leaf_index: 768
+root: 0x400000004000000000000000000000000000000000000000000
+next_available_leaf_index: 0
 
 end_nullifier_tree_snapshots:
-root: 0x400
-next_available_leaf_index: 1024
+root: 0x501000000000000000000000000000000000000000000000000
+next_available_leaf_index: 0
 
-new_commitments_subtree_root: 0x501
-new_nullifiers_subtree_root: 0x502
-new_contract_leaves_subtree_root: 0x503
-new_commitments_hash: 0x601
-new_nullifiers_hash: 0x602
-new_l1_msgs_hash: 0x603
-new_contract_data_hash: 0x604
-prover_contributions_hash: 0x605
+new_commitments_subtree_root: 0x50200000000000000000000000000000000000000000000000000000000
+new_nullifiers_subtree_root: 0x50300000000000000000000000000000000000000000000000000000000
+new_contract_leaves_subtree_root: 0x50400000000000000000000000000000000000000000000000000000000
+calldata_hash: 0x30000000300000000000000000000000000000000000000000000000000
+prover_contributions_hash: 0x400000004000000000000000000000000000000000000000000
 "
 `;

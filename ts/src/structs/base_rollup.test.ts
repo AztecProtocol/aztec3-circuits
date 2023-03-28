@@ -58,6 +58,7 @@ describe('structs/base_rollup', () => {
       historicContractsTreeRootMembershipWitnesses,
       constants,
     });
+    console.log(baseRollupInputs);
 
     const wasm = await CircuitsWasm.new();
     await expectSerializeToMatchSnapshot(

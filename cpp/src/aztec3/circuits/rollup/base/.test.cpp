@@ -111,8 +111,6 @@ BaseRollupInputs getEmptyBaseRollupInputs()
             MembershipWitness<NT, CONTRACT_TREE_ROOTS_TREE_HEIGHT>::empty()
         };
 
-    fr prover_id = fr::random_element();
-
     // Kernels
     std::array<abis::private_kernel::PreviousKernelData<NT>, 2> kernel_data;
     // @note If using VK when empty, it will fail with segfault.
@@ -125,7 +123,6 @@ BaseRollupInputs getEmptyBaseRollupInputs()
         .historic_private_data_tree_root_membership_witnesses = historic_private_data_tree_root_membership_witnesses,
         .historic_contract_tree_root_membership_witnesses = historic_contract_tree_root_membership_witnesses,
         .constants = constantRollupData,
-        .prover_id = prover_id,
     };
     return baseRollupInputs;
 }

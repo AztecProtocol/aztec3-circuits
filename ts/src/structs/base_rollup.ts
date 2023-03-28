@@ -8,7 +8,7 @@ import {
   PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT,
 } from './constants.js';
 import { PreviousKernelData } from './kernel.js';
-import { AggregationObject, Fr, MembershipWitness, RollupTypes, UInt32 } from './shared.js';
+import { AggregationObject, Fr, MembershipWitness, UInt32 } from './shared.js';
 
 export class NullifierLeafPreimage {
   constructor(public leafValue: Fr, public nextValue: Fr, public nextIndex: UInt32) {}
@@ -131,8 +131,6 @@ export class BaseRollupInputs {
  */
 export class BaseRollupPublicInputs {
   constructor(
-    public rollupType: RollupTypes,
-
     public endAggregationObject: AggregationObject,
     public constants: ConstantBaseRollupData,
 
@@ -156,7 +154,6 @@ export class BaseRollupPublicInputs {
   static fromBuffer(buffer: Buffer | BufferReader): BaseRollupPublicInputs {
     const reader = BufferReader.asReader(buffer);
     return new BaseRollupPublicInputs(
-      reader.readNumber(),
       reader.readObject(AggregationObject),
       reader.readObject(ConstantBaseRollupData),
       reader.readObject(AppendOnlyTreeSnapshot),
@@ -175,7 +172,6 @@ export class BaseRollupPublicInputs {
    */
   toBuffer() {
     return serializeToBuffer(
-      this.rollupType.valueOf(),
       this.endAggregationObject,
       this.constants,
 

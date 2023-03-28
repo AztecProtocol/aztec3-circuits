@@ -69,5 +69,6 @@ export async function expectReserializeToMatchObject<T extends { toBuffer: () =>
 ) {
   const outputBuf = await callWasm(inputObj.toBuffer(), serializeMethod, wasm);
   const deserializedObj = deserialize(outputBuf);
+
   expect(deserializedObj).toEqual(deserializedObj);
 }

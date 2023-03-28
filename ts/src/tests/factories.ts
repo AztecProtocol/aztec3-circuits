@@ -247,7 +247,6 @@ export function makeEcdsaSignature(seed = 1): EcdsaSignature {
 
 export function makeBaseRollupPublicInputs(seed = 0) {
   return new BaseRollupPublicInputs(
-    RollupTypes.Base,
     makeAggregationObject(seed + 0x100),
     makeConstantBaseRollupData(seed + 0x200),
     makeAppendOnlyTreeSnapshot(seed + 0x300),
@@ -257,9 +256,6 @@ export function makeBaseRollupPublicInputs(seed = 0) {
     fr(seed + 0x503),
     fr(seed + 0x601),
     fr(seed + 0x602),
-    fr(seed + 0x603),
-    fr(seed + 0x604),
-    fr(seed + 0x605),
   );
 }
 
