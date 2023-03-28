@@ -89,12 +89,10 @@ WASM_EXPORT size_t base_rollup__sim(uint8_t const* base_rollup_inputs_buf,
     BaseRollupInputs base_rollup_inputs;
     read(base_rollup_inputs_buf, base_rollup_inputs);
 
-    // NT::Proof base_rollup_proof;
-    BaseRollupPublicInputs public_inputs;
-    public_inputs = base_rollup_circuit(base_rollup_inputs);
-    // mocked proof - zeros
-    // base_rollup_proof = NT::Proof{ std::vector<uint8_t>(42, 0) };
+    BaseRollupPublicInputs public_inputs = base_rollup_circuit(base_rollup_inputs);
 
+    // TODO for circuit proof version of this function
+    // NT::Proof base_rollup_proof;
     //    Composer composer = Composer(crs_factory);
     //    plonk::stdlib::types::Prover prover = composer.create_prover();
     //    public_inputs = base_rollup_circuit(composer, base_rollup_inputs);
