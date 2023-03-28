@@ -196,9 +196,14 @@ class base_rollup_tests : public ::testing::Test {
         // @note If using VK when empty, it will fail with segfault.
 
         BaseRollupInputs baseRollupInputs = { .kernel_data = kernel_data,
+                                              .start_private_data_tree_snapshot = AppendOnlyTreeSnapshot<NT>::empty(),
                                               .start_nullifier_tree_snapshot = AppendOnlyTreeSnapshot<NT>::empty(),
+                                              .start_contract_tree_snapshot = AppendOnlyTreeSnapshot<NT>::empty(),
                                               .low_nullifier_leaf_preimages = low_nullifier_leaf_preimages,
                                               .low_nullifier_membership_witness = low_nullifier_membership_witness,
+                                              .new_commitments_subtree_sibling_path = { 0 },
+                                              .new_nullifiers_subtree_sibling_path = { 0 },
+                                              .new_contracts_subtree_sibling_path = { 0 },
                                               .historic_private_data_tree_root_membership_witnesses =
                                                   historic_private_data_tree_root_membership_witnesses,
                                               .historic_contract_tree_root_membership_witnesses =
