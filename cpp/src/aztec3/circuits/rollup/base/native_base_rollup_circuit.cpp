@@ -20,6 +20,11 @@
 
 namespace aztec3::circuits::rollup::native_base_rollup {
 
+const uint8_t COMMITMENTS_SUBTREE_DEPTH = 3;
+const uint8_t CONTRACTS_SUBTREE_DEPTH = 1;
+const NT::fr EMPTY_COMMITMENTS_SUBTREE_ROOT = stdlib::merkle_tree::MemoryTree(COMMITMENTS_SUBTREE_DEPTH).root();
+const NT::fr EMPTY_CONTRACTS_SUBTREE_ROOT = stdlib::merkle_tree::MemoryTree(CONTRACTS_SUBTREE_DEPTH).root();
+
 // TODO: can we aggregate proofs if we do not have a working circuit impl
 
 // TODO: change the public inputs array - we wont be using this?
@@ -76,17 +81,60 @@ std::vector<NT::fr> calculate_contract_leaves(BaseRollupInputs baseRollupInputs)
             NT::fr portal_contract_address = new_contacts[j].portal_contract_address;
             NT::fr function_tree_root = new_contacts[j].function_tree_root;
 
-            // Pedersen hash of the 3 fields
+            // Pedersen hash of the 3 fields (contract_address, portal_contract_address, function_tree_root)
             auto contract_leaf =
                 crypto::pedersen_hash::hash_multiple({ contract_address, portal_contract_address, function_tree_root });
 
-            // @todo What to do about no contract deployments? Insert a zero, we talked with Mike.
-            // For the nullifier member-ship, ignore when the leaf is zero.
-            contract_leaves.push_back(contract_leaf);
+            // When there is no contract deployment, we should insert a zero leaf into the tree and ignore the
+            // member-ship check. This is to ensure that we don't hit "already deployed" errors when we are not
+            // deploying contracts. e.g., when we are only calling functions on existing contracts.
+            auto to_push = contract_address == NT::address(0) ? NT::fr(0) : contract_leaf;
+
+            contract_leaves.push_back(to_push);
         }
     }
 
     return contract_leaves;
+}
+
+template <size_t N>
+NT::fr iterate_through_tree_via_sibling_path(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath)
+{
+    for (size_t i = 0; i < siblingPath.size(); i++) {
+        if (leafIndex & (1 << i)) {
+            leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
+        } else {
+            leaf = crypto::pedersen_hash::hash_multiple({ siblingPath[i], leaf });
+        }
+    }
+    return leaf;
+}
+
+template <size_t N>
+void check_membership(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath, NT::fr root)
+{
+    auto calculatedRoot = iterate_through_tree_via_sibling_path(leaf, leafIndex, siblingPath);
+    if (calculatedRoot != root) {
+        // throw std::runtime_error("Merkle membership check failed");
+    }
+}
+
+template <size_t N>
+AppendOnlySnapshot insert_subtree_to_snapshot_tree(std::array<NT::fr, N> siblingPath,
+                                                   NT::uint32 nextAvailableLeafIndex,
+                                                   NT::fr subtreeRootToInsert,
+                                                   uint8_t subtreeDepth)
+{
+    // TODO: Sanity check len of siblingPath > height of subtree
+    // TODO: Ensure height of subtree is correct (eg 3 for commitments, 1 for contracts)
+    auto leafIndexAtDepth = nextAvailableLeafIndex >> subtreeDepth;
+    auto new_root = iterate_through_tree_via_sibling_path(subtreeRootToInsert, leafIndexAtDepth, siblingPath);
+    // 2^subtreeDepth is the number of leaves added. 2^x = 1 << x
+    auto new_next_available_leaf_index = nextAvailableLeafIndex + (uint8_t(1) << subtreeDepth);
+
+    AppendOnlySnapshot newTreeSnapshot = { .root = new_root,
+                                           .next_available_leaf_index = new_next_available_leaf_index };
+    return newTreeSnapshot;
 }
 
 std::array<NT::fr, 3> calculate_new_subtrees(BaseRollupInputs baseRollupInputs, std::vector<NT::fr> contract_leaves)
@@ -97,8 +145,8 @@ std::array<NT::fr, 3> calculate_new_subtrees(BaseRollupInputs baseRollupInputs, 
 
     // TODO: we have at size two for now, but we will need
 
-    stdlib::merkle_tree::MemoryTree contracts_tree = stdlib::merkle_tree::MemoryTree(2);
-    stdlib::merkle_tree::MemoryTree commitments_tree = stdlib::merkle_tree::MemoryTree(3);
+    stdlib::merkle_tree::MemoryTree contracts_tree = stdlib::merkle_tree::MemoryTree(CONTRACTS_SUBTREE_DEPTH);
+    stdlib::merkle_tree::MemoryTree commitments_tree = stdlib::merkle_tree::MemoryTree(COMMITMENTS_SUBTREE_DEPTH);
     // TODO: nullifier tree will be a different tree impl - indexed merkle tree
     // stdlib::merkle_tree::MemoryTree nullifier_tree = stdlib::merkle_tree::MemoryTree(2);
 
@@ -137,7 +185,7 @@ std::array<NT::fr, 3> calculate_new_subtrees(BaseRollupInputs baseRollupInputs, 
     return std::array<NT::fr, 3>{ contracts_tree_subroot, commitments_tree_subroot, nullifiers_tree_subroot };
 }
 
-NT::fr calculate_calldata_hash(BaseRollupInputs baseRollupInputs, std::vector<NT::fr> contract_leaves)
+std::array<NT::fr, 2> calculate_calldata_hash(BaseRollupInputs baseRollupInputs, std::vector<NT::fr> contract_leaves)
 {
     // Compute calldata hashes
     // 22 = (4 + 4 + 1 + 2) * 2 (2 kernels, 4 nullifiers per kernel, 4 commitments per kernel, 1 contract
@@ -159,8 +207,8 @@ NT::fr calculate_calldata_hash(BaseRollupInputs baseRollupInputs, std::vector<NT
         auto new_contracts = baseRollupInputs.kernel_data[i].public_inputs.end.new_contracts;
 
         // TODO: this assumes that there is only one contract deployment
-        calldata_hash_inputs[18 + i] = new_contracts[0].portal_contract_address;
-        calldata_hash_inputs[20 + i] = new_contracts[0].function_tree_root;
+        calldata_hash_inputs[18 + i] = new_contracts[0].contract_address;
+        calldata_hash_inputs[20 + i] = new_contracts[0].portal_contract_address;
     }
 
     // FIXME
@@ -178,34 +226,22 @@ NT::fr calculate_calldata_hash(BaseRollupInputs baseRollupInputs, std::vector<NT
     std::vector<uint8_t> calldata_hash_inputs_bytes_vec(calldata_hash_inputs_bytes.begin(),
                                                         calldata_hash_inputs_bytes.end());
 
-    // @todo Make this thing split into two field elements. Hi and low.
-    /*std::cout << "calldata_hash_inputs_bytes_vec: " << calldata_hash_inputs_bytes_vec << std::endl;
     auto h = sha256::sha256(calldata_hash_inputs_bytes_vec);
-    std::cout << "h: " << h << std::endl;*/
 
-    return sha256::sha256_to_field(calldata_hash_inputs_bytes_vec);
+    // Split the hash into two fields, a high and a low
+    std::array<uint8_t, 32> buf_1, buf_2;
+    for (uint8_t i = 0; i < 16; i++) {
+        buf_1[i] = 0;
+        buf_1[16 + i] = h[i];
+        buf_2[i] = 0;
+        buf_2[16 + i] = h[i + 16];
+    }
+    auto high = fr::serialize_from_buffer(buf_1.data());
+    auto low = fr::serialize_from_buffer(buf_2.data());
+
+    return std::array<NT::fr, 2>{ high, low };
 }
 
-void check_membership(NT::fr root,
-                      NT::fr leaf,
-                      abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> witness)
-{
-    // Extract values
-    NT::uint32 leaf_index = witness.leaf_index;
-    auto sibling_path = witness.sibling_path;
-
-    // Perform merkle membership check with the provided sibling path up to the root
-    for (size_t i = 0; i < PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT; i++) {
-        if (leaf_index & (1 << i)) {
-            leaf = crypto::pedersen_hash::hash_multiple({ leaf, sibling_path[i] });
-        } else {
-            leaf = crypto::pedersen_hash::hash_multiple({ sibling_path[i], leaf });
-        }
-    }
-    if (leaf != root) {
-        // throw std::runtime_error("Merkle membership check failed");
-    }
-}
 /**
  * @brief Check all of the provided commitments against the historical tree roots
  *
@@ -223,7 +259,7 @@ void perform_historical_private_data_tree_membership_checks(BaseRollupInputs bas
         abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> historic_root_witness =
             baseRollupInputs.historic_private_data_tree_root_membership_witnesses[i];
 
-        check_membership(historic_root, leaf, historic_root_witness);
+        check_membership(leaf, historic_root_witness.leaf_index, historic_root_witness.sibling_path, historic_root);
     }
 }
 
@@ -236,7 +272,7 @@ void perform_historical_contract_data_tree_membership_checks(BaseRollupInputs ba
         abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> historic_root_witness =
             baseRollupInputs.historic_contract_tree_root_membership_witnesses[i];
 
-        check_membership(historic_root, leaf, historic_root_witness);
+        check_membership(leaf, historic_root_witness.leaf_index, historic_root_witness.sibling_path, historic_root);
     }
 }
 // Important types:
@@ -256,13 +292,50 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
 
     std::vector<NT::fr> contract_leaves = calculate_contract_leaves(baseRollupInputs);
 
+    // Perform merkle membership check with the provided sibling path up to the root
+    // Note - the subtree hasn't been created (i.e. it is empty) so you check that the sibling path corresponds to an
+    // empty tree
+
+    // check for commitments/private_data
+    // next_available_leaf_index is at the leaf level. We need at the subtree level (say height 3). So divide by 8.
+    // (if leaf is at index x, its parent is at index floor(x/2))
+    auto leafIndexAtSubtreeDepth = baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index /
+                                   (NT::uint32(1) << COMMITMENTS_SUBTREE_DEPTH);
+    check_membership(EMPTY_COMMITMENTS_SUBTREE_ROOT,
+                     leafIndexAtSubtreeDepth,
+                     baseRollupInputs.new_commitments_subtree_sibling_path,
+                     baseRollupInputs.start_private_data_tree_snapshot.root);
+
+    // check for contracts
+    leafIndexAtSubtreeDepth = baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index /
+                              (NT::uint32(1) << CONTRACTS_SUBTREE_DEPTH);
+    check_membership(EMPTY_CONTRACTS_SUBTREE_ROOT,
+                     leafIndexAtSubtreeDepth,
+                     baseRollupInputs.new_contracts_subtree_sibling_path,
+                     baseRollupInputs.start_contract_tree_snapshot.root);
+
     std::array<NT::fr, 3> new_subtrees = calculate_new_subtrees(baseRollupInputs, contract_leaves);
     NT::fr contracts_tree_subroot = new_subtrees[0];
     NT::fr commitments_tree_subroot = new_subtrees[1];
-    NT::fr nullifiers_tree_subroot = new_subtrees[2];
+    // NT::fr nullifiers_tree_subroot = new_subtrees[2];
+
+    // Insert subtrees to the tree:
+    auto end_private_data_tree_snapshot =
+        insert_subtree_to_snapshot_tree(baseRollupInputs.new_commitments_subtree_sibling_path,
+                                        baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index,
+                                        commitments_tree_subroot,
+                                        COMMITMENTS_SUBTREE_DEPTH);
+
+    auto end_contract_tree_snapshot =
+        insert_subtree_to_snapshot_tree(baseRollupInputs.new_contracts_subtree_sibling_path,
+                                        baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index,
+                                        contracts_tree_subroot,
+                                        CONTRACTS_SUBTREE_DEPTH);
+
+    // TODO: Nullifiers tree insertion
 
     // Calculate the overall calldata hash
-    NT::fr calldata_hash = calculate_calldata_hash(baseRollupInputs, contract_leaves);
+    std::array<NT::fr, 2> calldata_hash = calculate_calldata_hash(baseRollupInputs, contract_leaves);
 
     // Perform membership checks that the notes provided exist within the historic trees data
     perform_historical_private_data_tree_membership_checks(baseRollupInputs);
@@ -280,18 +353,16 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
         .next_available_leaf_index = 0,
     };
 
-    NT::fr prover_contribution_hash = get_prover_contribution_hash(); // TODO: implement
-
     BaseRollupPublicInputs public_inputs = {
         .end_aggregation_object = aggregation_object,
         .constants = baseRollupInputs.constants,
+        .start_private_data_tree_snapshot = baseRollupInputs.start_private_data_tree_snapshot,
+        .end_private_data_tree_snapshot = end_private_data_tree_snapshot,
         .start_nullifier_tree_snapshot = mockNullifierStartSnapshot, // TODO: implement:
-        .end_nullifier_tree_snapshots = mockNullifierEndSnapshot,    // TODO: implement
-        .new_commitments_subtree_root = commitments_tree_subroot,
-        .new_nullifiers_subtree_root = nullifiers_tree_subroot,
-        .new_contract_leaves_subtree_root = contracts_tree_subroot,
+        .end_nullifier_tree_snapshot = mockNullifierEndSnapshot,     // TODO: implement:
+        .start_contract_tree_snapshot = baseRollupInputs.start_contract_tree_snapshot,
+        .end_contract_tree_snapshot = end_contract_tree_snapshot,
         .calldata_hash = calldata_hash,
-        .prover_contributions_hash = prover_contribution_hash,
     };
     return public_inputs;
 }

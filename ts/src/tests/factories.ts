@@ -250,11 +250,11 @@ export function makeBaseRollupPublicInputs(seed = 0) {
     makeConstantBaseRollupData(seed + 0x200),
     makeAppendOnlyTreeSnapshot(seed + 0x300),
     makeAppendOnlyTreeSnapshot(seed + 0x400),
-    fr(seed + 0x501),
-    fr(seed + 0x502),
-    fr(seed + 0x503),
-    fr(seed + 0x601),
-    fr(seed + 0x602),
+    makeAppendOnlyTreeSnapshot(seed + 0x500),
+    makeAppendOnlyTreeSnapshot(seed + 0x600),
+    makeAppendOnlyTreeSnapshot(seed + 0x700),
+    makeAppendOnlyTreeSnapshot(seed + 0x800),
+    range(2, seed + 0x901).map(fr) as [Fr, Fr],
   );
 }
 

@@ -18,25 +18,23 @@ template <typename NCT> struct BaseRollupPublicInputs {
     typedef typename NCT::AggregationObject AggregationObject;
 
     AggregationObject end_aggregation_object;
-
     ConstantRollupData<NCT> constants;
 
-    // The only tree root actually updated in this circuit is the nullifier tree, because earlier leaves (of
-    // low_nullifiers) must be updated to point to the new nullifiers in this circuit.
-    AppendOnlyTreeSnapshot<NCT> start_nullifier_tree_snapshot;
-    AppendOnlyTreeSnapshot<NCT> end_nullifier_tree_snapshots;
+    AppendOnlyTreeSnapshot<NCT> start_private_data_tree_snapshot;
+    AppendOnlyTreeSnapshot<NCT> end_private_data_tree_snapshot;
 
-    fr new_commitments_subtree_root;
-    fr new_nullifiers_subtree_root;
-    fr new_contract_leaves_subtree_root;
+    AppendOnlyTreeSnapshot<NCT> start_nullifier_tree_snapshot;
+    AppendOnlyTreeSnapshot<NCT> end_nullifier_tree_snapshot;
+
+    AppendOnlyTreeSnapshot<NCT> start_contract_tree_snapshot;
+    AppendOnlyTreeSnapshot<NCT> end_contract_tree_snapshot;
 
     // Hashes (probably sha256) to make public inputs constant-sized (to then be unpacked on-chain)
     // UPDATE we should instead just hash all of the below into a single value. See big diagram of sha256 hashing
     // bottom-right of here.
     // TODO I've put `fr`, but these hash values' types might need to be two fields if we want all 256-bits, for
     // security purposes.
-    fr calldata_hash;
-    fr prover_contributions_hash;
+    std::array<fr, 2> calldata_hash;
 
     bool operator==(BaseRollupPublicInputs<NCT> const&) const = default;
 };
@@ -47,13 +45,13 @@ template <typename NCT> void read(uint8_t const*& it, BaseRollupPublicInputs<NCT
 
     read(it, obj.end_aggregation_object);
     read(it, obj.constants);
+    read(it, obj.start_private_data_tree_snapshot);
+    read(it, obj.end_private_data_tree_snapshot);
     read(it, obj.start_nullifier_tree_snapshot);
-    read(it, obj.end_nullifier_tree_snapshots);
-    read(it, obj.new_commitments_subtree_root);
-    read(it, obj.new_nullifiers_subtree_root);
-    read(it, obj.new_contract_leaves_subtree_root);
+    read(it, obj.end_nullifier_tree_snapshot);
+    read(it, obj.start_contract_tree_snapshot);
+    read(it, obj.end_contract_tree_snapshot);
     read(it, obj.calldata_hash);
-    read(it, obj.prover_contributions_hash);
 };
 
 template <typename NCT> void write(std::vector<uint8_t>& buf, BaseRollupPublicInputs<NCT> const& obj)
@@ -62,13 +60,13 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, BaseRollupPublicIn
 
     write(buf, obj.end_aggregation_object);
     write(buf, obj.constants);
+    write(buf, obj.start_private_data_tree_snapshot);
+    write(buf, obj.end_private_data_tree_snapshot);
     write(buf, obj.start_nullifier_tree_snapshot);
-    write(buf, obj.end_nullifier_tree_snapshots);
-    write(buf, obj.new_commitments_subtree_root);
-    write(buf, obj.new_nullifiers_subtree_root);
-    write(buf, obj.new_contract_leaves_subtree_root);
+    write(buf, obj.end_nullifier_tree_snapshot);
+    write(buf, obj.start_contract_tree_snapshot);
+    write(buf, obj.end_contract_tree_snapshot);
     write(buf, obj.calldata_hash);
-    write(buf, obj.prover_contributions_hash);
 };
 
 template <typename NCT> std::ostream& operator<<(std::ostream& os, BaseRollupPublicInputs<NCT> const& obj)
@@ -79,26 +77,26 @@ template <typename NCT> std::ostream& operator<<(std::ostream& os, BaseRollupPub
                  "constants:\n"
               << obj.constants
               << "\n"
+                 "start_private_data_tree_snapshot:\n"
+              << obj.start_private_data_tree_snapshot
+              << "\n"
+                 "end_private_data_tree_snapshot:\n"
+              << obj.start_private_data_tree_snapshot
+              << "\n"
                  "start_nullifier_tree_snapshot:\n"
               << obj.start_nullifier_tree_snapshot
               << "\n"
                  "end_nullifier_tree_snapshots:\n"
-              << obj.end_nullifier_tree_snapshots
+              << obj.end_nullifier_tree_snapshot
               << "\n"
-                 "new_commitments_subtree_root: "
-              << obj.new_commitments_subtree_root
+                 "start_contract_tree_snapshot:\n"
+              << obj.start_contract_tree_snapshot
               << "\n"
-                 "new_nullifiers_subtree_root: "
-              << obj.new_nullifiers_subtree_root
-              << "\n"
-                 "new_contract_leaves_subtree_root: "
-              << obj.new_contract_leaves_subtree_root
+                 "end_contract_tree_snapshot:\n"
+              << obj.end_contract_tree_snapshot
               << "\n"
                  "calldata_hash: "
-              << obj.calldata_hash
-              << "\n"
-                 "prover_contributions_hash: "
-              << obj.prover_contributions_hash << "\n";
+              << obj.calldata_hash << "\n";
 }
 
 } // namespace aztec3::circuits::abis
