@@ -776,7 +776,7 @@ TEST(private_kernel_tests, test_create_proof_cbinds)
     std::vector<uint8_t> private_constructor_call_vec;
     write(private_constructor_call_vec, private_constructor_call);
 
-    // uint8_t const* proof_data;
+    uint8_t const* proof_data;
     uint8_t const* public_inputs;
     info("Simulating to generate public inputs...");
     size_t public_inputs_size = private_kernel__sim(signed_constructor_tx_request_vec.data(),
@@ -784,17 +784,20 @@ TEST(private_kernel_tests, test_create_proof_cbinds)
                                                     private_constructor_call_vec.data(),
                                                     true, // first iteration
                                                     &public_inputs);
-    // info("Proving");
-    // size_t proof_data_size = private_kernel__prove(signed_constructor_tx_request_vec.data(),
-    //                                               public_inputs.previous_kernel, // no previous kernel on first
-    //                                               iteration private_constructor_call_vec.data(), pk_buf, true, //
-    //                                               first iteration &proof_data);
-    // info("Proof size: ", proof_data_size);
+
+    info("Proving");
+    size_t proof_data_size = private_kernel__prove(signed_constructor_tx_request_vec.data(),
+                                                   nullptr,
+                                                   private_constructor_call_vec.data(),
+                                                   pk_buf,
+                                                   true, // first iteration
+                                                   &proof_data);
+    info("Proof size: ", proof_data_size);
     info("PublicInputs size: ", public_inputs_size);
 
     free((void*)pk_buf);
     free((void*)vk_buf);
-    // free((void*)proof_data);
+    free((void*)proof_data);
     free((void*)public_inputs);
 }
 
