@@ -76,6 +76,8 @@ using aztec3::circuits::abis::AppendOnlyTreeSnapshot;
 
 using aztec3::circuits::abis::MembershipWitness;
 using aztec3::circuits::abis::NullifierLeafPreimage;
+using aztec3::circuits::rollup::native_base_rollup::BaseRollupInputs;
+using aztec3::circuits::rollup::native_base_rollup::BaseRollupPublicInputs;
 using aztec3::circuits::rollup::native_base_rollup::ConstantRollupData;
 using aztec3::circuits::rollup::native_base_rollup::NT;
 
@@ -85,7 +87,7 @@ namespace aztec3::circuits::rollup::base::native_base_rollup_circuit {
 
 class base_rollup_tests : public ::testing::Test {};
 
-TEST(base_rollup_tests, test_compute_contract_leafs)
+BaseRollupInputs getEmptyBaseRollupInputs()
 {
     ConstantRollupData constantRollupData = ConstantRollupData::empty();
 
@@ -103,6 +105,7 @@ TEST(base_rollup_tests, test_compute_contract_leafs)
             MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>::empty(),
             MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>::empty()
         };
+
     std::array<MembershipWitness<NT, CONTRACT_TREE_ROOTS_TREE_HEIGHT>, 2>
         historic_contract_tree_root_membership_witnesses = {
             MembershipWitness<NT, CONTRACT_TREE_ROOTS_TREE_HEIGHT>::empty(),
@@ -115,7 +118,7 @@ TEST(base_rollup_tests, test_compute_contract_leafs)
     std::array<abis::private_kernel::PreviousKernelData<NT>, 2> kernel_data;
     // @note If using VK when empty, it will fail with segfault.
 
-    native_base_rollup::BaseRollupInputs baseRollupInputs = {
+    BaseRollupInputs baseRollupInputs = {
         .kernel_data = kernel_data,
         .start_nullifier_tree_snapshot = AppendOnlyTreeSnapshot<NT>::empty(),
         .low_nullifier_leaf_preimages = low_nullifier_leaf_preimages,
@@ -125,9 +128,14 @@ TEST(base_rollup_tests, test_compute_contract_leafs)
         .constants = constantRollupData,
         .prover_id = prover_id,
     };
+    return baseRollupInputs;
+}
 
-    native_base_rollup::BaseRollupPublicInputs outputs =
-        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(constantRollupData, baseRollupInputs);
+TEST(base_rollup_tests, test_compute_contract_leafs)
+{
+    BaseRollupInputs emptyInputs = getEmptyBaseRollupInputs();
+
+    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(emptyInputs);
 
     // Print outputs
     // std::cout << "outputs: " << outputs << std::endl;
