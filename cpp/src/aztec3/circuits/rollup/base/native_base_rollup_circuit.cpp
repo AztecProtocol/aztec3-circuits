@@ -1,370 +1,237 @@
-#include "aztec3/constants.hpp"
-#include "barretenberg/crypto/pedersen_hash/pedersen.hpp"
-#include "barretenberg/crypto/sha256/sha256.hpp"
-#include "barretenberg/ecc/curves/bn254/fr.hpp"
-#include "barretenberg/stdlib/hash/pedersen/pedersen.hpp"
-#include "barretenberg/stdlib/merkle_tree/membership.hpp"
-#include "barretenberg/stdlib/merkle_tree/memory_tree.hpp"
-#include "barretenberg/stdlib/merkle_tree/merkle_tree.hpp"
 #include "init.hpp"
 
-#include <algorithm>
-#include <array>
-#include <aztec3/circuits/abis/rollup/base/base_rollup_inputs.hpp>
-#include <aztec3/circuits/abis/rollup/base/base_rollup_public_inputs.hpp>
-#include <aztec3/circuits/abis/rollup/nullifier_leaf_preimage.hpp>
-#include <cstdint>
-#include <iostream>
-#include <tuple>
-#include <vector>
+#include <aztec3/circuits/abis/private_kernel/private_inputs.hpp>
+#include <aztec3/circuits/abis/private_kernel/public_inputs.hpp>
 
-namespace aztec3::circuits::rollup::native_base_rollup {
+#include <aztec3/utils/array.hpp>
 
-const uint8_t COMMITMENTS_SUBTREE_DEPTH = 3;
-const uint8_t CONTRACTS_SUBTREE_DEPTH = 1;
-const NT::fr EMPTY_COMMITMENTS_SUBTREE_ROOT = stdlib::merkle_tree::MemoryTree(COMMITMENTS_SUBTREE_DEPTH).root();
-const NT::fr EMPTY_CONTRACTS_SUBTREE_ROOT = stdlib::merkle_tree::MemoryTree(CONTRACTS_SUBTREE_DEPTH).root();
+namespace aztec3::circuits::kernel::private_kernel {
 
-// TODO: can we aggregate proofs if we do not have a working circuit impl
+using aztec3::circuits::abis::private_kernel::PrivateInputs;
+using aztec3::circuits::abis::private_kernel::PublicInputs;
 
-// TODO: change the public inputs array - we wont be using this?
+using aztec3::utils::array_length;
+using aztec3::utils::array_pop;
+using aztec3::utils::is_array_empty;
+// using aztec3::utils::array_push;
+using aztec3::utils::push_array_to_array;
 
-// Access Native types through NT namespace
+// // TODO: NEED TO RECONCILE THE `proof`'s public inputs (which are uint8's) with the
+// // private_call.call_stack_item.public_inputs!
+// CT::AggregationObject verify_proofs(Composer& composer,
+//                                     PrivateInputs<CT> const& private_inputs,
+//                                     size_t const& num_private_call_public_inputs,
+//                                     size_t const& num_private_kernel_public_inputs)
+// {
+//     CT::AggregationObject aggregation_object = Aggregator::aggregate(
+//         &composer, private_inputs.private_call.vk, private_inputs.private_call.proof,
+//         num_private_call_public_inputs);
 
-bool verify_kernel_proof(NT::Proof kernel_proof)
+//     Aggregator::aggregate(&composer,
+//                           private_inputs.previous_kernel.vk,
+//                           private_inputs.previous_kernel.proof,
+//                           num_private_kernel_public_inputs,
+//                           aggregation_object);
+
+//     return aggregation_object;
+// }
+
+void initialise_end_values(PrivateInputs<NT> const& private_inputs, PublicInputs<NT>& public_inputs)
 {
-    std::cout << kernel_proof << std::endl; // REMOVE_ME
-    return true;
+    public_inputs.constants = private_inputs.previous_kernel.public_inputs.constants;
+
+    // Ensure the arrays are the same as previously, before we start pushing more data onto them in other functions
+    // within this circuit:
+    auto& end = public_inputs.end;
+    const auto& start = private_inputs.previous_kernel.public_inputs.end;
+
+    end.new_commitments = start.new_commitments;
+    end.new_nullifiers = start.new_nullifiers;
+
+    end.private_call_stack = start.private_call_stack;
+    end.public_call_stack = start.public_call_stack;
+    end.l1_msg_stack = start.l1_msg_stack;
+
+    end.optionally_revealed_data = start.optionally_revealed_data;
 }
 
-/**
- * @brief Create an aggregation object for the proofs that are provided
- *          - We add points P0 for each of our proofs
- *          - We add points P1 for each of our proofs
- *          - We concat our public inputs
- *
- * @param baseRollupInputs
- * @return AggregationObject
- */
-AggregationObject aggregate_proofs(BaseRollupInputs baseRollupInputs)
+void update_end_values(PrivateInputs<NT> const& private_inputs, PublicInputs<NT>& public_inputs)
 {
+    const auto private_call_public_inputs = private_inputs.private_call.call_stack_item.public_inputs;
 
-    // TODO: NOTE: for now we simply return the aggregation object from the first proof
-    return baseRollupInputs.kernel_data[0].public_inputs.end.aggregation_object;
-}
+    const auto& new_commitments = private_call_public_inputs.new_commitments;
+    const auto& new_nullifiers = private_call_public_inputs.new_nullifiers;
 
-/** TODO: implement
- * @brief Get the prover contribution hash object
- *
- * @return NT::fr
- */
-NT::fr get_prover_contribution_hash()
-{
-    return NT::fr(0);
-}
+    const auto& is_static_call = private_call_public_inputs.call_context.is_static_call;
 
-std::vector<NT::fr> calculate_contract_leaves(BaseRollupInputs baseRollupInputs)
-{
-
-    std::vector<NT::fr> contract_leaves;
-
-    for (size_t i = 0; i < 2; i++) {
-
-        auto new_contacts = baseRollupInputs.kernel_data[i].public_inputs.end.new_contracts;
-
-        // loop over the new contracts
-        // TODO: NOTE: we are currently assuming that there is only going to be one
-        for (size_t j = 0; j < new_contacts.size(); j++) {
-
-            NT::address contract_address = new_contacts[j].contract_address;
-            // TODO: UPDATE protal_contract_address is listed as a 20 byte address in the ABI
-            NT::fr portal_contract_address = new_contacts[j].portal_contract_address;
-            NT::fr function_tree_root = new_contacts[j].function_tree_root;
-
-            // Pedersen hash of the 3 fields (contract_address, portal_contract_address, function_tree_root)
-            auto contract_leaf =
-                crypto::pedersen_hash::hash_multiple({ contract_address, portal_contract_address, function_tree_root });
-
-            // When there is no contract deployment, we should insert a zero leaf into the tree and ignore the
-            // member-ship check. This is to ensure that we don't hit "already deployed" errors when we are not
-            // deploying contracts. e.g., when we are only calling functions on existing contracts.
-            auto to_push = contract_address == NT::address(0) ? NT::fr(0) : contract_leaf;
-
-            contract_leaves.push_back(to_push);
-        }
+    if (is_static_call) {
+        // No state changes are allowed for static calls:
+        ASSERT(is_array_empty(new_commitments) == true);
+        ASSERT(is_array_empty(new_nullifiers) == true);
     }
 
-    return contract_leaves;
-}
+    const auto& storage_contract_address = private_call_public_inputs.call_context.storage_contract_address;
 
-template <size_t N>
-NT::fr iterate_through_tree_via_sibling_path(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath)
-{
-    for (size_t i = 0; i < siblingPath.size(); i++) {
-        if (leafIndex & (1 << i)) {
-            leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
-        } else {
-            leaf = crypto::pedersen_hash::hash_multiple({ siblingPath[i], leaf });
-        }
-    }
-    return leaf;
-}
-
-template <size_t N>
-void check_membership(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath, NT::fr root)
-{
-    auto calculatedRoot = iterate_through_tree_via_sibling_path(leaf, leafIndex, siblingPath);
-    if (calculatedRoot != root) {
-        // throw std::runtime_error("Merkle membership check failed");
-    }
-}
-
-template <size_t N>
-AppendOnlySnapshot insert_subtree_to_snapshot_tree(std::array<NT::fr, N> siblingPath,
-                                                   NT::uint32 nextAvailableLeafIndex,
-                                                   NT::fr subtreeRootToInsert,
-                                                   uint8_t subtreeDepth)
-{
-    // TODO: Sanity check len of siblingPath > height of subtree
-    // TODO: Ensure height of subtree is correct (eg 3 for commitments, 1 for contracts)
-    auto leafIndexAtDepth = nextAvailableLeafIndex >> subtreeDepth;
-    auto new_root = iterate_through_tree_via_sibling_path(subtreeRootToInsert, leafIndexAtDepth, siblingPath);
-    // 2^subtreeDepth is the number of leaves added. 2^x = 1 << x
-    auto new_next_available_leaf_index = nextAvailableLeafIndex + (uint8_t(1) << subtreeDepth);
-
-    AppendOnlySnapshot newTreeSnapshot = { .root = new_root,
-                                           .next_available_leaf_index = new_next_available_leaf_index };
-    return newTreeSnapshot;
-}
-
-std::array<NT::fr, 3> calculate_new_subtrees(BaseRollupInputs baseRollupInputs, std::vector<NT::fr> contract_leaves)
-{
-    // Leaves that will be added to the new trees
-    std::array<NT::fr, 8> commitment_leaves; // TODO: use constant
-    std::array<NT::fr, 8> nullifier_leaves;  // TODO: use constant
-
-    // TODO: we have at size two for now, but we will need
-
-    stdlib::merkle_tree::MemoryTree contracts_tree = stdlib::merkle_tree::MemoryTree(CONTRACTS_SUBTREE_DEPTH);
-    stdlib::merkle_tree::MemoryTree commitments_tree = stdlib::merkle_tree::MemoryTree(COMMITMENTS_SUBTREE_DEPTH);
-    // TODO: nullifier tree will be a different tree impl - indexed merkle tree
-    // stdlib::merkle_tree::MemoryTree nullifier_tree = stdlib::merkle_tree::MemoryTree(2);
-
-    for (size_t i = 0; i < 2; i++) {
-
-        auto new_commitments = baseRollupInputs.kernel_data[i].public_inputs.end.new_commitments;
-
-        // Our commitments size MUST be 4 to calculate our subtrees correctly
-        assert(new_commitments.size() == 4);
-
-        for (size_t j = 0; j < new_commitments.size(); j++) {
-            // todo: batch insert
-            commitments_tree.update_element(i * 4 + j, new_commitments[j]);
+    { // commitments & nullifiers
+        std::array<NT::fr, NEW_COMMITMENTS_LENGTH> siloed_new_commitments;
+        for (size_t i = 0; i < new_commitments.size(); ++i) {
+            siloed_new_commitments[i] = new_commitments[i] == 0
+                                            ? 0
+                                            : NT::compress({ storage_contract_address.to_field(), new_commitments[i] },
+                                                           GeneratorIndex::OUTER_COMMITMENT);
         }
 
-        // Nullifiers
-        // TODO: not taking care of nullifiers right now
-        // auto new_nullifiers = baseRollupInputs.kernel_data[i].public_inputs.end.new_nullifiers;
-    }
-
-    // Compute the merkle root of a contract subtree
-    // TODO: consolidate what the tree depth should be
-    // TODO: cleanup lmao
-    // Contracts subtree
-    for (size_t i = 0; i < contract_leaves.size(); i++) {
-        contracts_tree.update_element(i, contract_leaves[i]);
-    }
-    NT::fr contracts_tree_subroot = contracts_tree.root();
-
-    // Commitments subtree
-    NT::fr commitments_tree_subroot = commitments_tree.root();
-
-    // Nullifiers tree // TODO: implement
-    NT::fr nullifiers_tree_subroot = NT::fr(0);
-
-    return std::array<NT::fr, 3>{ contracts_tree_subroot, commitments_tree_subroot, nullifiers_tree_subroot };
-}
-
-std::array<NT::fr, 2> calculate_calldata_hash(BaseRollupInputs baseRollupInputs, std::vector<NT::fr> contract_leaves)
-{
-    // Compute calldata hashes
-    // 22 = (4 + 4 + 1 + 2) * 2 (2 kernels, 4 nullifiers per kernel, 4 commitments per kernel, 1 contract
-    // deployments, 2 contracts data fields (size 2 for each) )
-    std::array<NT::fr, 22> calldata_hash_inputs;
-
-    for (size_t i = 0; i < 2; i++) {
-        // Nullifiers
-        auto new_nullifiers = baseRollupInputs.kernel_data[i].public_inputs.end.new_nullifiers;
-        auto new_commitments = baseRollupInputs.kernel_data[i].public_inputs.end.new_commitments;
-        for (size_t j = 0; j < 4; j++) { // TODO: const
-            calldata_hash_inputs[i * 4 + j] = new_nullifiers[j];
-            calldata_hash_inputs[8 + i * 4 + j] = new_commitments[j];
+        std::array<NT::fr, NEW_NULLIFIERS_LENGTH> siloed_new_nullifiers;
+        for (size_t i = 0; i < new_nullifiers.size(); ++i) {
+            siloed_new_nullifiers[i] = new_nullifiers[i] == 0
+                                           ? 0
+                                           : NT::compress({ storage_contract_address.to_field(), new_nullifiers[i] },
+                                                          GeneratorIndex::OUTER_NULLIFIER);
         }
 
-        // yuck - TODO: is contract_leaves fixed size?
-        calldata_hash_inputs[16 + i] = contract_leaves[i];
-
-        auto new_contracts = baseRollupInputs.kernel_data[i].public_inputs.end.new_contracts;
-
-        // TODO: this assumes that there is only one contract deployment
-        calldata_hash_inputs[18 + i] = new_contracts[0].contract_address;
-        calldata_hash_inputs[20 + i] = new_contracts[0].portal_contract_address;
+        push_array_to_array(siloed_new_commitments, public_inputs.end.new_commitments);
+        push_array_to_array(siloed_new_nullifiers, public_inputs.end.new_nullifiers);
     }
 
-    // FIXME
-    // Calculate sha256 hash of calldata; TODO: work out typing here
-    // 22 * 32 = 22 fields, each 32 bytes
-    std::array<uint8_t, 22 * 32> calldata_hash_inputs_bytes;
-    // Convert all into a buffer, then copy into the array, then hash
-    for (size_t i = 0; i < calldata_hash_inputs.size(); i++) {
-        auto as_bytes = calldata_hash_inputs[i].to_buffer();
-
-        auto offset = i * 32;
-        std::copy(as_bytes.begin(), as_bytes.end(), calldata_hash_inputs_bytes.begin() + offset);
+    { // call stacks
+        auto& this_private_call_stack = private_call_public_inputs.private_call_stack;
+        push_array_to_array(this_private_call_stack, public_inputs.end.private_call_stack);
     }
-    // TODO: double check this gpt code
-    std::vector<uint8_t> calldata_hash_inputs_bytes_vec(calldata_hash_inputs_bytes.begin(),
-                                                        calldata_hash_inputs_bytes.end());
 
-    auto h = sha256::sha256(calldata_hash_inputs_bytes_vec);
+    // const auto& portal_contract_address = private_inputs.private_call.portal_contract_address;
 
-    // Split the hash into two fields, a high and a low
-    std::array<uint8_t, 32> buf_1, buf_2;
-    for (uint8_t i = 0; i < 16; i++) {
-        buf_1[i] = 0;
-        buf_1[16 + i] = h[i];
-        buf_2[i] = 0;
-        buf_2[16 + i] = h[i + 16];
-    }
-    auto high = fr::serialize_from_buffer(buf_1.data());
-    auto low = fr::serialize_from_buffer(buf_2.data());
+    // {
+    //     const auto& l1_msg_stack = private_call_public_inputs.l1_msg_stack;
+    //     std::array<CT::fr, L1_MSG_STACK_LENGTH> l1_call_stack;
 
-    return std::array<NT::fr, 2>{ high, low };
+    //     for (size_t i = 0; i < l1_msg_stack.size(); ++i) {
+    //         l1_call_stack[i] = CT::fr::conditional_assign(
+    //             l1_msg_stack[i] == 0,
+    //             0,
+    //             CT::compress({ portal_contract_address, l1_msg_stack[i] }, GeneratorIndex::L1_MSG_STACK_ITEM));
+    //     }
+    // }
 }
 
-/**
- * @brief Check all of the provided commitments against the historical tree roots
- *
- * @param constantBaseRollupData
- * @param baseRollupInputs
- */
-void perform_historical_private_data_tree_membership_checks(BaseRollupInputs baseRollupInputs)
+void validate_this_private_call_hash(PrivateInputs<NT> const& private_inputs)
 {
-    // For each of the historic_private_data_tree_membership_checks, we need to do an inclusion proof
-    // against the historical root provided in the rollup constants
-    auto historic_root = baseRollupInputs.constants.start_tree_of_historic_private_data_tree_roots_snapshot.root;
+    const auto& start = private_inputs.previous_kernel.public_inputs.end;
+    // TODO: this logic might need to change to accommodate the weird edge 3 initial txs (the 'main' tx, the 'fee' tx,
+    // and the 'gas rebate' tx).
+    const auto this_private_call_hash = array_pop(start.private_call_stack);
+    const auto calculated_this_private_call_hash = private_inputs.private_call.call_stack_item.hash();
 
-    for (size_t i = 0; i < 2; i++) {
-        NT::fr leaf = baseRollupInputs.kernel_data[i].public_inputs.constants.old_tree_roots.private_data_tree_root;
-        abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> historic_root_witness =
-            baseRollupInputs.historic_private_data_tree_root_membership_witnesses[i];
+    ASSERT(this_private_call_hash ==
+           calculated_this_private_call_hash); // "this private_call_hash does not reconcile");
+};
 
-        check_membership(leaf, historic_root_witness.leaf_index, historic_root_witness.sibling_path, historic_root);
+void validate_this_private_call_stack(PrivateInputs<NT> const& private_inputs)
+{
+    auto& stack = private_inputs.private_call.call_stack_item.public_inputs.private_call_stack;
+    auto& preimages = private_inputs.private_call.private_call_stack_preimages;
+    for (size_t i = 0; i < stack.size(); ++i) {
+        const auto& hash = stack[i];
+        const auto& preimage = preimages[i];
+
+        // Note: this assumes it's computationally infeasible to have `0` as a valid call_stack_item_hash.
+        // Assumes `hash == 0` means "this stack item is empty".
+        const auto calculated_hash = hash == 0 ? 0 : preimage.hash();
+
+        if (hash != calculated_hash) {
+            throw_or_abort(format("private_call_stack[", i, "] = ", hash, "; does not reconcile"));
+        }
+        // ASSERT(hash == calculated_hash); // item on private call stack does not reconcile
+    }
+};
+
+void validate_inputs(PrivateInputs<NT> const& private_inputs)
+{
+    const auto& this_call_stack_item = private_inputs.private_call.call_stack_item;
+
+    ASSERT(this_call_stack_item.function_data.is_private ==
+           true); // "Cannot execute a non-private function with the private kernel circuit"
+
+    const auto& start = private_inputs.previous_kernel.public_inputs.end;
+
+    const NT::boolean is_base_case = start.private_call_count == 0;
+
+    // TODO: we might want to range-constrain the call_count to prevent some kind of overflow errors. Having said that,
+    // iterating 2^254 times isn't feasible.
+
+    NT::fr start_private_call_stack_length = array_length(start.private_call_stack);
+    NT::fr start_public_call_stack_length = array_length(start.public_call_stack);
+    NT::fr start_l1_msg_stack_length = array_length(start.l1_msg_stack);
+
+    // Base Case
+    if (is_base_case) {
+        // TODO: change to allow 3 initial calls on the private call stack, so a fee can be paid and a gas
+        // rebate can be paid.
+
+        ASSERT(start_private_call_stack_length == 1); // "Private call stack must be length 1"
+
+        ASSERT(start_public_call_stack_length == 0); // Public call stack must be empty"
+        ASSERT(start_l1_msg_stack_length == 0);      // L1 msg stack must be empty"
+
+        ASSERT(this_call_stack_item.public_inputs.call_context.is_delegate_call ==
+               false); // "Users cannot make a delegatecall"
+        ASSERT(this_call_stack_item.public_inputs.call_context.is_static_call ==
+               false); // Users cannot make a static call"
+
+        // The below also prevents delegatecall/staticcall in the base case
+        ASSERT(this_call_stack_item.public_inputs.call_context.storage_contract_address ==
+               this_call_stack_item.contract_address); // "Storage contract address must be that of the called contract"
+
+        ASSERT(private_inputs.previous_kernel.vk->contains_recursive_proof ==
+               false); // "Mock kernel proof must not contain a recursive proof"
+
+        // TODO: Assert that the previous kernel data is empty. (Or rather, the verify_proof() function needs a valid
+        // dummy proof and vk to complete execution, so actually what we want is for that mockvk to be
+        // hard-coded into the circuit and assert that that is the one which has been used in the base case).
+    } else {
+        // is_recursive_case
+
+        ASSERT(private_inputs.previous_kernel.public_inputs.is_private ==
+               true); // "Cannot verify a non-private kernel snark in the private kernel circuit"
+        ASSERT(this_call_stack_item.function_data.is_constructor ==
+               false); // "A constructor must be executed as the first tx in the recursion"
+        ASSERT(start_private_call_stack_length !=
+               0); // "Cannot execute private kernel circuit with an empty private call stack" }
     }
 }
 
-void perform_historical_contract_data_tree_membership_checks(BaseRollupInputs baseRollupInputs)
+// NOTE: THIS IS A VERY UNFINISHED WORK IN PROGRESS.
+// TODO: decide what to return.
+// TODO: is there a way to identify whether an input has not been used by ths circuit? This would help us more-safely
+// ensure we're constraining everything.
+PublicInputs<NT> native_private_kernel_circuit(PrivateInputs<NT> const& private_inputs)
 {
-    auto historic_root = baseRollupInputs.constants.start_tree_of_historic_contract_tree_roots_snapshot.root;
+    // We'll be pushing data to this during execution of this circuit.
+    PublicInputs<NT> public_inputs{};
 
-    for (size_t i = 0; i < 2; i++) {
-        NT::fr leaf = baseRollupInputs.kernel_data[i].public_inputs.constants.old_tree_roots.contract_tree_root;
-        abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> historic_root_witness =
-            baseRollupInputs.historic_contract_tree_root_membership_witnesses[i];
+    // Do this before any functions can modify the inputs.
+    initialise_end_values(private_inputs, public_inputs);
 
-        check_membership(leaf, historic_root_witness.leaf_index, historic_root_witness.sibling_path, historic_root);
-    }
-}
-// Important types:
-//   - BaseRollupPublicInputs - where we want to put our return values
-//
-// TODO: replace auto
-BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
-{
+    validate_inputs(private_inputs);
 
-    // First we compute the contract tree leaves
+    validate_this_private_call_hash(private_inputs);
 
-    // Verify the previous kernel proofs
-    for (size_t i = 0; i < 2; i++) {
-        NT::Proof proof = baseRollupInputs.kernel_data[i].proof;
-        assert(verify_kernel_proof(proof));
-    }
+    validate_this_private_call_stack(private_inputs);
 
-    std::vector<NT::fr> contract_leaves = calculate_contract_leaves(baseRollupInputs);
+    update_end_values(private_inputs, public_inputs);
 
-    // Perform merkle membership check with the provided sibling path up to the root
-    // Note - the subtree hasn't been created (i.e. it is empty) so you check that the sibling path corresponds to an
-    // empty tree
+    // We'll skip any verification in this native implementation, because for a Local Developer Testnet, there won't
+    // _be_ a valid proof to verify!!! auto aggregation_object = verify_proofs(composer,
+    //                                         private_inputs,
+    //                                         _private_inputs.private_call.vk->num_public_inputs,
+    //                                         _private_inputs.previous_kernel.vk->num_public_inputs);
 
-    // check for commitments/private_data
-    // next_available_leaf_index is at the leaf level. We need at the subtree level (say height 3). So divide by 8.
-    // (if leaf is at index x, its parent is at index floor(x/2))
-    auto leafIndexAtSubtreeDepth = baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index /
-                                   (NT::uint32(1) << COMMITMENTS_SUBTREE_DEPTH);
-    check_membership(EMPTY_COMMITMENTS_SUBTREE_ROOT,
-                     leafIndexAtSubtreeDepth,
-                     baseRollupInputs.new_commitments_subtree_sibling_path,
-                     baseRollupInputs.start_private_data_tree_snapshot.root);
+    // TODO: kernel vk membership check!
 
-    // check for contracts
-    leafIndexAtSubtreeDepth = baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index /
-                              (NT::uint32(1) << CONTRACTS_SUBTREE_DEPTH);
-    check_membership(EMPTY_CONTRACTS_SUBTREE_ROOT,
-                     leafIndexAtSubtreeDepth,
-                     baseRollupInputs.new_contracts_subtree_sibling_path,
-                     baseRollupInputs.start_contract_tree_snapshot.root);
+    // Note: given that we skipped the verify_proof function, the aggregation object we get at the end will just be the
+    // same as we had at the start. public_inputs.end.aggregation_object = aggregation_object;
+    public_inputs.end.aggregation_object = private_inputs.previous_kernel.public_inputs.end.aggregation_object;
 
-    std::array<NT::fr, 3> new_subtrees = calculate_new_subtrees(baseRollupInputs, contract_leaves);
-    NT::fr contracts_tree_subroot = new_subtrees[0];
-    NT::fr commitments_tree_subroot = new_subtrees[1];
-    // NT::fr nullifiers_tree_subroot = new_subtrees[2];
-
-    // Insert subtrees to the tree:
-    auto end_private_data_tree_snapshot =
-        insert_subtree_to_snapshot_tree(baseRollupInputs.new_commitments_subtree_sibling_path,
-                                        baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index,
-                                        commitments_tree_subroot,
-                                        COMMITMENTS_SUBTREE_DEPTH);
-
-    auto end_contract_tree_snapshot =
-        insert_subtree_to_snapshot_tree(baseRollupInputs.new_contracts_subtree_sibling_path,
-                                        baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index,
-                                        contracts_tree_subroot,
-                                        CONTRACTS_SUBTREE_DEPTH);
-
-    // TODO: Nullifiers tree insertion
-
-    // Calculate the overall calldata hash
-    std::array<NT::fr, 2> calldata_hash = calculate_calldata_hash(baseRollupInputs, contract_leaves);
-
-    // Perform membership checks that the notes provided exist within the historic trees data
-    perform_historical_private_data_tree_membership_checks(baseRollupInputs);
-    perform_historical_contract_data_tree_membership_checks(baseRollupInputs);
-
-    AggregationObject aggregation_object = aggregate_proofs(baseRollupInputs);
-
-    // TODO: update these mocks
-    AppendOnlySnapshot mockNullifierStartSnapshot = {
-        .root = NT::fr::one(),
-        .next_available_leaf_index = 0,
-    };
-    AppendOnlySnapshot mockNullifierEndSnapshot = {
-        .root = NT::fr::one(),
-        .next_available_leaf_index = 0,
-    };
-
-    BaseRollupPublicInputs public_inputs = {
-        .end_aggregation_object = aggregation_object,
-        .constants = baseRollupInputs.constants,
-        .start_private_data_tree_snapshot = baseRollupInputs.start_private_data_tree_snapshot,
-        .end_private_data_tree_snapshot = end_private_data_tree_snapshot,
-        .start_nullifier_tree_snapshot = mockNullifierStartSnapshot, // TODO: implement:
-        .end_nullifier_tree_snapshot = mockNullifierEndSnapshot,     // TODO: implement:
-        .start_contract_tree_snapshot = baseRollupInputs.start_contract_tree_snapshot,
-        .end_contract_tree_snapshot = end_contract_tree_snapshot,
-        .calldata_hash = calldata_hash,
-    };
     return public_inputs;
-}
+};
 
-} // namespace aztec3::circuits::rollup::native_base_rollup
+} // namespace aztec3::circuits::kernel::private_kernel
