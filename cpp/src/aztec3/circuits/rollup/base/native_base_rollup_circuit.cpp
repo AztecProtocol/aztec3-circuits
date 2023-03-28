@@ -141,7 +141,8 @@ AppendOnlySnapshot insert_subtree_to_private_data_tree(BaseRollupInputs baseRoll
     // if leaf is at index 8, parent is at index floor(x/2)
     auto leafIndexAtDepth3 = leafIndexToInsertAt / 8;
     // now iterate normally:
-    iterate_through_tree_via_sibling_path(new_private_data_subtree_root, leafIndexAtDepth3, siblingPath);
+    newTreeSnapshot.root =
+        iterate_through_tree_via_sibling_path(new_private_data_subtree_root, leafIndexAtDepth3, siblingPath);
 
     newTreeSnapshot.next_available_leaf_index = leafIndexToInsertAt + 8;
 
@@ -162,7 +163,8 @@ AppendOnlySnapshot insert_subtree_to_contracts_tree(BaseRollupInputs baseRollupI
 
     auto leafIndexAtDepth2 = leafIndexToInsertAt / 4;
     // now iterate normally:
-    iterate_through_tree_via_sibling_path(new_contracts_subtree_root, leafIndexAtDepth2, siblingPath);
+    newTreeSnapshot.root =
+        iterate_through_tree_via_sibling_path(new_contracts_subtree_root, leafIndexAtDepth2, siblingPath);
 
     newTreeSnapshot.next_available_leaf_index = leafIndexToInsertAt + 8;
 
