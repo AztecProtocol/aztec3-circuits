@@ -90,12 +90,9 @@ std::vector<NT::fr> calculate_contract_leaves(BaseRollupInputs baseRollupInputs)
 }
 
 template <size_t N>
-NT::fr iterate_through_tree_via_sibling_path(NT::fr leaf,
-                                             NT::uint32 leafIndex,
-                                             std::array<NT::fr, N> siblingPath,
-                                             size_t startAtDepth = 0)
+NT::fr iterate_through_tree_via_sibling_path(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath)
 {
-    for (size_t i = startAtDepth; i < siblingPath.size(); i++) {
+    for (size_t i = 0; i < siblingPath.size(); i++) {
         if (leafIndex & (1 << i)) {
             leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
         } else {
@@ -103,6 +100,15 @@ NT::fr iterate_through_tree_via_sibling_path(NT::fr leaf,
         }
     }
     return leaf;
+}
+
+template <size_t N>
+void check_merkle_membership(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath, NT::fr root)
+{
+    auto calculatedRoot = iterate_through_tree_via_sibling_path(leaf, leafIndex, siblingPath);
+    if (calculatedRoot != root) {
+        // throw std::runtime_error("Merkle membership check failed");
+    }
 }
 
 template <size_t N>
@@ -116,10 +122,8 @@ void check_membership_of_subtree_in_snapshot(NT::uint32 depth,
     // next_available_leaf_index is at the leaf level. We need at the subtree level (say height 3). So divide by 8.
     // (if leaf is at index x, its parent is at index floor(x/2))
     auto leafIndex = nextAvailableLeafIndex / (NT::uint32(1) << depth);
-    auto leaf = iterate_through_tree_via_sibling_path(leafToCheck, leafIndex, siblingPath);
-    if (leaf != snapshotRoot) {
-        // throw std::runtime_error("Subtree not in snapshot");
-    }
+
+    check_merkle_membership(leafToCheck, leafIndex, siblingPath, snapshotRoot);
 }
 
 AppendOnlySnapshot insert_subtree_to_private_data_tree(BaseRollupInputs baseRollupInputs,
@@ -137,7 +141,7 @@ AppendOnlySnapshot insert_subtree_to_private_data_tree(BaseRollupInputs baseRoll
     // if leaf is at index 8, parent is at index floor(x/2)
     auto leafIndexAtDepth3 = leafIndexToInsertAt / 8;
     // now iterate normally:
-    iterate_through_tree_via_sibling_path(new_private_data_subtree_root, leafIndexAtDepth3, siblingPath, 2);
+    iterate_through_tree_via_sibling_path(new_private_data_subtree_root, leafIndexAtDepth3, siblingPath);
 
     newTreeSnapshot.next_available_leaf_index = leafIndexToInsertAt + 8;
 
@@ -158,7 +162,7 @@ AppendOnlySnapshot insert_subtree_to_contracts_tree(BaseRollupInputs baseRollupI
 
     auto leafIndexAtDepth2 = leafIndexToInsertAt / 4;
     // now iterate normally:
-    iterate_through_tree_via_sibling_path(new_contracts_subtree_root, leafIndexAtDepth2, siblingPath, 1);
+    iterate_through_tree_via_sibling_path(new_contracts_subtree_root, leafIndexAtDepth2, siblingPath);
 
     newTreeSnapshot.next_available_leaf_index = leafIndexToInsertAt + 8;
 
@@ -262,26 +266,6 @@ NT::fr calculate_calldata_hash(BaseRollupInputs baseRollupInputs, std::vector<NT
     return sha256::sha256_to_field(calldata_hash_inputs_bytes_vec);
 }
 
-void check_membership_witness(NT::fr root,
-                              NT::fr leaf,
-                              abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> witness)
-{
-    // Extract values
-    NT::uint32 leaf_index = witness.leaf_index;
-    auto sibling_path = witness.sibling_path;
-
-    // Perform merkle membership check with the provided sibling path up to the root
-    for (size_t i = 0; i < PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT; i++) {
-        if (leaf_index & (1 << i)) {
-            leaf = crypto::pedersen_hash::hash_multiple({ leaf, sibling_path[i] });
-        } else {
-            leaf = crypto::pedersen_hash::hash_multiple({ sibling_path[i], leaf });
-        }
-    }
-    if (leaf != root) {
-        // throw std::runtime_error("Merkle membership check failed");
-    }
-}
 /**
  * @brief Check all of the provided commitments against the historical tree roots
  *
@@ -299,7 +283,8 @@ void perform_historical_private_data_tree_membership_checks(BaseRollupInputs bas
         abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> historic_root_witness =
             baseRollupInputs.historic_private_data_tree_root_membership_witnesses[i];
 
-        check_membership_witness(historic_root, leaf, historic_root_witness);
+        check_merkle_membership(
+            leaf, historic_root_witness.leaf_index, historic_root_witness.sibling_path, historic_root);
     }
 }
 
@@ -312,7 +297,8 @@ void perform_historical_contract_data_tree_membership_checks(BaseRollupInputs ba
         abis::MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> historic_root_witness =
             baseRollupInputs.historic_contract_tree_root_membership_witnesses[i];
 
-        check_membership_witness(historic_root, leaf, historic_root_witness);
+        check_merkle_membership(
+            leaf, historic_root_witness.leaf_index, historic_root_witness.sibling_path, historic_root);
     }
 }
 // Important types:
