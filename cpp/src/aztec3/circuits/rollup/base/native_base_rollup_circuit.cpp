@@ -212,12 +212,11 @@ void check_membership(NT::fr root,
  * @param constantBaseRollupData
  * @param baseRollupInputs
  */
-void perform_historical_private_data_tree_membership_checks(ConstantRollupData constantBaseRollupData,
-                                                            BaseRollupInputs baseRollupInputs)
+void perform_historical_private_data_tree_membership_checks(BaseRollupInputs baseRollupInputs)
 {
     // For each of the historic_private_data_tree_membership_checks, we need to do an inclusion proof
     // against the historical root provided in the rollup constants
-    auto historic_root = constantBaseRollupData.start_tree_of_historic_private_data_tree_roots_snapshot.root;
+    auto historic_root = baseRollupInputs.constants.start_tree_of_historic_private_data_tree_roots_snapshot.root;
 
     for (size_t i = 0; i < 2; i++) {
         NT::fr leaf = baseRollupInputs.kernel_data[i].public_inputs.constants.old_tree_roots.private_data_tree_root;
@@ -228,11 +227,10 @@ void perform_historical_private_data_tree_membership_checks(ConstantRollupData c
     }
 }
 
-void perform_historical_contract_data_tree_membership_checks(ConstantRollupData constantBaseRollupData,
-                                                             BaseRollupInputs baseRollupInputs)
+void perform_historical_contract_data_tree_membership_checks(BaseRollupInputs baseRollupInputs)
 {
     // @todo Remove the constantBaseRollupData argument
-    auto historic_root = constantBaseRollupData.start_tree_of_historic_contract_tree_roots_snapshot.root;
+    auto historic_root = baseRollupInputs.constants.start_tree_of_historic_contract_tree_roots_snapshot.root;
 
     for (size_t i = 0; i < 2; i++) {
         NT::fr leaf = baseRollupInputs.kernel_data[i].public_inputs.constants.old_tree_roots.contract_tree_root;
@@ -246,7 +244,7 @@ void perform_historical_contract_data_tree_membership_checks(ConstantRollupData 
 //   - BaseRollupPublicInputs - where we want to put our return values
 //
 // TODO: replace auto
-BaseRollupPublicInputs base_rollup_circuit(ConstantRollupData constantBaseRollupData, BaseRollupInputs baseRollupInputs)
+BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
 {
 
     // First we compute the contract tree leaves
@@ -268,8 +266,8 @@ BaseRollupPublicInputs base_rollup_circuit(ConstantRollupData constantBaseRollup
     NT::fr calldata_hash = calculate_calldata_hash(baseRollupInputs, contract_leaves);
 
     // Perform membership checks that the notes provided exist within the historic trees data
-    perform_historical_private_data_tree_membership_checks(constantBaseRollupData, baseRollupInputs);
-    perform_historical_contract_data_tree_membership_checks(constantBaseRollupData, baseRollupInputs);
+    perform_historical_private_data_tree_membership_checks(baseRollupInputs);
+    perform_historical_contract_data_tree_membership_checks(baseRollupInputs);
 
     AggregationObject aggregation_object = aggregate_proofs(baseRollupInputs);
 
@@ -287,7 +285,7 @@ BaseRollupPublicInputs base_rollup_circuit(ConstantRollupData constantBaseRollup
 
     BaseRollupPublicInputs public_inputs = {
         .end_aggregation_object = aggregation_object,
-        .constants = constantBaseRollupData,
+        .constants = baseRollupInputs.constants,
         .start_nullifier_tree_snapshot = mockNullifierStartSnapshot, // TODO: implement:
         .end_nullifier_tree_snapshots = mockNullifierEndSnapshot,    // TODO: implement
         .new_commitments_subtree_root = commitments_tree_subroot,

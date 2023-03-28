@@ -15,6 +15,6 @@
 
 namespace aztec3::circuits::rollup::native_base_rollup {
 
-BaseRollupPublicInputs base_rollup_circuit(ConstantRollupData constantRollupData, BaseRollupInputs baseRollupInputs);
+BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs);
 
 } // namespace aztec3::circuits::rollup::native_base_rollup
