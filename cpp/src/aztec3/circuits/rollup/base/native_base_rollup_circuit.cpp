@@ -140,14 +140,14 @@ AppendOnlySnapshot insert_subtree_to_snapshot_tree(std::array<NT::fr, N> sibling
 std::array<NT::fr, 3> calculate_new_subtrees(BaseRollupInputs baseRollupInputs, std::vector<NT::fr> contract_leaves)
 {
     // Leaves that will be added to the new trees
-    std::array<NT::fr, 8> commitment_leaves; // TODO: use constant
-    std::array<NT::fr, 8> nullifier_leaves;  // TODO: use constant
+    std::array<NT::fr, KERNEL_NEW_COMMITMENTS_LENGTH * 2> commitment_leaves; // TODO: use constant
+    std::array<NT::fr, KERNEL_NEW_NULLIFIERS_LENGTH * 2> nullifier_leaves;   // TODO: use constant
 
     // TODO: we have at size two for now, but we will need
 
     stdlib::merkle_tree::MemoryTree contracts_tree = stdlib::merkle_tree::MemoryTree(CONTRACTS_SUBTREE_DEPTH);
     stdlib::merkle_tree::MemoryTree commitments_tree = stdlib::merkle_tree::MemoryTree(COMMITMENTS_SUBTREE_DEPTH);
-    stdlib::merkle_tree::MemoryTree nullifier_tree = stdlib::merkle_tree::MemoryTree(3); // TODO: constant
+    stdlib::merkle_tree::MemoryTree nullifier_tree = stdlib::merkle_tree::MemoryTree(COMMITMENTS_SUBTREE_DEPTH);
 
     for (size_t i = 0; i < 2; i++) {
 
@@ -158,14 +158,14 @@ std::array<NT::fr, 3> calculate_new_subtrees(BaseRollupInputs baseRollupInputs, 
 
         for (size_t j = 0; j < new_commitments.size(); j++) {
             // todo: batch insert
-            commitments_tree.update_element(i * 4 + j, new_commitments[j]);
+            commitments_tree.update_element(i * KERNEL_NEW_COMMITMENTS_LENGTH + j, new_commitments[j]);
         }
 
         // Nullifiers
         auto new_nullifiers = baseRollupInputs.kernel_data[i].public_inputs.end.new_nullifiers;
         assert(new_nullifiers.size() == 4);
         for (size_t j = 0; j < new_nullifiers.size(); j++) {
-            nullifier_tree.update_element(i * 4 + j, new_nullifiers[j]);
+            nullifier_tree.update_element(i * KERNEL_NEW_NULLIFIERS_LENGTH + j, new_nullifiers[j]);
         }
     }
 
@@ -198,9 +198,10 @@ std::array<NT::fr, 2> calculate_calldata_hash(BaseRollupInputs baseRollupInputs,
         // Nullifiers
         auto new_nullifiers = baseRollupInputs.kernel_data[i].public_inputs.end.new_nullifiers;
         auto new_commitments = baseRollupInputs.kernel_data[i].public_inputs.end.new_commitments;
-        for (size_t j = 0; j < 4; j++) { // TODO: const
-            calldata_hash_inputs[i * 4 + j] = new_nullifiers[j];
-            calldata_hash_inputs[8 + i * 4 + j] = new_commitments[j];
+        for (size_t j = 0; j < KERNEL_NEW_COMMITMENTS_LENGTH; j++) { // TODO: const
+            calldata_hash_inputs[i * KERNEL_NEW_COMMITMENTS_LENGTH + j] = new_nullifiers[j];
+            calldata_hash_inputs[(KERNEL_NEW_NULLIFIERS_LENGTH * 2) + i * KERNEL_NEW_NULLIFIERS_LENGTH + j] =
+                new_commitments[j];
         }
 
         // yuck - TODO: is contract_leaves fixed size?
@@ -296,14 +297,14 @@ AppendOnlySnapshot check_nullifier_tree_non_membership(BaseRollupInputs baseRoll
     // 7. le bosh (profit)
 
     // This will update on each iteration
-    auto previous_nullifier_tree_root = baseRollupInputs.start_nullifier_tree_snapshot.root;
+    auto current_nullifier_tree_root = baseRollupInputs.start_nullifier_tree_snapshot.root;
 
     // This will increase with every insertion
     auto new_index = baseRollupInputs.start_nullifier_tree_snapshot.next_available_leaf_index;
 
     for (size_t i = 0; i < 2; i++) {
         auto new_nullifiers = baseRollupInputs.kernel_data[i].public_inputs.end.new_nullifiers;
-        for (size_t j = 0; j < 4; j++) {
+        for (size_t j = 0; j < KERNEL_NEW_NULLIFIERS_LENGTH; j++) {
 
             // Witness containing index and path
             auto witness = baseRollupInputs.low_nullifier_membership_witness[i * 4 + j];
@@ -328,7 +329,7 @@ AppendOnlySnapshot check_nullifier_tree_non_membership(BaseRollupInputs baseRoll
 
             // perform (non) membership check for each of the provided paths
             check_membership<NULLIFIER_TREE_HEIGHT>(
-                updated_leaf, witness.leaf_index, witness.sibling_path, previous_nullifier_tree_root);
+                updated_leaf, witness.leaf_index, witness.sibling_path, current_nullifier_tree_root);
 
             // against the new nullifier root, calculate the new leaf hash of the new low_nullifier_preimage
             auto new_leaf =
@@ -338,29 +339,25 @@ AppendOnlySnapshot check_nullifier_tree_non_membership(BaseRollupInputs baseRoll
             new_index = new_index + 1;
 
             // Use the existing sibling path to calculate the new root
-            previous_nullifier_tree_root =
-                iterate_through_tree_via_sibling_path<NULLIFIER_TREE_HEIGHT>( // TODO: will this need to be different?
-                    new_leaf,
-                    witness.leaf_index,
-                    witness.sibling_path);
+            current_nullifier_tree_root = iterate_through_tree_via_sibling_path<NULLIFIER_TREE_HEIGHT>(
+                new_leaf, witness.leaf_index, witness.sibling_path);
         }
     }
 
     // Check the subtree insertions for the new nullifiers
     auto nullifier_sibling_path = baseRollupInputs.new_nullifiers_subtree_sibling_path;
+
     // Calculate the new root
-    auto new_root =
-        iterate_through_tree_via_sibling_path<NULLIFIER_TREE_HEIGHT>( // TODO: will this need to be different?
-            nullifier_tree_subtree_root,
-            new_index,
-            nullifier_sibling_path);
+    // We are inserting a subtree rather than a full tree here
+    auto subtree_index = new_index >> 3;
+    auto new_root = iterate_through_tree_via_sibling_path<NULLIFIER_TREE_HEIGHT>(
+        nullifier_tree_subtree_root, subtree_index, nullifier_sibling_path);
 
     // Return the new state of the nullifier tree
-    AppendOnlySnapshot end_nullifier_tree_snapshot = {
+    return {
         .root = new_root,
         .next_available_leaf_index = new_index,
     };
-    return end_nullifier_tree_snapshot;
 }
 
 // Important types:
