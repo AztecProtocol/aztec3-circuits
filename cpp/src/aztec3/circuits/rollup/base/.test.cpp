@@ -8,6 +8,7 @@
 #include "aztec3/circuits/abis/private_kernel/previous_kernel_data.hpp"
 #include "aztec3/circuits/abis/rollup/nullifier_leaf_preimage.hpp"
 #include "aztec3/constants.hpp"
+#include "barretenberg/crypto/sha256/sha256.hpp"
 #include "barretenberg/ecc/curves/bn254/fr.hpp"
 #include "barretenberg/stdlib/merkle_tree/memory_tree.hpp"
 #include "index.hpp"
@@ -40,8 +41,10 @@
 
 #include <barretenberg/common/map.hpp>
 #include <barretenberg/common/test.hpp>
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
+#include <vector>
 
 // #include <aztec3/constants.hpp>
 // #include <barretenberg/crypto/pedersen/pedersen.hpp>
@@ -208,7 +211,6 @@ class base_rollup_tests : public ::testing::Test {
 TEST_F(base_rollup_tests, no_new_contract_leafs)
 {
     // When there are no contract deployments. The contract tree should be inserting 0 leafs, (not empty leafs);
-    // @todo This needs to be implemented in the circuit.
     BaseRollupInputs emptyInputs = getEmptyBaseRollupInputs();
     BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(emptyInputs);
 
@@ -220,7 +222,6 @@ TEST_F(base_rollup_tests, contract_leaf_inserted)
 {
     // When there is a contract deployment, the contract tree should be inserting 1 leaf.
     // The remaining leafs should be 0 leafs, (not empty leafs);
-    // @todo This needs to be implemented in the circuit. But same as above
     BaseRollupInputs inputs = getEmptyBaseRollupInputs();
 
     // Create a "mock" contract deployment
@@ -242,14 +243,31 @@ TEST_F(base_rollup_tests, contract_leaf_inserted)
     ASSERT_EQ(contract_tree.root(), outputs.new_contract_leaves_subtree_root);
 }
 
-TEST_F(base_rollup_tests, new_nullifier_tree)
+TEST_F(base_rollup_tests, new_nullifier_tree) {}
+
+TEST_F(base_rollup_tests, new_commitments_tree) {}
+
+TEST_F(base_rollup_tests, empty_block_calldata_hash)
 {
+    // calldata_hash should be computed from leafs of 704 0 bytes. (0x00)
+    std::vector<uint8_t> zero_bytes_vec(704, 0);
+    auto hash = sha256::sha256(zero_bytes_vec);
     BaseRollupInputs inputs = getEmptyBaseRollupInputs();
-
     BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
-}
 
-TEST_F(base_rollup_tests, empty_block_calldata_hash) {}
+    std::array<fr, 2> calldata_hash_fr = outputs.calldata_hash;
+    std::cout << "calldata_hash: " << calldata_hash_fr << std::endl;
+    auto high_buffer = calldata_hash_fr[0].to_buffer();
+    auto low_buffer = calldata_hash_fr[1].to_buffer();
+
+    std::array<uint8_t, 32> calldata_hash;
+    for (uint8_t i = 0; i < 16; ++i) {
+        calldata_hash[i] = high_buffer[16 + i];
+        calldata_hash[16 + i] = low_buffer[16 + i];
+    }
+
+    ASSERT_EQ(hash, calldata_hash);
+}
 
 TEST_F(base_rollup_tests, calldata_hash) {}
 

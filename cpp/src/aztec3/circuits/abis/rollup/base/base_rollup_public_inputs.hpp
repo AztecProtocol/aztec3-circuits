@@ -34,7 +34,8 @@ template <typename NCT> struct BaseRollupPublicInputs {
     // bottom-right of here.
     // TODO I've put `fr`, but these hash values' types might need to be two fields if we want all 256-bits, for
     // security purposes.
-    fr calldata_hash;
+    std::array<fr, 2> calldata_hash;
+
     bool operator==(BaseRollupPublicInputs<NCT> const&) const = default;
 };
 
