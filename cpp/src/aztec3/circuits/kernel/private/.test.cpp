@@ -579,16 +579,19 @@ TEST(private_kernel_tests, test_create_proof_cbind_circuit)
     write(private_constructor_call_vec, private_constructor_call);
 
     uint8_t const* proof_data;
+    size_t proof_data_size;
     uint8_t const* public_inputs;
     info("creating proof");
-    size_t proof_size = private_kernel__create_proof(signed_constructor_tx_request_vec.data(),
-                                                     pk_buf,
-                                                     private_constructor_call_vec.data(),
-                                                     pk_buf,
-                                                     false, // proverless
-                                                     &proof_data,
-                                                     &public_inputs);
-    info("Proof size: ", proof_size);
+    size_t public_inputs_size = private_kernel__create_proof(signed_constructor_tx_request_vec.data(),
+                                                             pk_buf,
+                                                             private_constructor_call_vec.data(),
+                                                             pk_buf,
+                                                             false, // proverless
+                                                             &proof_data,
+                                                             &proof_data_size,
+                                                             &public_inputs);
+    info("Proof size: ", proof_data_size);
+    info("PublicInputs size: ", public_inputs_size);
 
     free((void*)pk_buf);
     free((void*)vk_buf);
@@ -736,16 +739,19 @@ TEST(private_kernel_tests, test_create_proof_cbind_native)
     write(private_constructor_call_vec, private_constructor_call);
 
     uint8_t const* proof_data;
+    size_t proof_data_size;
     uint8_t const* public_inputs;
     info("creating proof");
-    size_t proof_size = private_kernel__create_proof(signed_constructor_tx_request_vec.data(),
-                                                     pk_buf,
-                                                     private_constructor_call_vec.data(),
-                                                     pk_buf,
-                                                     true, // proverless
-                                                     &proof_data,
-                                                     &public_inputs);
-    info("Proof size: ", proof_size);
+    size_t public_inputs_size = private_kernel__create_proof(signed_constructor_tx_request_vec.data(),
+                                                             pk_buf,
+                                                             private_constructor_call_vec.data(),
+                                                             pk_buf,
+                                                             true, // proverless
+                                                             &proof_data,
+                                                             &proof_data_size,
+                                                             &public_inputs);
+    info("Proof size: ", proof_data_size);
+    info("PublicInputs size: ", public_inputs_size);
 
     free((void*)pk_buf);
     free((void*)vk_buf);
