@@ -162,12 +162,18 @@ WASM_EXPORT size_t private_kernel__prove(uint8_t const* signed_tx_request_buf,
     PreviousKernelData<NT> previous_kernel;
     if (first_iteration) {
         previous_kernel = default_previous_kernel();
+
+        previous_kernel.public_inputs.end.private_call_stack[0] = private_call_data.call_stack_item.hash();
+        previous_kernel.public_inputs.constants.old_tree_roots.private_data_tree_root =
+            private_call_data.call_stack_item.public_inputs.historic_private_data_tree_root;
+        previous_kernel.public_inputs.constants.tx_context = signed_tx_request.tx_request.tx_context;
+        previous_kernel.public_inputs.is_private = true;
     } else {
         read(previous_kernel_buf, previous_kernel);
     }
     PrivateInputs<NT> private_inputs = PrivateInputs<NT>{
         .signed_tx_request = signed_tx_request,
-        .previous_kernel = default_previous_kernel(),
+        .previous_kernel = previous_kernel,
         .private_call = private_call_data,
     };
 
