@@ -4,6 +4,7 @@
 #include "../../membership_witness.hpp"
 #include "../nullifier_leaf_preimage.hpp"
 #include "../constant_rollup_data.hpp"
+#include <array>
 
 namespace aztec3::circuits::abis {
 
@@ -17,10 +18,19 @@ template <typename NCT> struct BaseRollupInputs {
 
     std::array<private_kernel::PreviousKernelData<NCT>, 2> kernel_data;
 
+    AppendOnlyTreeSnapshot<NCT> start_private_data_tree_snapshot;
     AppendOnlyTreeSnapshot<NCT> start_nullifier_tree_snapshot;
+    AppendOnlyTreeSnapshot<NCT> start_contract_tree_snapshot;
+
     std::array<NullifierLeafPreimage<NCT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH> low_nullifier_leaf_preimages;
     std::array<MembershipWitness<NCT, NULLIFIER_TREE_HEIGHT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH>
         low_nullifier_membership_witness;
+
+    // For inserting the new subtrees into their respective trees:
+    // Note: the insertion leaf index can be derived from the above snapshots' `next_available_leaf_index` values.
+    std::array<fr, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> new_commitments_subtree_sibling_path;
+    std::array<fr, NULLIFIER_TREE_HEIGHT> new_nullifiers_subtree_sibling_path;
+    std::array<fr, CONTRACT_TREE_HEIGHT> new_contracts_subtree_sibling_path;
 
     std::array<MembershipWitness<NCT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>, 2>
         historic_private_data_tree_root_membership_witnesses;
@@ -28,8 +38,6 @@ template <typename NCT> struct BaseRollupInputs {
         historic_contract_tree_root_membership_witnesses;
 
     ConstantRollupData<NCT> constants;
-
-    fr prover_id;
 
     bool operator==(BaseRollupInputs<NCT> const&) const = default;
 };
@@ -39,13 +47,14 @@ template <typename NCT> void read(uint8_t const*& it, BaseRollupInputs<NCT>& obj
     using serialize::read;
 
     read(it, obj.kernel_data);
+    read(it, obj.start_private_data_tree_snapshot);
     read(it, obj.start_nullifier_tree_snapshot);
+    read(it, obj.start_contract_tree_snapshot);
     read(it, obj.low_nullifier_leaf_preimages);
     read(it, obj.low_nullifier_membership_witness);
     read(it, obj.historic_private_data_tree_root_membership_witnesses);
     read(it, obj.historic_contract_tree_root_membership_witnesses);
     read(it, obj.constants);
-    read(it, obj.prover_id);
 };
 
 template <typename NCT> void write(std::vector<uint8_t>& buf, BaseRollupInputs<NCT> const& obj)
@@ -53,21 +62,26 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, BaseRollupInputs<N
     using serialize::write;
 
     write(buf, obj.kernel_data);
+    write(buf, obj.start_private_data_tree_snapshot);
     write(buf, obj.start_nullifier_tree_snapshot);
+    write(buf, obj.start_contract_tree_snapshot);
     write(buf, obj.low_nullifier_leaf_preimages);
     write(buf, obj.low_nullifier_membership_witness);
     write(buf, obj.historic_private_data_tree_root_membership_witnesses);
     write(buf, obj.historic_contract_tree_root_membership_witnesses);
     write(buf, obj.constants);
-    write(buf, obj.prover_id);
 };
 
 template <typename NCT> std::ostream& operator<<(std::ostream& os, BaseRollupInputs<NCT> const& obj)
 {
     return os << "kernel_data:\n"
               << obj.kernel_data << "\n"
+              << "start_private_data_tree_snapshot:\n"
+              << obj.start_private_data_tree_snapshot << "\n"
               << "start_nullifier_tree_snapshot:\n"
               << obj.start_nullifier_tree_snapshot << "\n"
+              << "start_contract_tree_snapshot:\n"
+              << obj.start_contract_tree_snapshot << "\n"
               << "low_nullifier_leaf_preimages:\n"
               << obj.low_nullifier_leaf_preimages << "\n"
               << "low_nullifier_membership_witness:\n"
@@ -77,8 +91,7 @@ template <typename NCT> std::ostream& operator<<(std::ostream& os, BaseRollupInp
               << "historic_contract_tree_root_membership_witnesses:\n"
               << obj.historic_contract_tree_root_membership_witnesses << "\n"
               << "constants:\n"
-              << obj.constants << "\n"
-              << "prover_id: " << obj.prover_id << "\n";
+              << obj.constants << "\n";
 }
 
 } // namespace aztec3::circuits::abis
