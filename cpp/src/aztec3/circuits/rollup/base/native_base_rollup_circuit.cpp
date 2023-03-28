@@ -207,8 +207,8 @@ std::array<NT::fr, 2> calculate_calldata_hash(BaseRollupInputs baseRollupInputs,
         auto new_contracts = baseRollupInputs.kernel_data[i].public_inputs.end.new_contracts;
 
         // TODO: this assumes that there is only one contract deployment
-        calldata_hash_inputs[18 + i] = new_contracts[0].portal_contract_address;
-        calldata_hash_inputs[20 + i] = new_contracts[0].function_tree_root;
+        calldata_hash_inputs[18 + i] = new_contracts[0].contract_address;
+        calldata_hash_inputs[20 + i] = new_contracts[0].portal_contract_address;
     }
 
     // FIXME
