@@ -8,7 +8,7 @@ import {
   PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT,
 } from './constants.js';
 import { PreviousKernelData } from './kernel.js';
-import { AggregationObject, Fr, MembershipWitness, RollupTypes, UInt32 } from './shared.js';
+import { AggregationObject, Fr, MembershipWitness, UInt32 } from './shared.js';
 
 export class NullifierLeafPreimage {
   constructor(public leafValue: Fr, public nextValue: Fr, public nextIndex: UInt32) {}
@@ -100,8 +100,6 @@ export class BaseRollupInputs {
     ],
 
     public constants: ConstantBaseRollupData,
-
-    public proverId: Fr,
   ) {
     assertLength(this, 'lowNullifierLeafPreimages', 2 * KERNEL_NEW_NULLIFIERS_LENGTH);
     assertLength(this, 'lowNullifierMembershipWitness', 2 * KERNEL_NEW_NULLIFIERS_LENGTH);
@@ -120,7 +118,6 @@ export class BaseRollupInputs {
       fields.historicPrivateDataTreeRootMembershipWitnesses,
       fields.historicContractsTreeRootMembershipWitnesses,
       fields.constants,
-      fields.proverId,
     ] as const;
   }
 
@@ -134,8 +131,6 @@ export class BaseRollupInputs {
  */
 export class BaseRollupPublicInputs {
   constructor(
-    public rollupType: RollupTypes,
-
     public endAggregationObject: AggregationObject,
     public constants: ConstantBaseRollupData,
 
@@ -148,10 +143,7 @@ export class BaseRollupPublicInputs {
     public newContractLeavesSubtreeRoot: Fr,
 
     // Hashes (probably sha256) to make public inputs constant-sized (to then be unpacked on-chain)
-    public newCommitmentsHash: Fr,
-    public newNullifiersHash: Fr,
-    public newL1MsgsHash: Fr,
-    public newContractDataHash: Fr,
+    public calldataHash: Fr,
     public proverContributionsHash: Fr,
   ) {}
 
@@ -162,14 +154,10 @@ export class BaseRollupPublicInputs {
   static fromBuffer(buffer: Buffer | BufferReader): BaseRollupPublicInputs {
     const reader = BufferReader.asReader(buffer);
     return new BaseRollupPublicInputs(
-      reader.readNumber(),
       reader.readObject(AggregationObject),
       reader.readObject(ConstantBaseRollupData),
       reader.readObject(AppendOnlyTreeSnapshot),
       reader.readObject(AppendOnlyTreeSnapshot),
-      reader.readFr(),
-      reader.readFr(),
-      reader.readFr(),
       reader.readFr(),
       reader.readFr(),
       reader.readFr(),
@@ -184,7 +172,6 @@ export class BaseRollupPublicInputs {
    */
   toBuffer() {
     return serializeToBuffer(
-      this.rollupType.valueOf(),
       this.endAggregationObject,
       this.constants,
 
@@ -195,10 +182,7 @@ export class BaseRollupPublicInputs {
       this.newNullifiersSubtreeRoot,
       this.newContractLeavesSubtreeRoot,
 
-      this.newCommitmentsHash,
-      this.newNullifiersHash,
-      this.newL1MsgsHash,
-      this.newContractDataHash,
+      this.calldataHash,
       this.proverContributionsHash,
     );
   }

@@ -229,7 +229,6 @@ void perform_historical_private_data_tree_membership_checks(BaseRollupInputs bas
 
 void perform_historical_contract_data_tree_membership_checks(BaseRollupInputs baseRollupInputs)
 {
-    // @todo Remove the constantBaseRollupData argument
     auto historic_root = baseRollupInputs.constants.start_tree_of_historic_contract_tree_roots_snapshot.root;
 
     for (size_t i = 0; i < 2; i++) {
