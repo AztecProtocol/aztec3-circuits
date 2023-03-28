@@ -383,6 +383,6 @@ end_contract_tree_snapshot:
 root: 0x800
 next_available_leaf_index: 2048
 
-calldata_hash: 0x901
+calldata_hash: [ 0x901 0x902 ]
 "
 `;

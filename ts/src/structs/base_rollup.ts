@@ -160,8 +160,8 @@ export class BaseRollupPublicInputs {
     public startContractTreeSnapshot: AppendOnlyTreeSnapshot,
     public endContractTreeSnapshot: AppendOnlyTreeSnapshot,
 
-    // Hashes (probably sha256) to make public inputs constant-sized (to then be unpacked on-chain)
-    public calldataHash: Fr,
+    // Hashes (sha256), to make public inputs constant-sized (to then be unpacked on-chain). Length 2 for high and low
+    public calldataHash: [Fr, Fr],
   ) {}
 
   /**
@@ -179,7 +179,7 @@ export class BaseRollupPublicInputs {
       reader.readObject(AppendOnlyTreeSnapshot),
       reader.readObject(AppendOnlyTreeSnapshot),
       reader.readObject(AppendOnlyTreeSnapshot),
-      reader.readFr(),
+      reader.readArray(2, Fr) as [Fr, Fr],
     );
   }
 
