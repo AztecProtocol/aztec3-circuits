@@ -76,7 +76,6 @@ WASM_EXPORT size_t private_kernel__create_proof(uint8_t const* signed_tx_request
     // TODO accept proving key and use that to initialize composers
     // this info is just to prevent error for unused pk_buf
     // TODO do we want to accept it or just get it from our factory?
-    info("Ignore this print ", pk_buf);
     auto crs_factory = std::make_shared<EnvReferenceStringFactory>();
 
     SignedTxRequest<NT> signed_tx_request;
