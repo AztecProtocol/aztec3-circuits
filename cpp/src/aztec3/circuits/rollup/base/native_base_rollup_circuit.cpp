@@ -284,8 +284,8 @@ void perform_historical_contract_data_tree_membership_checks(BaseRollupInputs ba
  *
  * @returns The end nullifier tree root
  */
-AppendOnlySnapshot check_nullifier_tree_non_membership(BaseRollupInputs baseRollupInputs,
-                                                       NT::fr nullifier_tree_subtree_root)
+AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(BaseRollupInputs baseRollupInputs,
+                                                                          NT::fr nullifier_tree_subtree_root)
 {
     // LADIES AND GENTLEMEN The P L A N ( is simple )
     // 1. Get the previous nullifier set setup
@@ -307,16 +307,17 @@ AppendOnlySnapshot check_nullifier_tree_non_membership(BaseRollupInputs baseRoll
         for (size_t j = 0; j < KERNEL_NEW_NULLIFIERS_LENGTH; j++) {
 
             // Witness containing index and path
-            auto witness = baseRollupInputs.low_nullifier_membership_witness[i * 4 + j];
+            auto nullifier_index = 4 * i + j;
+            auto witness = baseRollupInputs.low_nullifier_membership_witness[nullifier_index];
             // Preimage of the lo-index required for a non-membership proof
-            auto low_nullifier_preimage = baseRollupInputs.low_nullifier_leaf_preimages[i * 4 + j];
+            auto low_nullifier_preimage = baseRollupInputs.low_nullifier_leaf_preimages[nullifier_index];
             // Newly created nullifier
             auto nullifier = new_nullifiers[j];
 
             // assert that the low_nullifier provided is the correct one by performing two range checks
             auto is_less_than_nullifier = low_nullifier_preimage.leaf_value < nullifier;
             auto is_next_greater_than = low_nullifier_preimage.next_value > nullifier;
-            if (!is_less_than_nullifier || !is_next_greater_than) {
+            if (!(is_less_than_nullifier && is_next_greater_than)) {
                 if (low_nullifier_preimage.next_index != 0 && low_nullifier_preimage.next_value != 0) {
                     // throw std::runtime_error("Low nullifier preimage is incorrect");
                 }
@@ -427,7 +428,7 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
     perform_historical_contract_data_tree_membership_checks(baseRollupInputs);
 
     AppendOnlySnapshot end_nullifier_tree_snapshot =
-        check_nullifier_tree_non_membership(baseRollupInputs, nullifiers_tree_subroot);
+        check_nullifier_tree_non_membership_and_insert_to_tree(baseRollupInputs, nullifiers_tree_subroot);
 
     AggregationObject aggregation_object = aggregate_proofs(baseRollupInputs);
 
