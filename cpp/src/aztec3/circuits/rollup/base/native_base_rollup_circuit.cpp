@@ -256,10 +256,10 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
 
     std::vector<NT::fr> contract_leaves = calculate_contract_leaves(baseRollupInputs);
 
-    std::array<NT::fr, 3> new_subtrees = calculate_new_subtrees(baseRollupInputs, contract_leaves);
-    NT::fr contracts_tree_subroot = new_subtrees[0];
-    NT::fr commitments_tree_subroot = new_subtrees[1];
-    NT::fr nullifiers_tree_subroot = new_subtrees[2];
+    // std::array<NT::fr, 3> new_subtrees = calculate_new_subtrees(baseRollupInputs, contract_leaves);
+    // NT::fr contracts_tree_subroot = new_subtrees[0];
+    // NT::fr commitments_tree_subroot = new_subtrees[1];
+    // NT::fr nullifiers_tree_subroot = new_subtrees[2];
 
     // Calculate the overall calldata hash
     NT::fr calldata_hash = calculate_calldata_hash(baseRollupInputs, contract_leaves);
@@ -280,18 +280,12 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
         .next_available_leaf_index = 0,
     };
 
-    NT::fr prover_contribution_hash = get_prover_contribution_hash(); // TODO: implement
-
     BaseRollupPublicInputs public_inputs = {
         .end_aggregation_object = aggregation_object,
         .constants = baseRollupInputs.constants,
         .start_nullifier_tree_snapshot = mockNullifierStartSnapshot, // TODO: implement:
-        .end_nullifier_tree_snapshots = mockNullifierEndSnapshot,    // TODO: implement
-        .new_commitments_subtree_root = commitments_tree_subroot,
-        .new_nullifiers_subtree_root = nullifiers_tree_subroot,
-        .new_contract_leaves_subtree_root = contracts_tree_subroot,
+        .end_nullifier_tree_snapshot = mockNullifierEndSnapshot,     // TODO: implement:
         .calldata_hash = calldata_hash,
-        .prover_contributions_hash = prover_contribution_hash,
     };
     return public_inputs;
 }

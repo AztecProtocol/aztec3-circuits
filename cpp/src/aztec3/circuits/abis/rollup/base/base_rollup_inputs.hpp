@@ -27,7 +27,7 @@ template <typename NCT> struct BaseRollupInputs {
 
     // For inserting the new subtrees into their respective trees:
     // Note: the insertion leaf index can be derived from the above snapshots' `next_available_leaf_index` values.
-    std::array<fr, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> new_commitments_subtree_sibling_path;
+    std::array<fr, PRIVATE_DATA_TREE_HEIGHT> new_commitments_subtree_sibling_path;
     std::array<fr, NULLIFIER_TREE_HEIGHT> new_nullifiers_subtree_sibling_path;
     std::array<fr, CONTRACT_TREE_HEIGHT> new_contracts_subtree_sibling_path;
 

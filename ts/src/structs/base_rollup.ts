@@ -2,9 +2,11 @@ import { BufferReader } from '../utils/buffer_reader.js';
 import { assertLength, FieldsOf } from '../utils/jsUtils.js';
 import { serializeToBuffer } from '../utils/serialize.js';
 import {
+  CONTRACT_TREE_HEIGHT,
   CONTRACT_TREE_ROOTS_TREE_HEIGHT,
   KERNEL_NEW_NULLIFIERS_LENGTH,
   NULLIFIER_TREE_HEIGHT,
+  PRIVATE_DATA_TREE_HEIGHT,
   PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT,
 } from './constants.js';
 import { PreviousKernelData } from './kernel.js';
@@ -86,9 +88,16 @@ export class BaseRollupInputs {
   constructor(
     public kernelData: [PreviousKernelData, PreviousKernelData],
 
+    public startPrivateDateTreeSnapshot: AppendOnlyTreeSnapshot,
     public startNullifierTreeSnapshot: AppendOnlyTreeSnapshot,
+    public startContractTreeSnapshot: AppendOnlyTreeSnapshot,
+
     public lowNullifierLeafPreimages: NullifierLeafPreimage[],
     public lowNullifierMembershipWitness: MembershipWitness<typeof NULLIFIER_TREE_HEIGHT>[],
+
+    public newCommitmentsSubtreeSiblingPath: Fr[],
+    public newNullifiersSubtreeSiblingPath: Fr[],
+    public newContractsSubtreeSiblingPath: Fr[],
 
     public historicPrivateDataTreeRootMembershipWitnesses: [
       MembershipWitness<typeof PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>,
@@ -103,6 +112,9 @@ export class BaseRollupInputs {
   ) {
     assertLength(this, 'lowNullifierLeafPreimages', 2 * KERNEL_NEW_NULLIFIERS_LENGTH);
     assertLength(this, 'lowNullifierMembershipWitness', 2 * KERNEL_NEW_NULLIFIERS_LENGTH);
+    assertLength(this, 'newCommitmentsSubtreeSiblingPath', PRIVATE_DATA_TREE_HEIGHT);
+    assertLength(this, 'newNullifiersSubtreeSiblingPath', NULLIFIER_TREE_HEIGHT);
+    assertLength(this, 'newContractsSubtreeSiblingPath', CONTRACT_TREE_HEIGHT);
   }
 
   static from(fields: FieldsOf<BaseRollupInputs>): BaseRollupInputs {
@@ -112,9 +124,14 @@ export class BaseRollupInputs {
   static getFields(fields: FieldsOf<BaseRollupInputs>) {
     return [
       fields.kernelData,
+      fields.startPrivateDateTreeSnapshot,
       fields.startNullifierTreeSnapshot,
+      fields.startContractTreeSnapshot,
       fields.lowNullifierLeafPreimages,
       fields.lowNullifierMembershipWitness,
+      fields.newCommitmentsSubtreeSiblingPath,
+      fields.newNullifiersSubtreeSiblingPath,
+      fields.newContractsSubtreeSiblingPath,
       fields.historicPrivateDataTreeRootMembershipWitnesses,
       fields.historicContractsTreeRootMembershipWitnesses,
       fields.constants,
@@ -134,17 +151,17 @@ export class BaseRollupPublicInputs {
     public endAggregationObject: AggregationObject,
     public constants: ConstantBaseRollupData,
 
-    // The only tree root actually updated in this circuit is the nullifier tree, because earlier leaves (of low_nullifiers) must be updated to point to the new nullifiers in this circuit.
+    public startPrivateDataTreeSnapshot: AppendOnlyTreeSnapshot,
+    public endPrivateDataTreeSnapshot: AppendOnlyTreeSnapshot,
+
     public startNullifierTreeSnapshot: AppendOnlyTreeSnapshot,
     public endNullifierTreeSnapshots: AppendOnlyTreeSnapshot,
 
-    public newCommitmentsSubtreeRoot: Fr,
-    public newNullifiersSubtreeRoot: Fr,
-    public newContractLeavesSubtreeRoot: Fr,
+    public startContractTreeSnapshot: AppendOnlyTreeSnapshot,
+    public endContractTreeSnapshot: AppendOnlyTreeSnapshot,
 
     // Hashes (probably sha256) to make public inputs constant-sized (to then be unpacked on-chain)
     public calldataHash: Fr,
-    public proverContributionsHash: Fr,
   ) {}
 
   /**
@@ -158,10 +175,10 @@ export class BaseRollupPublicInputs {
       reader.readObject(ConstantBaseRollupData),
       reader.readObject(AppendOnlyTreeSnapshot),
       reader.readObject(AppendOnlyTreeSnapshot),
-      reader.readFr(),
-      reader.readFr(),
-      reader.readFr(),
-      reader.readFr(),
+      reader.readObject(AppendOnlyTreeSnapshot),
+      reader.readObject(AppendOnlyTreeSnapshot),
+      reader.readObject(AppendOnlyTreeSnapshot),
+      reader.readObject(AppendOnlyTreeSnapshot),
       reader.readFr(),
     );
   }
@@ -175,15 +192,16 @@ export class BaseRollupPublicInputs {
       this.endAggregationObject,
       this.constants,
 
+      this.startPrivateDataTreeSnapshot,
+      this.endPrivateDataTreeSnapshot,
+
       this.startNullifierTreeSnapshot,
       this.endNullifierTreeSnapshots,
 
-      this.newCommitmentsSubtreeRoot,
-      this.newNullifiersSubtreeRoot,
-      this.newContractLeavesSubtreeRoot,
+      this.startContractTreeSnapshot,
+      this.endContractTreeSnapshot,
 
       this.calldataHash,
-      this.proverContributionsHash,
     );
   }
 }
