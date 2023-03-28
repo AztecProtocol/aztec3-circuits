@@ -76,12 +76,13 @@ std::vector<NT::fr> calculate_contract_leaves(BaseRollupInputs baseRollupInputs)
             NT::fr portal_contract_address = new_contacts[j].portal_contract_address;
             NT::fr function_tree_root = new_contacts[j].function_tree_root;
 
-            // Pedersen hash of the 3 fields
+            // Pedersen hash of the 3 fields (contract_address, portal_contract_address, function_tree_root)
             auto contract_leaf =
                 crypto::pedersen_hash::hash_multiple({ contract_address, portal_contract_address, function_tree_root });
 
-            // @todo What to do about no contract deployments? Insert a zero, we talked with Mike.
-            // For the nullifier member-ship, ignore when the leaf is zero.
+            // When there is no contract deployment, we should insert a zero leaf into the tree and ignore the
+            // member-ship check. This is to ensure that we don't hit "already deployed" errors when we are not
+            // deploying contracts. e.g., when we are only calling functions on existing contracts.
             auto to_push = contract_address == NT::address(0) ? NT::fr(0) : contract_leaf;
 
             contract_leaves.push_back(to_push);
