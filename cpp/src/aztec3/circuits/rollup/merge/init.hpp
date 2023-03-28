@@ -20,7 +20,7 @@ using NT = aztec3::utils::types::NativeTypes;
 
 // Params
 using MergeRollupInputs = abis::MergeRollupInputs<NT>;
-using RollupPublicInputs = abis::MergeRollupPublicInputs<NT>;
+using MergeRollupPublicInputs = abis::MergeRollupPublicInputs<NT>;
 
 using Aggregator = aztec3::circuits::recursion::Aggregator;
 using AggregationObject = utils::types::NativeTypes::AggregationObject;
