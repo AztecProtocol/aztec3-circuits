@@ -42,7 +42,7 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, PreviousRollupData
 
     write(buf, obj.merge_rollup_public_inputs);
     write(buf, obj.proof);
-    write(buf, obj.vk);
+    write(buf, *obj.vk);
     write(buf, obj.vk_index);
     write(buf, obj.vk_sibling_path);
 };
