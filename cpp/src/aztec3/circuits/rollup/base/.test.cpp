@@ -4,7 +4,7 @@
 // #include <aztec3/circuits/apps/oracle_wrapper.hpp>
 // #include <barretenberg/numeric/random/engine.hpp>
 #include "aztec3/circuits/abis/append_only_tree_snapshot.hpp"
-#include "aztec3/circuits/abis/base_rollup/nullifier_leaf_preimage.hpp"
+#include "aztec3/circuits/abis/rollup/nullifier_leaf_preimage.hpp"
 #include "aztec3/constants.hpp"
 #include "index.hpp"
 #include "init.hpp"
@@ -76,6 +76,7 @@ using aztec3::circuits::abis::AppendOnlyTreeSnapshot;
 
 using aztec3::circuits::abis::MembershipWitness;
 using aztec3::circuits::abis::NullifierLeafPreimage;
+using aztec3::circuits::rollup::native_base_rollup::ConstantRollupData;
 using aztec3::circuits::rollup::native_base_rollup::NT;
 
 } // namespace
@@ -86,8 +87,7 @@ class base_rollup_tests : public ::testing::Test {};
 
 TEST(base_rollup_tests, test_compute_contract_leafs)
 {
-    native_base_rollup::ConstantBaseRollupData constantBaseRollupData =
-        native_base_rollup::ConstantBaseRollupData::empty();
+    ConstantRollupData constantRollupData = ConstantRollupData::empty();
 
     std::array<NullifierLeafPreimage<NT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH> low_nullifier_leaf_preimages;
     std::array<MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH>
@@ -122,15 +122,15 @@ TEST(base_rollup_tests, test_compute_contract_leafs)
         .low_nullifier_membership_witness = low_nullifier_membership_witness,
         .historic_private_data_tree_root_membership_witnesses = historic_private_data_tree_root_membership_witnesses,
         .historic_contract_tree_root_membership_witnesses = historic_contract_tree_root_membership_witnesses,
-        .constants = constantBaseRollupData,
+        .constants = constantRollupData,
         .prover_id = prover_id,
     };
 
     native_base_rollup::BaseRollupPublicInputs outputs =
-        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(constantBaseRollupData, baseRollupInputs);
+        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(constantRollupData, baseRollupInputs);
 
     // Print outputs
-    std::cout << "outputs: " << outputs << std::endl;
+    // std::cout << "outputs: " << outputs << std::endl;
 }
 
 TEST(base_rollup_tests, test_compute_calldata_hash) {}

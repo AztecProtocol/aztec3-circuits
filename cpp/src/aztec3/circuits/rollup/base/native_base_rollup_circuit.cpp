@@ -179,9 +179,9 @@ NT::fr calculate_calldata_hash(BaseRollupInputs baseRollupInputs, std::vector<NT
                                                         calldata_hash_inputs_bytes.end());
 
     // @todo Make this thing split into two field elements. Hi and low.
-    std::cout << "calldata_hash_inputs_bytes_vec: " << calldata_hash_inputs_bytes_vec << std::endl;
+    /*std::cout << "calldata_hash_inputs_bytes_vec: " << calldata_hash_inputs_bytes_vec << std::endl;
     auto h = sha256::sha256(calldata_hash_inputs_bytes_vec);
-    std::cout << "h: " << h << std::endl;
+    std::cout << "h: " << h << std::endl;*/
 
     return sha256::sha256_to_field(calldata_hash_inputs_bytes_vec);
 }
