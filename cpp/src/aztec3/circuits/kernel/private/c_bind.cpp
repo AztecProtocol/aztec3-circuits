@@ -4,8 +4,6 @@
 
 #include <aztec3/constants.hpp>
 #include <aztec3/utils/types/native_types.hpp>
-// #include "private_circuit_public_inputs.hpp"
-// #include "private_kernel/previous_kernel_data.hpp"
 #include "aztec3/circuits/abis/signed_tx_request.hpp"
 #include "aztec3/circuits/abis/private_kernel/private_call_data.hpp"
 #include <aztec3/circuits/abis/private_kernel/private_inputs.hpp>
@@ -16,7 +14,6 @@
 
 #include "barretenberg/common/serialize.hpp"
 #include "barretenberg/plonk/composer/turbo_composer.hpp"
-// #include "barretenberg/stdlib/types/types.hpp"
 
 namespace {
 using NT = aztec3::utils::types::NativeTypes;
