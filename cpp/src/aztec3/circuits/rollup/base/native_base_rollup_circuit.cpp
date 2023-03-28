@@ -339,8 +339,8 @@ AppendOnlySnapshot check_nullifier_tree_non_membership(BaseRollupInputs baseRoll
             new_index = new_index + 1;
 
             // Use the existing sibling path to calculate the new root
-            current_nullifier_tree_root = iterate_through_tree_via_sibling_path<NULLIFIER_TREE_HEIGHT>(
-                new_leaf, witness.leaf_index, witness.sibling_path);
+            current_nullifier_tree_root =
+                iterate_through_tree_via_sibling_path(new_leaf, witness.leaf_index, witness.sibling_path);
         }
     }
 
@@ -350,8 +350,8 @@ AppendOnlySnapshot check_nullifier_tree_non_membership(BaseRollupInputs baseRoll
     // Calculate the new root
     // We are inserting a subtree rather than a full tree here
     auto subtree_index = new_index >> 3;
-    auto new_root = iterate_through_tree_via_sibling_path<NULLIFIER_TREE_HEIGHT>(
-        nullifier_tree_subtree_root, subtree_index, nullifier_sibling_path);
+    auto new_root =
+        iterate_through_tree_via_sibling_path(nullifier_tree_subtree_root, subtree_index, nullifier_sibling_path);
 
     // Return the new state of the nullifier tree
     return {
