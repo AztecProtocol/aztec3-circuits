@@ -254,7 +254,7 @@ export function makeBaseRollupPublicInputs(seed = 0) {
     makeAppendOnlyTreeSnapshot(seed + 0x600),
     makeAppendOnlyTreeSnapshot(seed + 0x700),
     makeAppendOnlyTreeSnapshot(seed + 0x800),
-    fr(seed + 0x901),
+    range(2, seed + 0x901).map(fr) as [Fr, Fr],
   );
 }
 

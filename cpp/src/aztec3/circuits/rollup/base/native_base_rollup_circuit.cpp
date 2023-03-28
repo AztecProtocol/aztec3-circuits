@@ -76,13 +76,16 @@ std::vector<NT::fr> calculate_contract_leaves(BaseRollupInputs baseRollupInputs)
             NT::fr portal_contract_address = new_contacts[j].portal_contract_address;
             NT::fr function_tree_root = new_contacts[j].function_tree_root;
 
-            // Pedersen hash of the 3 fields
+            // Pedersen hash of the 3 fields (contract_address, portal_contract_address, function_tree_root)
             auto contract_leaf =
                 crypto::pedersen_hash::hash_multiple({ contract_address, portal_contract_address, function_tree_root });
 
-            // @todo What to do about no contract deployments? Insert a zero, we talked with Mike.
-            // For the nullifier member-ship, ignore when the leaf is zero.
-            contract_leaves.push_back(contract_leaf);
+            // When there is no contract deployment, we should insert a zero leaf into the tree and ignore the
+            // member-ship check. This is to ensure that we don't hit "already deployed" errors when we are not
+            // deploying contracts. e.g., when we are only calling functions on existing contracts.
+            auto to_push = contract_address == NT::address(0) ? NT::fr(0) : contract_leaf;
+
+            contract_leaves.push_back(to_push);
         }
     }
 
@@ -137,7 +140,7 @@ std::array<NT::fr, 3> calculate_new_subtrees(BaseRollupInputs baseRollupInputs, 
     return std::array<NT::fr, 3>{ contracts_tree_subroot, commitments_tree_subroot, nullifiers_tree_subroot };
 }
 
-NT::fr calculate_calldata_hash(BaseRollupInputs baseRollupInputs, std::vector<NT::fr> contract_leaves)
+std::array<NT::fr, 2> calculate_calldata_hash(BaseRollupInputs baseRollupInputs, std::vector<NT::fr> contract_leaves)
 {
     // Compute calldata hashes
     // 22 = (4 + 4 + 1 + 2) * 2 (2 kernels, 4 nullifiers per kernel, 4 commitments per kernel, 1 contract
@@ -178,12 +181,20 @@ NT::fr calculate_calldata_hash(BaseRollupInputs baseRollupInputs, std::vector<NT
     std::vector<uint8_t> calldata_hash_inputs_bytes_vec(calldata_hash_inputs_bytes.begin(),
                                                         calldata_hash_inputs_bytes.end());
 
-    // @todo Make this thing split into two field elements. Hi and low.
-    /*std::cout << "calldata_hash_inputs_bytes_vec: " << calldata_hash_inputs_bytes_vec << std::endl;
     auto h = sha256::sha256(calldata_hash_inputs_bytes_vec);
-    std::cout << "h: " << h << std::endl;*/
 
-    return sha256::sha256_to_field(calldata_hash_inputs_bytes_vec);
+    // Split the hash into two fields, a high and a low
+    std::array<uint8_t, 32> buf_1, buf_2;
+    for (uint8_t i = 0; i < 16; i++) {
+        buf_1[i] = 0;
+        buf_1[16 + i] = h[i];
+        buf_2[i] = 0;
+        buf_2[16 + i] = h[i + 16];
+    }
+    auto high = fr::serialize_from_buffer(buf_1.data());
+    auto low = fr::serialize_from_buffer(buf_2.data());
+
+    return std::array<NT::fr, 2>{ high, low };
 }
 
 void check_membership(NT::fr root,
@@ -262,7 +273,7 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
     // NT::fr nullifiers_tree_subroot = new_subtrees[2];
 
     // Calculate the overall calldata hash
-    NT::fr calldata_hash = calculate_calldata_hash(baseRollupInputs, contract_leaves);
+    std::array<NT::fr, 2> calldata_hash = calculate_calldata_hash(baseRollupInputs, contract_leaves);
 
     // Perform membership checks that the notes provided exist within the historic trees data
     perform_historical_private_data_tree_membership_checks(baseRollupInputs);
