@@ -274,7 +274,58 @@ TEST_F(base_rollup_tests, empty_block_calldata_hash)
     ASSERT_EQ(hash, calldata_hash);
 }
 
-TEST_F(base_rollup_tests, calldata_hash) {}
+TEST_F(base_rollup_tests, calldata_hash)
+{
+    // Execute the base rollup circuit with nullifiers, commitments and a contract deployment. Then check the calldata
+    // hash against the expected value.
+    BaseRollupInputs inputs = getEmptyBaseRollupInputs();
+    std::vector<uint8_t> input_data(704, 0);
+
+    for (uint8_t i = 0; i < 4; ++i) {
+        // commitments
+        input_data[i * 32 + 31] = i + 1; // 1
+        inputs.kernel_data[0].public_inputs.end.new_nullifiers[i] = fr(i + 1);
+
+        // nullifiers
+        input_data[8 * 32 + i * 32 + 31] = i + 1; // 1
+        inputs.kernel_data[0].public_inputs.end.new_commitments[i] = fr(i + 1);
+    }
+
+    // Add a contract deployment
+    NewContractData<NT> new_contract = {
+        .contract_address = fr(1),
+        .portal_contract_address = fr(3),
+        .function_tree_root = fr(2),
+    };
+    auto contract_leaf = crypto::pedersen_hash::hash_multiple(
+        { new_contract.contract_address, new_contract.portal_contract_address, new_contract.function_tree_root });
+    inputs.kernel_data[0].public_inputs.end.new_contracts[0] = new_contract;
+    auto contract_leaf_buffer = contract_leaf.to_buffer();
+    auto contract_address_buffer = new_contract.contract_address.to_field().to_buffer();
+    auto portal_address_buffer = new_contract.portal_contract_address.to_field().to_buffer();
+    for (uint8_t i = 0; i < 32; ++i) {
+        input_data[16 * 32 + i] = contract_leaf_buffer[i];
+        input_data[18 * 32 + i] = contract_address_buffer[i];
+        input_data[20 * 32 + i] = portal_address_buffer[i];
+    }
+
+    auto hash = sha256::sha256(input_data);
+
+    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
+
+    // Take the two fields and stich them together to get the calldata hash.
+    std::array<fr, 2> calldata_hash_fr = outputs.calldata_hash;
+    auto high_buffer = calldata_hash_fr[0].to_buffer();
+    auto low_buffer = calldata_hash_fr[1].to_buffer();
+
+    std::array<uint8_t, 32> calldata_hash;
+    for (uint8_t i = 0; i < 16; ++i) {
+        calldata_hash[i] = high_buffer[16 + i];
+        calldata_hash[16 + i] = low_buffer[16 + i];
+    }
+
+    ASSERT_EQ(hash, calldata_hash);
+}
 
 TEST_F(base_rollup_tests, test_compute_membership_historic) {}
 
