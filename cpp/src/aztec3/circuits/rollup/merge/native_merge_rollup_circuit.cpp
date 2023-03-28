@@ -48,6 +48,8 @@ MergeRollupPublicInputs merge_rollup_circuit(MergeRollupInputs mergeRollupInputs
 
     AggregationObject aggregation_object = aggregate_proofs(mergeRollupInputs);
 
+    // Hash together the calldataHashes
+
     MergeRollupPublicInputs public_inputs = {};
     return public_inputs;
 }

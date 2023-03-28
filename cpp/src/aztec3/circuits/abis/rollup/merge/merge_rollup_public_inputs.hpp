@@ -16,8 +16,10 @@ template <typename NCT> struct MergeRollupPublicInputs {
     typedef typename NCT::fr fr;
     typedef typename NCT::AggregationObject AggregationObject;
 
+    // For a base rollup this height will be 0
     fr rollup_subtree_height;
 
+    // All below are shared between the base and merge rollups
     AggregationObject end_aggregation_object;
 
     ConstantRollupData<NCT> constants;
@@ -31,8 +33,7 @@ template <typename NCT> struct MergeRollupPublicInputs {
     fr new_nullifiers_subtree_root;
     fr new_contract_leaves_subtree_root;
 
-    fr calldata_hash;
-    fr prover_contributions_hash;
+    std::array<fr, 2> calldata_hash;
 
     bool operator==(MergeRollupPublicInputs<NCT> const&) const = default;
 };
@@ -95,10 +96,7 @@ template <typename NCT> std::ostream& operator<<(std::ostream& os, MergeRollupPu
               << obj.new_contract_leaves_subtree_root
               << "\n"
                  "calldata_hash: "
-              << obj.calldata_hash
-              << "\n"
-                 "prover_contributions_hash: "
-              << obj.prover_contributions_hash << "\n";
+              << obj.calldata_hash << "\n";
 }
 
 } // namespace aztec3::circuits::abis
