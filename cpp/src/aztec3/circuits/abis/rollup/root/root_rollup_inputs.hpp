@@ -20,8 +20,8 @@ template <typename NCT> struct RootRollupInputs {
     // All below are shared between the base and merge rollups
     std::array<PreviousRollupData<NCT>, 2> previous_rollup_data;
 
-    std::array<fr, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> new_historic_private_data_tree_roots;
-    std::array<fr, CONTRACT_TREE_ROOTS_TREE_HEIGHT> new_historic_contract_tree_roots;
+    std::array<fr, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT> new_historic_private_data_tree_root_sibling_path;
+    std::array<fr, CONTRACT_TREE_ROOTS_TREE_HEIGHT> new_historic_contract_tree_root_sibling_path;
 
     bool operator==(RootRollupInputs<NCT> const&) const = default;
 };

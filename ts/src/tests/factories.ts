@@ -1,4 +1,4 @@
-import { CallContext, PrivateCircuitPublicInputs } from '../index.js';
+import { CallContext, PreviousRollupData, PrivateCircuitPublicInputs, RootRollupPublicInputs } from '../index.js';
 import { AppendOnlyTreeSnapshot, BaseRollupPublicInputs, ConstantBaseRollupData } from '../structs/base_rollup.js';
 import {
   ARGS_LENGTH,
@@ -138,6 +138,16 @@ export function makePreviousKernelData(seed = 1): PreviousKernelData {
   );
 }
 
+export function makePreviousRollupData(seed = 1): PreviousRollupData {
+  return new PreviousRollupData(
+    makeBaseRollupPublicInputs(seed),
+    makeDynamicSizeBuffer(16, seed + 0x100),
+    makeVerificationKey(),
+    0x42,
+    range(VK_TREE_HEIGHT, 0x2000).map(fr),
+  );
+}
+
 export function makePrivateKernelInputs(seed = 1): PrivateKernelInputs {
   return new PrivateKernelInputs(
     makeSignedTxRequest(seed),
@@ -255,6 +265,23 @@ export function makeBaseRollupPublicInputs(seed = 0) {
     makeAppendOnlyTreeSnapshot(seed + 0x700),
     makeAppendOnlyTreeSnapshot(seed + 0x800),
     range(2, seed + 0x901).map(fr) as [Fr, Fr],
+  );
+}
+
+export function makeRootRollupPublicInputs(seed = 0) {
+  return new RootRollupPublicInputs(
+    makeAggregationObject(seed + 0x100),
+    makeAppendOnlyTreeSnapshot(seed + 0x200),
+    makeAppendOnlyTreeSnapshot(seed + 0x300),
+    makeAppendOnlyTreeSnapshot(seed + 0x400),
+    makeAppendOnlyTreeSnapshot(seed + 0x500),
+    makeAppendOnlyTreeSnapshot(seed + 0x600),
+    makeAppendOnlyTreeSnapshot(seed + 0x700),
+    makeAppendOnlyTreeSnapshot(seed + 0x800),
+    makeAppendOnlyTreeSnapshot(seed + 0x900),
+    makeAppendOnlyTreeSnapshot(seed + 0xa00),
+    makeAppendOnlyTreeSnapshot(seed + 0xb00),
+    range(2, seed + 0xd01).map(fr) as [Fr, Fr],
   );
 }
 
