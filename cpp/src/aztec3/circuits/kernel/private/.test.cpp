@@ -66,7 +66,6 @@ using aztec3::circuits::apps::test_apps::escrow::deposit;
 
 // using aztec3::circuits::mock::mock_circuit;
 using aztec3::circuits::mock::mock_kernel_circuit;
-// using aztec3::circuits::mock::mock_kernel_inputs;
 
 } // namespace
 
