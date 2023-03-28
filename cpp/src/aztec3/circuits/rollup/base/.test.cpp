@@ -194,10 +194,15 @@ class base_rollup_tests : public ::testing::Test {
 
         // Kernels
         std::array<abis::private_kernel::PreviousKernelData<NT>, 2> kernel_data;
-        // kernel_data[0] = getEmptyPreviousKernelData();
-        // kernel_data[1] = getEmptyPreviousKernelData();
-        kernel_data[0] = default_previous_kernel();
-        kernel_data[1] = default_previous_kernel();
+        kernel_data[0] = getEmptyPreviousKernelData();
+        kernel_data[1] = getEmptyPreviousKernelData();
+        // grab a mocked previous kernel and use its proof and vk
+        PreviousKernelData<NT> mocked_kernel0 = default_previous_kernel();
+        PreviousKernelData<NT> mocked_kernel1 = default_previous_kernel();
+        kernel_data[0].proof = mocked_kernel0.proof;
+        kernel_data[0].vk = mocked_kernel0.vk;
+        kernel_data[1].proof = mocked_kernel1.proof;
+        kernel_data[1].vk = mocked_kernel1.vk;
         // @note If using VK when empty, it will fail with segfault.
 
         BaseRollupInputs baseRollupInputs = { .kernel_data = kernel_data,
