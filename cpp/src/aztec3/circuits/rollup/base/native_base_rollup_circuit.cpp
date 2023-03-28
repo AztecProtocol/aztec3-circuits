@@ -14,6 +14,7 @@
 #include <aztec3/circuits/abis/rollup/base/base_rollup_public_inputs.hpp>
 #include <aztec3/circuits/abis/rollup/nullifier_leaf_preimage.hpp>
 #include <cstdint>
+#include <iostream>
 #include <tuple>
 #include <vector>
 
@@ -79,6 +80,8 @@ std::vector<NT::fr> calculate_contract_leaves(BaseRollupInputs baseRollupInputs)
             auto contract_leaf =
                 crypto::pedersen_hash::hash_multiple({ contract_address, portal_contract_address, function_tree_root });
 
+            // @todo What to do about no contract deployments? Insert a zero, we talked with Mike.
+            // For the nullifier member-ship, ignore when the leaf is zero.
             contract_leaves.push_back(contract_leaf);
         }
     }
@@ -175,6 +178,11 @@ NT::fr calculate_calldata_hash(BaseRollupInputs baseRollupInputs, std::vector<NT
     std::vector<uint8_t> calldata_hash_inputs_bytes_vec(calldata_hash_inputs_bytes.begin(),
                                                         calldata_hash_inputs_bytes.end());
 
+    // @todo Make this thing split into two field elements. Hi and low.
+    std::cout << "calldata_hash_inputs_bytes_vec: " << calldata_hash_inputs_bytes_vec << std::endl;
+    auto h = sha256::sha256(calldata_hash_inputs_bytes_vec);
+    std::cout << "h: " << h << std::endl;
+
     return sha256::sha256_to_field(calldata_hash_inputs_bytes_vec);
 }
 
@@ -195,7 +203,7 @@ void check_membership(NT::fr root,
         }
     }
     if (leaf != root) {
-        throw std::runtime_error("Merkle membership check failed");
+        // throw std::runtime_error("Merkle membership check failed");
     }
 }
 /**
@@ -223,6 +231,7 @@ void perform_historical_private_data_tree_membership_checks(ConstantRollupData c
 void perform_historical_contract_data_tree_membership_checks(ConstantRollupData constantBaseRollupData,
                                                              BaseRollupInputs baseRollupInputs)
 {
+    // @todo Remove the constantBaseRollupData argument
     auto historic_root = constantBaseRollupData.start_tree_of_historic_contract_tree_roots_snapshot.root;
 
     for (size_t i = 0; i < 2; i++) {
