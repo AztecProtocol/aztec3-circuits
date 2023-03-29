@@ -48,6 +48,26 @@ You can also limit it to run only specific test cases using a gtest filter:
 (cd build && ./bin/aztec3_circuits_abis_tests --gtest_filter=*hash_tx_request*)
 ```
 
+---
+
+Here's a list of the tests currently available (conveniently combined with the command to build, then execute them, for easy copy-pasta):
+ - aztec3_circuits_abis_tests
+   - `cmake --build --preset clang15 --target aztec3_circuits_abis_tests && (cd build && ./bin/aztec3_circuits_abis_tests --gtest_filter=*)`
+
+ - aztec3_circuits_apps_tests
+   - `cmake --build --preset clang15 --target aztec3_circuits_apps_tests && (cd build && ./bin/aztec3_circuits_apps_tests --gtest_filter=*)`
+
+ - aztec3_circuits_kernel_tests
+   - `cmake --build --preset clang15 --target aztec3_circuits_kernel_tests && (cd build && ./bin/aztec3_circuits_kernel_tests --gtest_filter=*)`
+
+ - aztec3_circuits_recursion_tests
+   - `cmake --build --preset clang15 --target aztec3_circuits_recursion_tests && (cd build && ./bin/aztec3_circuits_recursion_tests --gtest_filter=*)`
+
+ - aztec3_circuits_rollup_tests
+   - `cmake --build --preset clang15 --target aztec3_circuits_rollup_tests && (cd build && ./bin/aztec3_circuits_rollup_tests --gtest_filter=*)`
+
+---
+
 ### C++ Repository Layout
 This repository submodules [`barretenberg`](https://github.com/AztecProtocol/barretenberg) as a C++ library containing proving systems and utilities at `cpp/barretenberg/`.
 
@@ -66,8 +86,7 @@ The core Aztec 3 C++ code lives in `cpp/src/aztec3/`, and is split into the foll
 
 ### Typescript
 
-This is being actively developed and is not merged into master yet. This code will provide Typescript wrappers for C++ cbinds including interfaces to circuits and to the helper functions that can be used when constructing circuit inputs.
-
+All typescript code was moved from here into `aztec3-packages/yarn-project/circuits.js`.
 
 ## Private Kernel Circuit
 

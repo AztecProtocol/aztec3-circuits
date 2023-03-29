@@ -118,7 +118,6 @@ WASM_EXPORT size_t private_kernel__sim(uint8_t const* signed_tx_request_buf,
         .signed_tx_request = signed_tx_request,
         .previous_kernel = previous_kernel,
         .private_call = private_call_data,
-
     };
 
     PublicInputs<NT> public_inputs = native_private_kernel_circuit(private_inputs);
