@@ -21,14 +21,13 @@
 namespace aztec3::circuits::rollup::native_root_rollup {
 
 // TODO: can we aggregate proofs if we do not have a working circuit impl
-
 // TODO: change the public inputs array - we wont be using this?
 
 // Access Native types through NT namespace
 
 bool verify_merge_proof(NT::Proof merge_proof)
 {
-    std::cout << merge_proof << std::endl; // REMOVE_ME
+    (void)merge_proof;
     return true;
 }
 
@@ -81,7 +80,9 @@ std::array<fr, 2> compute_calldata_hash(RootRollupInputs rootRollupInputs)
 // TODO: replace auto
 RootRollupPublicInputs root_rollup_circuit(RootRollupInputs rootRollupInputs)
 {
-    // First we compute the contract tree leaves
+    // TODO: Check the historic trees as well
+    // old -> leftmost
+    // new -> rightmost
 
     AggregationObject aggregation_object = aggregate_proofs(rootRollupInputs);
 
@@ -91,14 +92,19 @@ RootRollupPublicInputs root_rollup_circuit(RootRollupInputs rootRollupInputs)
         assert(verify_merge_proof(proof));
     }
 
+    auto left = rootRollupInputs.previous_rollup_data[0].base_rollup_public_inputs;
+    auto right = rootRollupInputs.previous_rollup_data[1].base_rollup_public_inputs;
+
+    // Compute the historic trees.
+
     RootRollupPublicInputs public_inputs = {
         .end_aggregation_object = aggregation_object,
-        .start_private_data_tree_snapshot = AppendOnlySnapshot::empty(),
-        .end_private_data_tree_snapshot = AppendOnlySnapshot::empty(),
-        .start_nullifier_tree_snapshot = AppendOnlySnapshot::empty(),
-        .end_nullifier_tree_snapshot = AppendOnlySnapshot::empty(),
-        .start_contract_tree_snapshot = AppendOnlySnapshot::empty(),
-        .end_contract_tree_snapshot = AppendOnlySnapshot::empty(),
+        .start_private_data_tree_snapshot = left.start_private_data_tree_snapshot,
+        .end_private_data_tree_snapshot = right.end_private_data_tree_snapshot,
+        .start_nullifier_tree_snapshot = left.start_nullifier_tree_snapshot,
+        .end_nullifier_tree_snapshot = right.end_nullifier_tree_snapshot,
+        .start_contract_tree_snapshot = left.start_contract_tree_snapshot,
+        .end_contract_tree_snapshot = right.end_contract_tree_snapshot,
         .start_tree_of_private_data_tree_roots_snapshot = AppendOnlySnapshot::empty(),
         .end_tree_of_private_data_tree_roots_snapshot = AppendOnlySnapshot::empty(),
         .start_tree_of_historic_contract_tree_roots_snapshot = AppendOnlySnapshot::empty(),
