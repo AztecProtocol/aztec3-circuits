@@ -198,7 +198,7 @@ class root_rollup_tests : public ::testing::Test {
     }
 };
 
-TEST_F(root_rollup_tests, blabber)
+TEST_F(root_rollup_tests, calldata_hash_empty_blocks)
 {
     std::vector<uint8_t> zero_bytes_vec(704, 0);
     auto call_data_hash_inner = sha256::sha256(zero_bytes_vec);

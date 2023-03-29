@@ -13,6 +13,7 @@
 #include <aztec3/circuits/abis/rollup/root/root_rollup_inputs.hpp>
 #include <aztec3/circuits/abis/rollup/root/root_rollup_public_inputs.hpp>
 #include <aztec3/circuits/abis/rollup/nullifier_leaf_preimage.hpp>
+#include <cassert>
 #include <cstdint>
 #include <iostream>
 #include <tuple>
@@ -35,6 +36,33 @@ AggregationObject aggregate_proofs(RootRollupInputs rootRollupInputs)
 {
     // TODO: NOTE: for now we simply return the aggregation object from the first proof
     return rootRollupInputs.previous_rollup_data[0].base_rollup_public_inputs.end_aggregation_object;
+}
+
+bool is_constants_equal(ConstantRollupData left, ConstantRollupData right)
+{
+    return left == right;
+}
+
+template <size_t N>
+NT::fr iterate_through_tree_via_sibling_path(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath)
+{
+    for (size_t i = 0; i < siblingPath.size(); i++) {
+        if (leafIndex & (1 << i)) {
+            leaf = crypto::pedersen_hash::hash_multiple({ siblingPath[i], leaf });
+        } else {
+            leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
+        }
+    }
+    return leaf;
+}
+
+template <size_t N>
+void check_membership(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath, NT::fr root)
+{
+    auto calculatedRoot = iterate_through_tree_via_sibling_path(leaf, leafIndex, siblingPath);
+    if (calculatedRoot != root) {
+        // throw std::runtime_error("Merkle membership check failed");
+    }
 }
 
 std::array<fr, 2> compute_calldata_hash(RootRollupInputs rootRollupInputs)
@@ -74,6 +102,21 @@ std::array<fr, 2> compute_calldata_hash(RootRollupInputs rootRollupInputs)
     return { high, low };
 }
 
+template <size_t N>
+AppendOnlySnapshot insert_at_empty_in_snapshot_tree(AppendOnlySnapshot old_snapshot,
+                                                    std::array<NT::fr, N> siblingPath,
+                                                    NT::fr subtreeRootToInsert)
+{
+    // check that the value is zero at the path (unused)
+    check_membership(fr::zero(), old_snapshot.next_available_leaf_index, siblingPath, old_snapshot.root);
+
+    // Compute the new root after the update
+    auto new_root =
+        iterate_through_tree_via_sibling_path(subtreeRootToInsert, old_snapshot.next_available_leaf_index, siblingPath);
+
+    return { .root = new_root, .next_available_leaf_index = old_snapshot.next_available_leaf_index + 1 };
+}
+
 // Important types:
 //   - BaseRollupPublicInputs - where we want to put our return values
 //
@@ -95,7 +138,20 @@ RootRollupPublicInputs root_rollup_circuit(RootRollupInputs rootRollupInputs)
     auto left = rootRollupInputs.previous_rollup_data[0].base_rollup_public_inputs;
     auto right = rootRollupInputs.previous_rollup_data[1].base_rollup_public_inputs;
 
-    // Compute the historic trees.
+    // Constants must be the same between left and right
+    assert(is_constants_equal(left.constants, right.constants));
+
+    // Update the historic private data tree
+    AppendOnlySnapshot end_tree_of_historic_private_data_tree_roots_snapshot =
+        insert_at_empty_in_snapshot_tree(left.constants.start_tree_of_historic_private_data_tree_roots_snapshot,
+                                         rootRollupInputs.new_historic_private_data_tree_root_sibling_path,
+                                         right.end_private_data_tree_snapshot.root);
+
+    // Update the historic private data tree
+    AppendOnlySnapshot end_tree_of_historic_contract_tree_roots_snapshot =
+        insert_at_empty_in_snapshot_tree(left.constants.start_tree_of_historic_contract_tree_roots_snapshot,
+                                         rootRollupInputs.new_historic_contract_tree_root_sibling_path,
+                                         right.end_contract_tree_snapshot.root);
 
     RootRollupPublicInputs public_inputs = {
         .end_aggregation_object = aggregation_object,
@@ -105,10 +161,12 @@ RootRollupPublicInputs root_rollup_circuit(RootRollupInputs rootRollupInputs)
         .end_nullifier_tree_snapshot = right.end_nullifier_tree_snapshot,
         .start_contract_tree_snapshot = left.start_contract_tree_snapshot,
         .end_contract_tree_snapshot = right.end_contract_tree_snapshot,
-        .start_tree_of_private_data_tree_roots_snapshot = AppendOnlySnapshot::empty(),
-        .end_tree_of_private_data_tree_roots_snapshot = AppendOnlySnapshot::empty(),
-        .start_tree_of_historic_contract_tree_roots_snapshot = AppendOnlySnapshot::empty(),
-        .end_tree_of_historic_contract_tree_roots_snapshot = AppendOnlySnapshot::empty(),
+        .start_tree_of_historic_private_data_tree_roots_snapshot =
+            left.constants.start_tree_of_historic_private_data_tree_roots_snapshot,
+        .end_tree_of_historic_private_data_tree_roots_snapshot = end_tree_of_historic_private_data_tree_roots_snapshot,
+        .start_tree_of_historic_contract_tree_roots_snapshot =
+            left.constants.start_tree_of_historic_contract_tree_roots_snapshot,
+        .end_tree_of_historic_contract_tree_roots_snapshot = end_tree_of_historic_contract_tree_roots_snapshot,
         .calldata_hash = compute_calldata_hash(rootRollupInputs),
     };
     return public_inputs;
