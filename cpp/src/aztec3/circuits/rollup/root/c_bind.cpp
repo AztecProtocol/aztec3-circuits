@@ -72,7 +72,7 @@ WASM_EXPORT size_t root_rollup__sim(uint8_t const* root_rollup_inputs_buf,
     return public_inputs_vec.size();
 }
 
-WASM_EXPORT size_t private_kernel__verify_proof(uint8_t const* vk_buf, uint8_t const* proof, uint32_t length)
+WASM_EXPORT size_t root_rollup__verify_proof(uint8_t const* vk_buf, uint8_t const* proof, uint32_t length)
 {
     (void)vk_buf; // unused
     (void)proof;  // unused
