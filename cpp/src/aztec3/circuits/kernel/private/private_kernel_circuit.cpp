@@ -134,7 +134,9 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
         auto contract_address_nullifier = CT::fr(CT::blake3s(blake_input));
 
         // push the contract address nullifier to nullifier vector
-        array_push<Composer>(public_inputs.end.new_nullifiers, contract_address_nullifier);
+        CT::fr conditional_contract_address_nullifier =
+            CT::fr::conditional_assign(is_contract_deployment, contract_address_nullifier, CT::fr(0));
+        array_push<Composer>(public_inputs.end.new_nullifiers, conditional_contract_address_nullifier);
 
         // Add new contract data if its a contract deployment function
         NewContractData<CT> new_contract_data = NewContractData<CT>{
