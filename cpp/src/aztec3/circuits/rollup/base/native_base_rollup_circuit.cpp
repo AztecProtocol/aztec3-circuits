@@ -324,27 +324,30 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(BaseRo
                 }
             }
 
-            // Calculate the leaf hash
-            auto updated_leaf = crypto::pedersen_hash::hash_multiple({ low_nullifier_preimage.leaf_value,
-                                                                       low_nullifier_preimage.next_index,
-                                                                       low_nullifier_preimage.next_value });
+            // Recreate the original low nullifier from the preimage
+            NullifierLeaf original_low_nullifier = NullifierLeaf{
+                .value = low_nullifier_preimage.leaf_value,
+                .nextIndex = low_nullifier_preimage.next_index,
+                .nextValue = low_nullifier_preimage.next_value,
+            };
 
-            // perform (non) membership check for each of the provided paths
+            // perform membership check for the low nullifier
             check_membership<NULLIFIER_TREE_HEIGHT>(
-                updated_leaf, witness.leaf_index, witness.sibling_path, current_nullifier_tree_root);
+                original_low_nullifier.hash(), witness.leaf_index, witness.sibling_path, current_nullifier_tree_root);
 
-            // against the new nullifier root, calculate the new leaf hash of the new low_nullifier_preimage
-            auto new_leaf =
-                crypto::pedersen_hash::hash_multiple({ low_nullifier_preimage.leaf_value, new_index, nullifier });
+            // Calculate the new value of the low_nullifier_leaf
+            NullifierLeaf updated_low_nullifier = NullifierLeaf{ .value = low_nullifier_preimage.leaf_value,
+                                                                 .nextIndex = new_index,
+                                                                 .nextValue = nullifier };
 
-            // increase new index for next insertion
+            // increment insertion index
             new_index = new_index + 1;
 
-            // Use the existing sibling path to calculate the new root
-            current_nullifier_tree_root =
-                iterate_through_tree_via_sibling_path(new_leaf, witness.leaf_index, witness.sibling_path);
+            // Calculate the new root after insertion of the new low nullifier root
+            current_nullifier_tree_root = iterate_through_tree_via_sibling_path(
+                updated_low_nullifier.hash(), witness.leaf_index, witness.sibling_path);
 
-            // Create the new nullifier leaf
+            // Create the nullifier leaf of the new nullifier to be inserted
             NullifierLeaf new_nullifier_leaf = {
                 .value = nullifier,
                 .nextIndex = low_nullifier_preimage.next_index,
@@ -354,7 +357,7 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(BaseRo
         }
     }
 
-    // Check the subtree insertions for the new nullifiers
+    // Create new nullifier subtree to insert into the whole nullifier tree
     auto nullifier_sibling_path = baseRollupInputs.new_nullifiers_subtree_sibling_path;
     auto nullifier_subtree_root = create_nullifier_subtree(nullifier_leaves);
 
