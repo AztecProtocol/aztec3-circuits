@@ -112,7 +112,9 @@ void update_end_values(PrivateInputs<NT> const& private_inputs, PublicInputs<NT>
         auto contract_address_nullifier = NT::fr::serialize_from_buffer(NT::blake3s(blake_input).data());
 
         // push the contract address nullifier to nullifier vector
-        array_push(public_inputs.end.new_nullifiers, contract_address_nullifier);
+        if (is_contract_deployment) {
+            array_push(public_inputs.end.new_nullifiers, contract_address_nullifier);
+        }
 
         // Add new contract data if its a contract deployment function
         auto native_new_contract_data = NewContractData<NT>{ contract_address,
