@@ -291,6 +291,7 @@ TEST_F(root_rollup_tests, calldata_hash_empty_blocks)
     }
 
     ASSERT_EQ(hash, calldata_hash);
+
     run_cbind(inputs, outputs, true);
 }
 
