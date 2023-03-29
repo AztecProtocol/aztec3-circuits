@@ -20,10 +20,9 @@
 
 namespace aztec3::circuits::rollup::native_base_rollup {
 
-const uint8_t COMMITMENTS_SUBTREE_DEPTH = 3;
-const uint8_t CONTRACTS_SUBTREE_DEPTH = 1;
-const NT::fr EMPTY_COMMITMENTS_SUBTREE_ROOT = MerkleTree(COMMITMENTS_SUBTREE_DEPTH).root();
-const NT::fr EMPTY_CONTRACTS_SUBTREE_ROOT = MerkleTree(CONTRACTS_SUBTREE_DEPTH).root();
+const NT::fr EMPTY_COMMITMENTS_SUBTREE_ROOT = MerkleTree(PRIVATE_DATA_SUBTREE_DEPTH).root();
+const NT::fr EMPTY_CONTRACTS_SUBTREE_ROOT = MerkleTree(CONTRACT_COMMITMENTS_SUBTREE_DEPTH).root();
+const NT::fr EMPTY_NULLIFIER_SUBTREE_ROOT = MerkleTree(NULLIFIER_SUBTREE_DEPTH).root();
 
 // TODO: can we aggregate proofs if we do not have a working circuit impl
 
@@ -134,7 +133,7 @@ AppendOnlySnapshot insert_subtree_to_snapshot_tree(std::array<NT::fr, N> sibling
 
 NT::fr calculate_contract_subtree(std::vector<NT::fr> contract_leaves)
 {
-    MerkleTree contracts_tree = MerkleTree(CONTRACTS_SUBTREE_DEPTH);
+    MerkleTree contracts_tree = MerkleTree(CONTRACT_COMMITMENTS_SUBTREE_DEPTH);
 
     // Compute the merkle root of a contract subtree
     // TODO: consolidate what the tree depth should be
@@ -150,7 +149,7 @@ NT::fr calculate_commitments_subtree(BaseRollupInputs baseRollupInputs)
     // Leaves that will be added to the new trees
     std::array<NT::fr, KERNEL_NEW_COMMITMENTS_LENGTH * 2> commitment_leaves;
 
-    MerkleTree commitments_tree = MerkleTree(COMMITMENTS_SUBTREE_DEPTH);
+    MerkleTree commitments_tree = MerkleTree(PRIVATE_DATA_SUBTREE_DEPTH);
 
     for (size_t i = 0; i < 2; i++) {
 
@@ -264,7 +263,7 @@ void perform_historical_contract_data_tree_membership_checks(BaseRollupInputs ba
 NT::fr create_nullifier_subtree(std::array<NullifierLeaf, KERNEL_NEW_NULLIFIERS_LENGTH * 2> nullifier_leaves)
 {
     // Build a merkle tree of the nullifiers
-    MerkleTree nullifier_subtree = MerkleTree(COMMITMENTS_SUBTREE_DEPTH);
+    MerkleTree nullifier_subtree = MerkleTree(NULLIFIER_SUBTREE_DEPTH);
     for (size_t i = 0; i < nullifier_leaves.size(); i++) {
         nullifier_subtree.update_element(i, nullifier_leaves[i].hash());
     }
@@ -393,21 +392,29 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
 
     // check for commitments/private_data
     // next_available_leaf_index is at the leaf level. We need at the subtree level (say height 3). So divide by 8.
-    // (if leaf is at index x, its parent is at index floor(x/2))
-    auto leafIndexAtSubtreeDepth = baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index /
-                                   (NT::uint32(1) << COMMITMENTS_SUBTREE_DEPTH);
+    // (if leaf is at index x, its parent is at index floor >> depth)
+    auto leafIndexAtSubtreeDepth =
+        baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index >> PRIVATE_DATA_SUBTREE_DEPTH;
     check_membership(EMPTY_COMMITMENTS_SUBTREE_ROOT,
                      leafIndexAtSubtreeDepth,
                      baseRollupInputs.new_commitments_subtree_sibling_path,
                      baseRollupInputs.start_private_data_tree_snapshot.root);
 
     // check for contracts
-    leafIndexAtSubtreeDepth = baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index /
-                              (NT::uint32(1) << CONTRACTS_SUBTREE_DEPTH);
+    auto leafIndexContractsSubtreeDepth =
+        baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index >> CONTRACT_COMMITMENTS_SUBTREE_DEPTH;
     check_membership(EMPTY_CONTRACTS_SUBTREE_ROOT,
-                     leafIndexAtSubtreeDepth,
+                     leafIndexContractsSubtreeDepth,
                      baseRollupInputs.new_contracts_subtree_sibling_path,
                      baseRollupInputs.start_contract_tree_snapshot.root);
+
+    // check for nullifiers
+    auto leafIndexNullifierSubtreeDepth =
+        baseRollupInputs.start_nullifier_tree_snapshot.next_available_leaf_index >> NULLIFIER_SUBTREE_DEPTH;
+    check_membership(EMPTY_NULLIFIER_SUBTREE_ROOT,
+                     leafIndexNullifierSubtreeDepth,
+                     baseRollupInputs.new_nullifiers_subtree_sibling_path,
+                     baseRollupInputs.start_nullifier_tree_snapshot.root);
 
     // Check contracts and commitments subtrees
     NT::fr contracts_tree_subroot = calculate_contract_subtree(contract_leaves);
