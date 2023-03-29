@@ -425,13 +425,13 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
         insert_subtree_to_snapshot_tree(baseRollupInputs.new_commitments_subtree_sibling_path,
                                         baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index,
                                         commitments_tree_subroot,
-                                        COMMITMENTS_SUBTREE_DEPTH);
+                                        PRIVATE_DATA_SUBTREE_DEPTH);
 
     auto end_contract_tree_snapshot =
         insert_subtree_to_snapshot_tree(baseRollupInputs.new_contracts_subtree_sibling_path,
                                         baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index,
                                         contracts_tree_subroot,
-                                        CONTRACTS_SUBTREE_DEPTH);
+                                        CONTRACT_COMMITMENTS_SUBTREE_DEPTH);
 
     // Check nullifiers and check new subtree insertion
     AppendOnlySnapshot end_nullifier_tree_snapshot =
