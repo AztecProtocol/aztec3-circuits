@@ -21,6 +21,8 @@ using aztec3::circuits::rollup::native_root_rollup::root_rollup_circuit;
 using aztec3::circuits::rollup::native_root_rollup::RootRollupInputs;
 using aztec3::circuits::rollup::native_root_rollup::RootRollupPublicInputs;
 
+using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel_with_vk_proof;
+
 using plonk::TurboComposer;
 using namespace plonk::stdlib::types;
 } // namespace

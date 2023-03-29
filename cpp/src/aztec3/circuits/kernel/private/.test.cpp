@@ -814,6 +814,7 @@ TEST(private_kernel_tests, test_dummy_previous_kernel_cbind)
     write(expected_vec, previous_kernel);
 
     // Just compare the first 10 bytes of the serialized public outputs
+    // TODO this is not a good test
     if (cbind_buf_size > 10) {
         // for (size_t 0; i < public_inputs_size; i++) {
         for (size_t i = 0; i < 10; i++) {
