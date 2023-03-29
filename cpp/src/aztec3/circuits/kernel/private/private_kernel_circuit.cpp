@@ -119,8 +119,8 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
                            private_call_vk_hash },
                          CONSTRUCTOR);
 
-        contract_deployment_data.constructor_vk_hash.assert_equal(
-            private_call_vk_hash, "constructor_vk_hash does not match private call vk hash");
+        is_contract_deployment.must_imply(contract_deployment_data.constructor_vk_hash == private_call_vk_hash,
+                                          "constructor_vk_hash does not match private call vk hash");
 
         // compute the contract address
         auto contract_address = CT::compress({ deployer_address.to_field(),
@@ -128,8 +128,6 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
                                                contract_deployment_data.function_tree_root,
                                                constructor_hash },
                                              CONTRACT_ADDRESS);
-
-        info("circuit contract add = ", contract_address.get_value());
 
         // compute contract address nullifier
         auto blake_input = CT::byte_array(contract_address);
@@ -139,13 +137,11 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
         array_push<Composer>(public_inputs.end.new_nullifiers, contract_address_nullifier);
 
         // Add new contract data if its a contract deployment function
-        auto native_new_contract_data =
-            NewContractData<NT>{ .contract_address = NT::address(contract_address.get_value()),
-                                 .portal_contract_address = NT::address(portal_contract_address.get_value()),
-                                 .function_tree_root = contract_deployment_data.function_tree_root.get_value() };
-
-        auto context = new_commitments[0].get_context();
-        NewContractData<CT> new_contract_data = native_new_contract_data.to_circuit_type(*context);
+        NewContractData<CT> new_contract_data = NewContractData<CT>{
+            .contract_address = contract_address,
+            .portal_contract_address = portal_contract_address,
+            .function_tree_root = contract_deployment_data.function_tree_root,
+        };
 
         array_push<Composer, NewContractData<CT>, KERNEL_NEW_CONTRACTS_LENGTH>(public_inputs.end.new_contracts,
                                                                                new_contract_data);

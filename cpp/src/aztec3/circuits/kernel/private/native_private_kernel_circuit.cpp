@@ -96,7 +96,9 @@ void update_end_values(PrivateInputs<NT> const& private_inputs, PublicInputs<NT>
                            private_call_vk_hash },
                          CONSTRUCTOR);
 
-        ASSERT(contract_deployment_data.constructor_vk_hash == private_call_vk_hash);
+        if (is_contract_deployment) {
+            ASSERT(contract_deployment_data.constructor_vk_hash == private_call_vk_hash);
+        }
 
         // compute the contract address
         auto contract_address = NT::compress({ deployer_address.to_field(),
