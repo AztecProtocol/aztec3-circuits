@@ -260,15 +260,17 @@ void perform_historical_contract_data_tree_membership_checks(BaseRollupInputs ba
     }
 }
 
+// TODO: right now we are using the hash of NULLIFIER_LEAF{0,0,0} as the empty leaf, however this is an attack vector
+// WE MUST after this hackathon change this to be 0, not the hash of some 0 values
 NT::fr create_nullifier_subtree(std::array<NullifierLeaf, KERNEL_NEW_NULLIFIERS_LENGTH * 2> nullifier_leaves)
 {
     // Build a merkle tree of the nullifiers
     MerkleTree nullifier_subtree = MerkleTree(NULLIFIER_SUBTREE_DEPTH);
     for (size_t i = 0; i < nullifier_leaves.size(); i++) {
         // check if the nullifier is zero, if so dont insert
-        if (nullifier_leaves[i].value != fr(0)) {
-            nullifier_subtree.update_element(i, nullifier_leaves[i].hash());
-        }
+        // if (nullifier_leaves[i].value != fr(0)) { // TODO: reinsert after 0 is accounted for
+        nullifier_subtree.update_element(i, nullifier_leaves[i].hash());
+        // }
     }
 
     return nullifier_subtree.root();
@@ -381,7 +383,7 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(BaseRo
 
     // Calculate the new root
     // We are inserting a subtree rather than a full tree here
-    auto subtree_index = new_index >> 3;
+    auto subtree_index = new_index >> (NULLIFIER_SUBTREE_DEPTH + 1);
     auto new_root =
         iterate_through_tree_via_sibling_path(nullifier_subtree_root, subtree_index, nullifier_sibling_path);
 
@@ -413,15 +415,15 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
     // next_available_leaf_index is at the leaf level. We need at the subtree level (say height 3). So divide by 8.
     // (if leaf is at index x, its parent is at index floor >> depth)
     auto leafIndexAtSubtreeDepth =
-        baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index >> PRIVATE_DATA_SUBTREE_DEPTH;
+        baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index >> (PRIVATE_DATA_SUBTREE_DEPTH + 1);
     check_membership(EMPTY_COMMITMENTS_SUBTREE_ROOT,
                      leafIndexAtSubtreeDepth,
                      baseRollupInputs.new_commitments_subtree_sibling_path,
                      baseRollupInputs.start_private_data_tree_snapshot.root);
 
     // check for contracts
-    auto leafIndexContractsSubtreeDepth =
-        baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index >> CONTRACT_COMMITMENTS_SUBTREE_DEPTH;
+    auto leafIndexContractsSubtreeDepth = baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index >>
+                                          (CONTRACT_COMMITMENTS_SUBTREE_DEPTH + 1);
     check_membership(EMPTY_CONTRACTS_SUBTREE_ROOT,
                      leafIndexContractsSubtreeDepth,
                      baseRollupInputs.new_contracts_subtree_sibling_path,
@@ -429,7 +431,7 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
 
     // check for nullifiers
     auto leafIndexNullifierSubtreeDepth =
-        baseRollupInputs.start_nullifier_tree_snapshot.next_available_leaf_index >> NULLIFIER_SUBTREE_DEPTH;
+        baseRollupInputs.start_nullifier_tree_snapshot.next_available_leaf_index >> (NULLIFIER_SUBTREE_DEPTH + 1);
     check_membership(EMPTY_NULLIFIER_SUBTREE_ROOT,
                      leafIndexNullifierSubtreeDepth,
                      baseRollupInputs.new_nullifiers_subtree_sibling_path,

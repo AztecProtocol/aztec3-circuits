@@ -265,6 +265,16 @@ template <size_t N> NT::fr calc_root(NT::fr leaf, NT::uint32 leafIndex, std::arr
         } else {
             leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
         }
+        leafIndex >>= 1;
+    }
+    return leaf;
+}
+
+fr calc_root_sibling_path(std::vector<std::pair<fr, fr>> siblingPath)
+{
+    fr leaf = 0;
+    for (size_t i = 0; i < siblingPath.size(); i++) {
+        leaf = crypto::pedersen_hash::hash_multiple({ siblingPath[i].first, siblingPath[i].second });
     }
     return leaf;
 }
@@ -303,12 +313,18 @@ TEST_F(base_rollup_tests, new_nullifier_tree)
     // Generate a new empty subtree that will be added to the tree
     stdlib::types::merkle_tree::MemoryTree new_nullifier_subtree =
         stdlib::types::merkle_tree::MemoryTree(NULLIFIER_SUBTREE_DEPTH);
+    // TODO: remove this when making empty hash 0
+    for (size_t i = 0; i < 8; ++i) {
+        new_nullifier_subtree.update_element(
+            i, native_base_rollup::NullifierLeaf{ .value = 0, .nextIndex = 0, .nextValue = 0 }.hash());
+    }
     // sub tree roots are same in contract and out
     fr subtree_root = new_nullifier_subtree.root();
 
     // Get the sibling path, we should be able to use the same path to get to the end root
     std::vector<std::pair<fr, fr>> sibling_path = nullifier_tree.get_hash_path(start_next_index);
     std::vector<fr> frontier_path = nullifier_tree.get_frontier_path(start_next_index);
+
     // Chop the first 3 levels from the frontier_path
     frontier_path.erase(frontier_path.begin(), frontier_path.begin() + 3);
     std::array<fr, NULLIFIER_SUBTREE_INCLUSION_CHECK_DEPTH> frontier_path_array;
@@ -316,7 +332,7 @@ TEST_F(base_rollup_tests, new_nullifier_tree)
 
     // Use subtree root and sibling path to calculate the expected end state
     auto end_next_index = start_next_index + uint32_t(KERNEL_NEW_NULLIFIERS_LENGTH * 2);
-    fr root = calc_root(subtree_root, end_next_index >> 3, frontier_path_array);
+    fr root = calc_root(subtree_root, end_next_index >> (NULLIFIER_SUBTREE_DEPTH + 1), frontier_path_array);
 
     // Expected end state
     AppendOnlyTreeSnapshot<NT> nullifier_tree_end_snapshot = {
@@ -347,6 +363,9 @@ TEST_F(base_rollup_tests, new_nullifier_tree)
     ASSERT_EQ(outputs.end_nullifier_tree_snapshot.root, nullifier_tree_end_snapshot.root);
     ASSERT_EQ(outputs.end_nullifier_tree_snapshot.next_available_leaf_index,
               nullifier_tree_end_snapshot.next_available_leaf_index);
+
+    // As adding empty subtree, start root == end root
+    ASSERT_EQ(outputs.end_nullifier_tree_snapshot.root, outputs.start_nullifier_tree_snapshot.root);
 }
 
 TEST_F(base_rollup_tests, new_commitments_tree) {}
