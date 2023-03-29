@@ -256,7 +256,98 @@ TEST_F(base_rollup_tests, contract_leaf_inserted)
     run_cbind(inputs, outputs);
 }
 
-TEST_F(base_rollup_tests, new_nullifier_tree) {}
+// TODO: move into helper file
+template <size_t N> NT::fr calc_root(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath)
+{
+    for (size_t i = 0; i < siblingPath.size(); i++) {
+        if (leafIndex & (1 << i)) {
+            leaf = crypto::pedersen_hash::hash_multiple({ siblingPath[i], leaf });
+        } else {
+            leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
+        }
+    }
+    return leaf;
+}
+
+TEST_F(base_rollup_tests, new_nullifier_tree)
+{
+    /**
+     * DESCRIPTION
+     */
+    // This test checks for insertions of all 0 values
+    // In this special case we will not need to provide sibling paths to check insertion of the nullifier values
+    // This is because 0 values are not actually inserted into the tree, rather the inserted subtree is left
+    // empty to begin with
+
+    /**
+     * SETUP
+     */
+    BaseRollupInputs inputs = getEmptyBaseRollupInputs();
+
+    // Create a nullifier tree with 8 nullifiers, this padding is required so that the default 0 value in an indexed
+    // merkle tree does not affect our tests Nullifier tree at the start
+    native_base_rollup::NullifierTree nullifier_tree = native_base_rollup::NullifierTree(NULLIFIER_TREE_HEIGHT);
+    // Insert 7 nullifiers so that the tree is now balanced
+    for (size_t i = 1; i < 8; ++i) {
+        nullifier_tree.update_element(i);
+    }
+
+    // Get nullifier tree start state
+    fr start_subtree_root = nullifier_tree.root();
+    uint32_t start_next_index = 8;
+    AppendOnlyTreeSnapshot<NT> nullifier_tree_start_snapshot = {
+        .root = start_subtree_root,
+        .next_available_leaf_index = start_next_index,
+    };
+
+    // Generate a new empty subtree that will be added to the tree
+    stdlib::types::merkle_tree::MemoryTree new_nullifier_subtree =
+        stdlib::types::merkle_tree::MemoryTree(NULLIFIER_SUBTREE_DEPTH);
+    // sub tree roots are same in contract and out
+    fr subtree_root = new_nullifier_subtree.root();
+
+    // Get the sibling path, we should be able to use the same path to get to the end root
+    std::vector<std::pair<fr, fr>> sibling_path = nullifier_tree.get_hash_path(start_next_index);
+    std::vector<fr> frontier_path = nullifier_tree.get_frontier_path(start_next_index);
+    // Chop the first 3 levels from the frontier_path
+    frontier_path.erase(frontier_path.begin(), frontier_path.begin() + 3);
+    std::array<fr, NULLIFIER_SUBTREE_INCLUSION_CHECK_DEPTH> frontier_path_array;
+    std::copy(frontier_path.begin(), frontier_path.end(), frontier_path_array.begin());
+
+    // Use subtree root and sibling path to calculate the expected end state
+    auto end_next_index = start_next_index + uint32_t(KERNEL_NEW_NULLIFIERS_LENGTH * 2);
+    fr root = calc_root(subtree_root, end_next_index >> 3, frontier_path_array);
+
+    // Expected end state
+    AppendOnlyTreeSnapshot<NT> nullifier_tree_end_snapshot = {
+        .root = root,
+        .next_available_leaf_index = end_next_index,
+    };
+
+    // Update our start state
+    inputs.start_nullifier_tree_snapshot = nullifier_tree_start_snapshot;
+    inputs.new_nullifiers_subtree_sibling_path = frontier_path_array;
+
+    /**
+     * RUN
+     */
+
+    // Run the circuit
+    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
+
+    /**
+     * ASSERT
+     */
+    // Start state
+    ASSERT_EQ(outputs.start_nullifier_tree_snapshot.root, nullifier_tree_start_snapshot.root);
+    ASSERT_EQ(outputs.start_nullifier_tree_snapshot.next_available_leaf_index,
+              nullifier_tree_start_snapshot.next_available_leaf_index);
+
+    // End state
+    ASSERT_EQ(outputs.end_nullifier_tree_snapshot.root, nullifier_tree_end_snapshot.root);
+    ASSERT_EQ(outputs.end_nullifier_tree_snapshot.next_available_leaf_index,
+              nullifier_tree_end_snapshot.next_available_leaf_index);
+}
 
 TEST_F(base_rollup_tests, new_commitments_tree) {}
 
