@@ -500,7 +500,6 @@ TEST(private_kernel_tests, test_basic_contract_deployment)
 
     std::shared_ptr<NT::VK> constructor_vk = constructor_composer.compute_verification_key();
     auto constructor_vk_hash = stdlib::recursion::verification_key<CT::bn254>::compress_native(constructor_vk);
-    info("testing_private_call_ck_hash = ", constructor_vk_hash);
 
     ContractDeploymentData<NT> contract_deployment_data{
         .constructor_vk_hash = constructor_vk_hash, // TODO actually get this?
@@ -519,11 +518,8 @@ TEST(private_kernel_tests, test_basic_contract_deployment)
     auto arg1 = NT::fr(1);
     auto arg2 = NT::fr(999);
 
-    info("constructor");
-    info("-----------------------------");
     OptionalPrivateCircuitPublicInputs<NT> opt_constructor_public_inputs =
         constructor(constructor_ctx, arg0, arg1, arg2);
-    info("-----------------------------");
 
     PrivateCircuitPublicInputs<NT> constructor_public_inputs = opt_constructor_public_inputs.remove_optionality();
 
@@ -536,11 +532,11 @@ TEST(private_kernel_tests, test_basic_contract_deployment)
                        NT::compress<ARGS_LENGTH>(constructor_public_inputs.args, CONSTRUCTOR_ARGS),
                        constructor_vk_hash },
                      CONSTRUCTOR);
-    auto expected_constructor_address = NT::compress({ msg_sender,
-                                                       contract_deployment_data.contract_address_salt,
-                                                       contract_deployment_data.function_tree_root,
-                                                       expected_constructor_hash },
-                                                     CONTRACT_ADDRESS);
+    NT::fr expected_contract_address = NT::compress({ msg_sender,
+                                                      contract_deployment_data.contract_address_salt,
+                                                      contract_deployment_data.function_tree_root,
+                                                      expected_constructor_hash },
+                                                    CONTRACT_ADDRESS);
 
     //***************************************************************************
     // We can create a TxRequest from some of the above data. Users must sign a TxRequest in order to give permission
@@ -600,10 +596,7 @@ TEST(private_kernel_tests, test_basic_contract_deployment)
     mock_kernel_public_inputs.constants.tx_context = constructor_tx_request.tx_context;
     mock_kernel_public_inputs.is_private = true;
 
-    info("mock_kernel_circuit");
-    info("-----------------------------");
     mock_kernel_circuit(mock_kernel_composer, mock_kernel_public_inputs);
-    info("-----------------------------");
 
     Prover mock_kernel_prover = mock_kernel_composer.create_prover();
     NT::Proof mock_kernel_proof = mock_kernel_prover.construct_proof();
@@ -644,15 +637,11 @@ TEST(private_kernel_tests, test_basic_contract_deployment)
             },
     };
 
-    info("\nprivate_kernel_circuit");
-    info("-----------------------------");
     auto private_kernel_circuit_public_inputs = private_kernel_circuit(private_kernel_composer, private_inputs);
-    info("-----------------------------");
 
     // Check contract address was correctly computed by the circuit
-    info("testing_constructor_hash = ", expected_constructor_hash);
-    info("contract_address = ", expected_constructor_address);
-    // EXPECT_EQ(private_kernel_circuit_public_inputs.end.new_contracts[0].contract_address == contract_address_real);
+    EXPECT_EQ(private_kernel_circuit_public_inputs.end.new_contracts[0].contract_address.to_field(),
+              expected_contract_address);
 
     info("computed witness: ", private_kernel_composer.computed_witness);
     // info("witness: ", private_kernel_composer.witness);
