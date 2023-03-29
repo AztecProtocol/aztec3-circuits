@@ -130,7 +130,8 @@ class base_rollup_tests : public ::testing::Test {
         if (compare_pubins) {
             BaseRollupPublicInputs public_inputs;
             info("about to read...");
-            read(public_inputs_buf, public_inputs);
+            uint8_t const* public_inputs_buf_tmp = public_inputs_buf;
+            read(public_inputs_buf_tmp, public_inputs);
             info("about to assert...");
             ASSERT_EQ(public_inputs.calldata_hash.size(), expected_public_inputs.calldata_hash.size());
             for (size_t i = 0; i < public_inputs.calldata_hash.size(); i++) {
