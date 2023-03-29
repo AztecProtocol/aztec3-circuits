@@ -94,7 +94,6 @@ using aztec3::circuits::rollup::native_base_rollup::NT;
 using aztec3::circuits::abis::FunctionData;
 using aztec3::circuits::abis::OptionallyRevealedData;
 using aztec3::circuits::abis::private_kernel::NewContractData;
-
 } // namespace
 
 namespace aztec3::circuits::rollup::base::native_base_rollup_circuit {
