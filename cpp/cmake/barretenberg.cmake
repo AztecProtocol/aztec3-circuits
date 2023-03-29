@@ -31,7 +31,7 @@ ExternalProject_Add(Barretenberg
     BUILD_ALWAYS TRUE
     UPDATE_COMMAND ""
     INSTALL_COMMAND ""
-    CONFIGURE_COMMAND ${CMAKE_COMMAND} --preset ${CMAKE_BBERG_PRESET} -DSERIALIZE_CANARY=${SERIALIZE_CANARY}
+    CONFIGURE_COMMAND ${CMAKE_COMMAND} --preset ${CMAKE_BBERG_PRESET} -DSERIALIZE_CANARY=${SERIALIZE_CANARY} -DENABLE_ASAN=${ENABLE_ASAN}
     BUILD_COMMAND ${CMAKE_COMMAND} --build --preset ${CMAKE_BBERG_PRESET} --target barretenberg --target env
     # byproducts needed by ninja generator (not needed by make)
     BUILD_BYPRODUCTS ${BBERG_BUILD_DIR}/lib/libbarretenberg.a ${BBERG_BUILD_DIR}/lib/libenv.a)
