@@ -88,22 +88,27 @@ template <size_t SIZE> NT::boolean is_array_empty(std::array<NT::fr, SIZE> const
 template <size_t size_1, size_t size_2>
 void push_array_to_array(std::array<NT::fr, size_1> const& source, std::array<NT::fr, size_2>& target)
 {
+    info("source: ", source);
+    info("target: ", target);
     // TODO: inefficient to get length this way within this function. Probably best to inline the checks that we need
     // into the below loops directly.
     NT::fr target_length = array_length(target);
-    NT::fr target_capacity = NT::fr(target.size());
+    NT::fr target_capacity = NT::fr(target.max_size());
     const NT::fr overflow_capacity = target_capacity + 1;
+
+    info("target_capacity: ", target_capacity);
+    info("target_length: ", target_length);
 
     // ASSERT(uint256_t(target_capacity.get_value()) + 1 >
     //        uint256_t(target_length.get_value()) + uint256_t(source_length.get_value()));
 
     NT::fr j_ct = 0; // circuit-type index for the inner loop
     NT::fr next_target_index = target_length;
-    for (size_t i = 0; i < source.size(); ++i) {
+    for (size_t i = 0; i < source.max_size(); ++i) {
         auto& s = source[i];
 
         // Triangular loop:
-        for (size_t j = i; j < target.size() - source.size() + i + 1; ++j) {
+        for (size_t j = i; j < target.max_size() - source.max_size() + i + 1; ++j) {
             auto& t = target[j];
 
             NT::boolean at_next_index = j_ct == next_target_index;

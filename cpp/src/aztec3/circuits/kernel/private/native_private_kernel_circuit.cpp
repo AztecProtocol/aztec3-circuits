@@ -142,12 +142,15 @@ void update_end_values(PrivateInputs<NT> const& private_inputs, PublicInputs<NT>
                                                           GeneratorIndex::OUTER_NULLIFIER);
         }
 
+        info("a");
         push_array_to_array(siloed_new_commitments, public_inputs.end.new_commitments);
+        info("b");
         push_array_to_array(siloed_new_nullifiers, public_inputs.end.new_nullifiers);
     }
 
     { // call stacks
         auto& this_private_call_stack = private_call_public_inputs.private_call_stack;
+        info("c");
         push_array_to_array(this_private_call_stack, public_inputs.end.private_call_stack);
     }
 
