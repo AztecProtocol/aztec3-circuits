@@ -26,6 +26,7 @@
 #include <aztec3/circuits/abis/private_kernel/globals.hpp>
 // #include <aztec3/circuits/abis/private_kernel/private_inputs.hpp>
 // #include <aztec3/circuits/abis/private_kernel/private_inputs.hpp>
+#include "aztec3/circuits/kernel/private/utils.hpp"
 
 #include <aztec3/circuits/apps/function_execution_context.hpp>
 
@@ -801,6 +802,25 @@ TEST(private_kernel_tests, test_create_proof_cbinds)
     free((void*)vk_buf);
     free((void*)proof_data);
     free((void*)public_inputs);
+}
+
+TEST(private_kernel_tests, test_dummy_previous_kernel_cbind)
+{
+    uint8_t const* cbind_previous_kernel_buf;
+    size_t cbind_buf_size = private_kernel__dummy_previous_kernel(&cbind_previous_kernel_buf);
+
+    PreviousKernelData<NT> previous_kernel = utils::dummy_previous_kernel_with_vk_proof();
+    std::vector<uint8_t> expected_vec;
+    write(expected_vec, previous_kernel);
+
+    // Just compare the first 10 bytes of the serialized public outputs
+    if (cbind_buf_size > 10) {
+        // for (size_t 0; i < public_inputs_size; i++) {
+        for (size_t i = 0; i < 10; i++) {
+            info("testing byte ", i);
+            ASSERT_EQ(cbind_previous_kernel_buf[i], expected_vec[i]);
+        }
+    }
 }
 
 } // namespace aztec3::circuits::kernel::private_kernel

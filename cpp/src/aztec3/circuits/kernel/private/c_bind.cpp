@@ -10,6 +10,7 @@
 #include "aztec3/circuits/abis/private_kernel/private_call_data.hpp"
 #include <aztec3/circuits/abis/private_kernel/private_inputs.hpp>
 #include <aztec3/circuits/abis/private_kernel/public_inputs.hpp>
+#include "aztec3/circuits/kernel/private/utils.hpp"
 #include <aztec3/circuits/mock/mock_kernel_circuit.hpp>
 
 #include "barretenberg/srs/reference_string/env_reference_string.hpp"
@@ -69,6 +70,21 @@ WASM_EXPORT size_t private_kernel__init_verification_key(uint8_t const* pk_buf, 
     *vk_buf = raw_buf;
 
     return vk_vec.size();
+}
+
+WASM_EXPORT size_t private_kernel__dummy_previous_kernel(uint8_t const** previous_kernel_buf)
+{
+    PreviousKernelData<NT> previous_kernel = dummy_previous_kernel_with_vk_proof();
+
+    std::vector<uint8_t> previous_kernel_vec;
+    write(previous_kernel_vec, previous_kernel);
+
+    auto raw_buf = (uint8_t*)malloc(previous_kernel_vec.size());
+    memcpy(raw_buf, (void*)previous_kernel_vec.data(), previous_kernel_vec.size());
+
+    *previous_kernel_buf = raw_buf;
+
+    return previous_kernel_vec.size();
 }
 
 // TODO comment about how public_inputs is a confusing name
