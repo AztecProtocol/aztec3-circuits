@@ -265,7 +265,6 @@ template <size_t N> NT::fr calc_root(NT::fr leaf, NT::uint32 leafIndex, std::arr
         } else {
             leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
         }
-        leafIndex >>= 1;
     }
     return leaf;
 }
