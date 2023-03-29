@@ -30,7 +30,7 @@ using aztec3::circuits::abis::private_kernel::PrivateInputs;
 using aztec3::circuits::abis::private_kernel::PublicInputs;
 using aztec3::circuits::kernel::private_kernel::native_private_kernel_circuit;
 using aztec3::circuits::kernel::private_kernel::private_kernel_circuit;
-using aztec3::circuits::kernel::private_kernel::utils::default_previous_kernel;
+using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel_with_vk_proof;
 using aztec3::circuits::mock::mock_kernel_circuit;
 
 using plonk::TurboComposer;
@@ -42,6 +42,7 @@ using namespace plonk::stdlib::types;
 // WASM Cbinds
 extern "C" {
 
+// TODO might be able to get rid of proving key buffer
 WASM_EXPORT size_t private_kernel__init_proving_key(uint8_t const** pk_buf)
 {
     std::vector<uint8_t> pk_vec(42, 0);
@@ -55,12 +56,13 @@ WASM_EXPORT size_t private_kernel__init_proving_key(uint8_t const** pk_buf)
 
 WASM_EXPORT size_t private_kernel__init_verification_key(uint8_t const* pk_buf, uint8_t const** vk_buf)
 {
-    // TODO actual verification key
+    (void)pk_buf;
+
+    // TODO actual verification key?
     // NT:VKData vk_data = { 0 };
 
     std::vector<uint8_t> vk_vec(42, 0);
     // write(vk_vec, vk_data);
-    info(pk_buf);
 
     auto raw_buf = (uint8_t*)malloc(vk_vec.size());
     memcpy(raw_buf, (void*)vk_vec.data(), vk_vec.size());
@@ -85,7 +87,7 @@ WASM_EXPORT size_t private_kernel__sim(uint8_t const* signed_tx_request_buf,
 
     PreviousKernelData<NT> previous_kernel;
     if (first_iteration) {
-        previous_kernel = default_previous_kernel();
+        previous_kernel = dummy_previous_kernel_with_vk_proof();
 
         previous_kernel.public_inputs.end.private_call_stack[0] = private_call_data.call_stack_item.hash();
         previous_kernel.public_inputs.constants.old_tree_roots.private_data_tree_root =
@@ -124,8 +126,7 @@ WASM_EXPORT size_t private_kernel__prove(uint8_t const* signed_tx_request_buf,
                                          bool first_iteration,
                                          uint8_t const** proof_data_buf)
 {
-    // TODO accept proving key and use that to initialize composers
-    // this info is just to prevent error for unused pk_buf
+    // TODO might be able to get rid of proving key buffer
     // TODO do we want to accept it or just get it from our factory?
     (void)pk_buf; // unused
     auto crs_factory = std::make_shared<EnvReferenceStringFactory>();
@@ -138,7 +139,7 @@ WASM_EXPORT size_t private_kernel__prove(uint8_t const* signed_tx_request_buf,
 
     PreviousKernelData<NT> previous_kernel;
     if (first_iteration) {
-        previous_kernel = default_previous_kernel();
+        previous_kernel = dummy_previous_kernel_with_vk_proof();
 
         previous_kernel.public_inputs.end.private_call_stack[0] = private_call_data.call_stack_item.hash();
         previous_kernel.public_inputs.constants.old_tree_roots.private_data_tree_root =

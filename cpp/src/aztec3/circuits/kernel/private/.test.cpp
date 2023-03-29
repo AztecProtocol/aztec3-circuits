@@ -750,10 +750,12 @@ TEST(private_kernel_tests, test_create_proof_cbinds)
     std::array<NT::fr, KERNEL_PRIVATE_CALL_STACK_LENGTH> initial_kernel_private_call_stack{};
     initial_kernel_private_call_stack[0] = constructor_call_stack_item.hash();
 
+    // TODO might be able to get rid of proving key buffer
     uint8_t const* pk_buf;
     size_t pk_size = private_kernel__init_proving_key(&pk_buf);
     info("Proving key size: ", pk_size);
 
+    // TODO might be able to get rid of verification key buffer
     uint8_t const* vk_buf;
     size_t vk_size = private_kernel__init_verification_key(pk_buf, &vk_buf);
     info("Verification key size: ", vk_size);
