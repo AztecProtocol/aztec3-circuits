@@ -27,10 +27,6 @@ const NT::fr EMPTY_CONTRACTS_SUBTREE_ROOT = MerkleTree(CONTRACTS_SUBTREE_DEPTH).
 
 // TODO: can we aggregate proofs if we do not have a working circuit impl
 
-// TODO: change the public inputs array - we wont be using this?
-
-// Access Native types through NT namespace
-
 bool verify_kernel_proof(NT::Proof kernel_proof)
 {
     std::cout << kernel_proof << std::endl; // REMOVE_ME
@@ -77,8 +73,7 @@ std::vector<NT::fr> calculate_contract_leaves(BaseRollupInputs baseRollupInputs)
         for (size_t j = 0; j < new_contacts.size(); j++) {
 
             NT::address contract_address = new_contacts[j].contract_address;
-            // TODO: UPDATE protal_contract_address is listed as a 20 byte address in the ABI
-            NT::fr portal_contract_address = new_contacts[j].portal_contract_address;
+            NT::address portal_contract_address = new_contacts[j].portal_contract_address;
             NT::fr function_tree_root = new_contacts[j].function_tree_root;
 
             // Pedersen hash of the 3 fields (contract_address, portal_contract_address, function_tree_root)
@@ -137,14 +132,24 @@ AppendOnlySnapshot insert_subtree_to_snapshot_tree(std::array<NT::fr, N> sibling
     return newTreeSnapshot;
 }
 
-std::array<NT::fr, 2> calculate_new_subtrees(BaseRollupInputs baseRollupInputs, std::vector<NT::fr> contract_leaves)
+NT::fr calculate_contract_subtree(std::vector<NT::fr> contract_leaves)
+{
+    MerkleTree contracts_tree = MerkleTree(CONTRACTS_SUBTREE_DEPTH);
+
+    // Compute the merkle root of a contract subtree
+    // TODO: consolidate what the tree depth should be
+    // Contracts subtree
+    for (size_t i = 0; i < contract_leaves.size(); i++) {
+        contracts_tree.update_element(i, contract_leaves[i]);
+    }
+    return contracts_tree.root();
+}
+
+NT::fr calculate_commitments_subtree(BaseRollupInputs baseRollupInputs)
 {
     // Leaves that will be added to the new trees
     std::array<NT::fr, KERNEL_NEW_COMMITMENTS_LENGTH * 2> commitment_leaves;
 
-    // TODO: we have at size two for now, but we will need
-
-    MerkleTree contracts_tree = MerkleTree(CONTRACTS_SUBTREE_DEPTH);
     MerkleTree commitments_tree = MerkleTree(COMMITMENTS_SUBTREE_DEPTH);
 
     for (size_t i = 0; i < 2; i++) {
@@ -160,19 +165,8 @@ std::array<NT::fr, 2> calculate_new_subtrees(BaseRollupInputs baseRollupInputs, 
         }
     }
 
-    // Compute the merkle root of a contract subtree
-    // TODO: consolidate what the tree depth should be
-    // TODO: cleanup lmao
-    // Contracts subtree
-    for (size_t i = 0; i < contract_leaves.size(); i++) {
-        contracts_tree.update_element(i, contract_leaves[i]);
-    }
-    NT::fr contracts_tree_subroot = contracts_tree.root();
-
     // Commitments subtree
-    NT::fr commitments_tree_subroot = commitments_tree.root();
-
-    return std::array<NT::fr, 2>{ contracts_tree_subroot, commitments_tree_subroot };
+    return commitments_tree.root();
 }
 
 std::array<NT::fr, 2> calculate_calldata_hash(BaseRollupInputs baseRollupInputs, std::vector<NT::fr> contract_leaves)
@@ -186,7 +180,7 @@ std::array<NT::fr, 2> calculate_calldata_hash(BaseRollupInputs baseRollupInputs,
         // Nullifiers
         auto new_nullifiers = baseRollupInputs.kernel_data[i].public_inputs.end.new_nullifiers;
         auto new_commitments = baseRollupInputs.kernel_data[i].public_inputs.end.new_commitments;
-        for (size_t j = 0; j < KERNEL_NEW_COMMITMENTS_LENGTH; j++) { // TODO: const
+        for (size_t j = 0; j < KERNEL_NEW_COMMITMENTS_LENGTH; j++) {
             calldata_hash_inputs[i * KERNEL_NEW_COMMITMENTS_LENGTH + j] = new_nullifiers[j];
             calldata_hash_inputs[(KERNEL_NEW_NULLIFIERS_LENGTH * 2) + i * KERNEL_NEW_NULLIFIERS_LENGTH + j] =
                 new_commitments[j];
@@ -294,7 +288,7 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(BaseRo
     // 7. le bosh (profit)
 
     // BOYS AND GIRLS THE P L A N ( once the first plan is complete )
-    // GENERATE OUR NEW SUBTREES
+    // GENERATE OUR NEW NULLIFIER SUBTREE
     // 1. We need to point the new nullifiers to point to the index that the previous nullifier replaced
 
     // New nullifier subtree
@@ -306,15 +300,11 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(BaseRo
     // This will increase with every insertion
     auto new_index = baseRollupInputs.start_nullifier_tree_snapshot.next_available_leaf_index;
 
-    // NOTE: we want to replicate the below, but the new nullifiers should be HASH(val, nextPtr, nextValue)
-    // Nullifiers
-    // auto new_nullifiers = baseRollupInputs.kernel_data[i].public_inputs.end.new_nullifiers;
-    // assert(new_nullifiers.size() == 4);
-    // for (size_t j = 0; j < new_nullifiers.size(); j++) {
-    // nullifier_tree.update_element(i * KERNEL_NEW_NULLIFIERS_LENGTH + j, new_nullifiers[j]);
-    // }
+    // For each kernel circuit
     for (size_t i = 0; i < 2; i++) {
+
         auto new_nullifiers = baseRollupInputs.kernel_data[i].public_inputs.end.new_nullifiers;
+        // For each of our nullifiers
         for (size_t j = 0; j < KERNEL_NEW_NULLIFIERS_LENGTH; j++) {
 
             // Witness containing index and path
@@ -381,10 +371,6 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(BaseRo
     };
 }
 
-// Important types:
-//   - BaseRollupPublicInputs - where we want to put our return values
-//
-// TODO: replace auto
 BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
 {
 
@@ -420,9 +406,9 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
                      baseRollupInputs.new_contracts_subtree_sibling_path,
                      baseRollupInputs.start_contract_tree_snapshot.root);
 
-    std::array<NT::fr, 2> new_subtrees = calculate_new_subtrees(baseRollupInputs, contract_leaves);
-    NT::fr contracts_tree_subroot = new_subtrees[0];
-    NT::fr commitments_tree_subroot = new_subtrees[1];
+    // Check contracts and commitments subtrees
+    NT::fr contracts_tree_subroot = calculate_contract_subtree(contract_leaves);
+    NT::fr commitments_tree_subroot = calculate_commitments_subtree(baseRollupInputs);
 
     // Insert subtrees to the tree:
     auto end_private_data_tree_snapshot =
@@ -437,7 +423,9 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
                                         contracts_tree_subroot,
                                         CONTRACTS_SUBTREE_DEPTH);
 
-    // TODO: Nullifiers tree insertion
+    // Check nullifiers and check new subtree insertion
+    AppendOnlySnapshot end_nullifier_tree_snapshot =
+        check_nullifier_tree_non_membership_and_insert_to_tree(baseRollupInputs);
 
     // Calculate the overall calldata hash
     std::array<NT::fr, 2> calldata_hash = calculate_calldata_hash(baseRollupInputs, contract_leaves);
@@ -445,9 +433,6 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
     // Perform membership checks that the notes provided exist within the historic trees data
     perform_historical_private_data_tree_membership_checks(baseRollupInputs);
     perform_historical_contract_data_tree_membership_checks(baseRollupInputs);
-
-    AppendOnlySnapshot end_nullifier_tree_snapshot =
-        check_nullifier_tree_non_membership_and_insert_to_tree(baseRollupInputs);
 
     AggregationObject aggregation_object = aggregate_proofs(baseRollupInputs);
 
