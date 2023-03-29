@@ -56,6 +56,17 @@ template <size_t SIZE> void array_push(std::array<NT::fr, SIZE>& arr, NT::fr con
     throw_or_abort("array_push cannot push to a full array");
 };
 
+template <typename T, size_t SIZE> void array_push(std::array<T, SIZE>& arr, T const& value)
+{
+    for (size_t i = 0; i < arr.size(); ++i) {
+        if (arr[i].is_empty()) {
+            arr[i] = value;
+            return;
+        }
+    }
+    throw_or_abort("array_push cannot push to a full array");
+};
+
 /**
  * Note: this assumes `0` always means 'not used', so be careful. If you actually want `0` to be counted, you'll need
  * something else.
