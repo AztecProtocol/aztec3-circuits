@@ -817,7 +817,6 @@ TEST(private_kernel_tests, test_dummy_previous_kernel_cbind)
     if (cbind_buf_size > 10) {
         // for (size_t 0; i < public_inputs_size; i++) {
         for (size_t i = 0; i < 10; i++) {
-            info("testing byte ", i);
             ASSERT_EQ(cbind_previous_kernel_buf[i], expected_vec[i]);
         }
     }

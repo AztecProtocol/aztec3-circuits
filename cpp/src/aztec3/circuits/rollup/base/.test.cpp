@@ -150,7 +150,6 @@ class base_rollup_tests : public ::testing::Test {
             if (public_inputs_size > 10) {
                 // for (size_t 0; i < public_inputs_size; i++) {
                 for (size_t i = 0; i < 10; i++) {
-                    info("testing byte ", i);
                     ASSERT_EQ(public_inputs_buf[i], expected_public_inputs_vec[i]);
                 }
             }
