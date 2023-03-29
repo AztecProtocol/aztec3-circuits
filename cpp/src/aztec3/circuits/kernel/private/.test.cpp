@@ -469,9 +469,11 @@ TEST(private_kernel_tests, test_basic_contract_deployment)
     // Some private circuit proof (`constructor`, in this case)
     //***************************************************************************
 
-    const NT::address new_contract_address = 12345;
+    // Set this to 0 and then fill it in with correct contract address
+    const NT::address new_contract_address = 0;
     // const NT::fr new_contract_leaf_index = 1;
     const NT::fr new_portal_contract_address = 23456;
+    const NT::fr contract_address_salt = 34567;
 
     const NT::fr msg_sender_private_key = 123456789;
     const NT::address msg_sender =
@@ -496,8 +498,18 @@ TEST(private_kernel_tests, test_basic_contract_deployment)
         .is_contract_deployment = true,
     };
 
-    NativeOracle constructor_oracle =
-        NativeOracle(db, new_contract_address, function_data, call_context, msg_sender_private_key);
+    std::shared_ptr<NT::VK> constructor_vk = constructor_composer.compute_verification_key();
+    auto constructor_vk_hash = stdlib::recursion::verification_key<CT::bn254>::compress_native(constructor_vk);
+
+    ContractDeploymentData<NT> contract_deployment_data{
+        .constructor_vk_hash = constructor_vk_hash, // TODO actually get this?
+        .function_tree_root = 0,                    // TODO actually get this?
+        .contract_address_salt = contract_address_salt,
+        .portal_contract_address = new_portal_contract_address,
+    };
+
+    NativeOracle constructor_oracle = NativeOracle(
+        db, new_contract_address, function_data, call_context, contract_deployment_data, msg_sender_private_key);
     OracleWrapper constructor_oracle_wrapper = OracleWrapper(constructor_composer, constructor_oracle);
 
     FunctionExecutionContext constructor_ctx(constructor_composer, constructor_oracle_wrapper);
@@ -509,13 +521,8 @@ TEST(private_kernel_tests, test_basic_contract_deployment)
     OptionalPrivateCircuitPublicInputs<NT> opt_constructor_public_inputs =
         constructor(constructor_ctx, arg0, arg1, arg2);
 
-    ContractDeploymentData<NT> contract_deployment_data{
-        .constructor_vk_hash = 0, // TODO actually get this?
-        .function_tree_root = 0,  // TODO actually get this?
-        .contract_address_salt = 42,
-        .portal_contract_address = new_portal_contract_address,
-    };
-    opt_constructor_public_inputs.contract_deployment_data = contract_deployment_data;
+    // Don't need this now:
+    // opt_constructor_public_inputs.contract_deployment_data = contract_deployment_data;
 
     PrivateCircuitPublicInputs<NT> constructor_public_inputs = opt_constructor_public_inputs.remove_optionality();
 
@@ -523,7 +530,16 @@ TEST(private_kernel_tests, test_basic_contract_deployment)
     NT::Proof constructor_proof = constructor_prover.construct_proof();
     // info("\nconstructor_proof: ", constructor_proof.proof_data);
 
-    std::shared_ptr<NT::VK> constructor_vk = constructor_composer.compute_verification_key();
+    auto constructor_hash_real =
+        NT::compress({ function_data.hash(),
+                       NT::compress<ARGS_LENGTH>(constructor_public_inputs.args, CONSTRUCTOR_ARGS),
+                       constructor_vk_hash },
+                     CONSTRUCTOR);
+    auto contract_address_real = NT::compress({ msg_sender,
+                                                contract_deployment_data.contract_address_salt,
+                                                contract_deployment_data.function_tree_root,
+                                                constructor_hash_real },
+                                              CONTRACT_ADDRESS);
 
     //***************************************************************************
     // We can create a TxRequest from some of the above data. Users must sign a TxRequest in order to give permission
@@ -624,7 +640,11 @@ TEST(private_kernel_tests, test_basic_contract_deployment)
             },
     };
 
-    private_kernel_circuit(private_kernel_composer, private_inputs);
+    auto private_kernel_circuit_public_inputs = private_kernel_circuit(private_kernel_composer, private_inputs);
+
+    // Check contract address was correctly computed by the circuit
+    info("contract_address = ", contract_address_real);
+    // EXPECT_EQ(private_kernel_circuit_public_inputs.end.new_contracts[0].contract_address == contract_address_real);
 
     info("computed witness: ", private_kernel_composer.computed_witness);
     // info("witness: ", private_kernel_composer.witness);

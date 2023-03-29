@@ -106,14 +106,18 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
     { // contracts
         // input storage contract address must be 0 if its a constructor call and non-zero otherwise
         auto is_contract_deployment = public_inputs.constants.tx_context.is_contract_deployment_tx;
-        is_contract_deployment.must_imply(storage_contract_address == CT::fr(0));
-        (!is_contract_deployment).must_imply(storage_contract_address != CT::fr(0));
+        is_contract_deployment.must_imply(storage_contract_address == CT::fr(0),
+                                          "storage_contract_address is not zero for contract deployment");
+        (!is_contract_deployment)
+            .must_imply(storage_contract_address != CT::fr(0),
+                        "storage_contract_address is zero for a private function");
 
         auto private_call_vk_hash = private_inputs.private_call.vk->compress();
-        auto constructor_hash = CT::compress({ private_inputs.signed_tx_request.tx_request.function_data.hash(),
-                                               CT::compress<ARGS_LENGTH>(private_call_public_inputs.args),
-                                               private_call_vk_hash },
-                                             CONSTRUCTOR);
+        auto constructor_hash =
+            CT::compress({ private_inputs.signed_tx_request.tx_request.function_data.hash(),
+                           CT::compress<ARGS_LENGTH>(private_call_public_inputs.args, CONSTRUCTOR_ARGS),
+                           private_call_vk_hash },
+                         CONSTRUCTOR);
 
         contract_deployment_data.constructor_vk_hash.assert_equal(
             private_call_vk_hash, "constructor_vk_hash does not match private call vk hash");
@@ -124,6 +128,8 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
                                                contract_deployment_data.function_tree_root,
                                                constructor_hash },
                                              CONTRACT_ADDRESS);
+
+        info("circuit contract add = ", contract_address.get_value());
 
         // compute contract address nullifier
         auto blake_input = CT::byte_array(contract_address);

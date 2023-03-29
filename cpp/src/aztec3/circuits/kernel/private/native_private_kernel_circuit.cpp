@@ -90,10 +90,11 @@ void update_end_values(PrivateInputs<NT> const& private_inputs, PublicInputs<NT>
 
         auto private_call_vk_hash =
             stdlib::recursion::verification_key<CT::bn254>::compress_native(private_inputs.private_call.vk);
-        auto constructor_hash = NT::compress({ private_inputs.signed_tx_request.tx_request.function_data.hash(),
-                                               NT::compress<ARGS_LENGTH>(private_call_public_inputs.args),
-                                               private_call_vk_hash },
-                                             CONSTRUCTOR);
+        auto constructor_hash =
+            NT::compress({ private_inputs.signed_tx_request.tx_request.function_data.hash(),
+                           NT::compress<ARGS_LENGTH>(private_call_public_inputs.args, CONSTRUCTOR_ARGS),
+                           private_call_vk_hash },
+                         CONSTRUCTOR);
 
         ASSERT(contract_deployment_data.constructor_vk_hash == private_call_vk_hash);
 
@@ -109,7 +110,6 @@ void update_end_values(PrivateInputs<NT> const& private_inputs, PublicInputs<NT>
         auto contract_address_nullifier = NT::fr::serialize_from_buffer(NT::blake3s(blake_input).data());
 
         // push the contract address nullifier to nullifier vector
-        // TODO: correct this
         array_push(public_inputs.end.new_nullifiers, contract_address_nullifier);
 
         // Add new contract data if its a contract deployment function
@@ -117,7 +117,6 @@ void update_end_values(PrivateInputs<NT> const& private_inputs, PublicInputs<NT>
                                                              portal_contract_address,
                                                              contract_deployment_data.function_tree_root };
 
-        // TODO: add array_push for general data type
         array_push<NewContractData<NT>, KERNEL_NEW_CONTRACTS_LENGTH>(public_inputs.end.new_contracts,
                                                                      native_new_contract_data);
     }
