@@ -12,7 +12,6 @@ namespace aztec3::circuits::abis {
 
 using aztec3::utils::types::CircuitTypes;
 using aztec3::utils::types::NativeTypes;
-using plonk::stdlib::witness_t;
 
 template <typename NCT> struct CallContext {
     typedef typename NCT::address address;
@@ -24,9 +23,9 @@ template <typename NCT> struct CallContext {
     address storage_contract_address;
     address tx_origin = msg_sender;
 
-    boolean is_delegate_call;
-    boolean is_static_call;
-    boolean is_contract_deployment;
+    boolean is_delegate_call = false;
+    boolean is_static_call = false;
+    boolean is_contract_deployment = false;
 
     boolean operator==(CallContext<NCT> const& other) const
     {
@@ -34,8 +33,6 @@ template <typename NCT> struct CallContext {
                tx_origin == other.tx_origin && is_delegate_call == other.is_delegate_call &&
                is_static_call == other.is_static_call && is_contract_deployment == other.is_contract_deployment;
     };
-
-    static CallContext<NCT> empty() { return { 0, 0, 0, 0, 0, 0 }; };
 
     template <typename Composer> CallContext<CircuitTypes<Composer>> to_circuit_type(Composer& composer) const
     {

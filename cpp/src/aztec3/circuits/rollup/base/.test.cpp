@@ -175,7 +175,7 @@ class base_rollup_tests : public ::testing::Test {
         std::array<OptionallyRevealedData<NT>, KERNEL_OPTIONALLY_REVEALED_DATA_LENGTH> optionally_revealed_data;
 
         optionally_revealed_data.fill(OptionallyRevealedData<NT>{ .call_stack_item_hash = fr::zero(),
-                                                                  .function_data = FunctionData<NT>::empty(),
+                                                                  .function_data = FunctionData<NT>(),
                                                                   .emitted_events = { 0 },
                                                                   .vk_hash = fr::zero(),
                                                                   .portal_contract_address = { 0 },
@@ -241,19 +241,19 @@ class base_rollup_tests : public ::testing::Test {
 
         for (size_t i = 0; i < 2 * KERNEL_NEW_NULLIFIERS_LENGTH; ++i) {
             low_nullifier_leaf_preimages[i] = NullifierLeafPreimage<NT>::empty();
-            low_nullifier_membership_witness[i] = MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>::empty();
+            low_nullifier_membership_witness[i] = MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>();
         }
 
         std::array<MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>, 2>
             historic_private_data_tree_root_membership_witnesses = {
-                MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>::empty(),
-                MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>::empty()
+                MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>(),
+                MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>()
             };
 
         std::array<MembershipWitness<NT, CONTRACT_TREE_ROOTS_TREE_HEIGHT>, 2>
             historic_contract_tree_root_membership_witnesses = {
-                MembershipWitness<NT, CONTRACT_TREE_ROOTS_TREE_HEIGHT>::empty(),
-                MembershipWitness<NT, CONTRACT_TREE_ROOTS_TREE_HEIGHT>::empty()
+                MembershipWitness<NT, CONTRACT_TREE_ROOTS_TREE_HEIGHT>(),
+                MembershipWitness<NT, CONTRACT_TREE_ROOTS_TREE_HEIGHT>()
             };
 
         // Kernels
