@@ -269,7 +269,7 @@ TEST_F(root_rollup_tests, blabber)
 
     for (uint8_t i = 0; i < 2; i++) {
         for (uint8_t j = 0; j < 4; j++) {
-            base_inputs_2.kernel_data[i].public_inputs.end.new_commitments[i * 4 + j] = fr(i * 4 + j + 1);
+            base_inputs_2.kernel_data[i].public_inputs.end.new_commitments[j] = fr(i * 4 + j + 1);
             data_tree.update_element(i * 4 + j, fr(i * 4 + j + 1));
         }
     }
