@@ -59,9 +59,15 @@ BaseRollupInputs<NT> dummy_base_rollup_inputs_with_vk_proof()
     kernel_data[1] = dummy_previous_kernel_with_vk_proof();
 
     BaseRollupInputs<NT> baseRollupInputs = { .kernel_data = kernel_data,
-                                              .start_private_data_tree_snapshot = AppendOnlyTreeSnapshot<NT>::empty(),
+                                              .start_private_data_tree_snapshot = {
+                                                  .root = native_base_rollup::MerkleTree(PRIVATE_DATA_TREE_HEIGHT).root(),
+                                                  .next_available_leaf_index = 0,
+                                              },
                                               .start_nullifier_tree_snapshot = AppendOnlyTreeSnapshot<NT>::empty(),
-                                              .start_contract_tree_snapshot = AppendOnlyTreeSnapshot<NT>::empty(),
+                                              .start_contract_tree_snapshot = {
+                                                  .root = native_base_rollup::MerkleTree(CONTRACT_TREE_HEIGHT).root(),
+                                                  .next_available_leaf_index = 0,
+                                              },
                                               .low_nullifier_leaf_preimages = low_nullifier_leaf_preimages,
                                               .low_nullifier_membership_witness = low_nullifier_membership_witness,
                                               .new_commitments_subtree_sibling_path = { 0 },
