@@ -291,6 +291,124 @@ TEST_F(root_rollup_tests, calldata_hash_empty_blocks)
     }
 
     ASSERT_EQ(hash, calldata_hash);
+    run_cbind(inputs, outputs, true);
+}
+
+template <size_t N>
+NT::fr iterate_through_tree_via_sibling_path(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath)
+{
+    for (size_t i = 0; i < siblingPath.size(); i++) {
+        if (leafIndex & (1 << i)) {
+            leaf = crypto::pedersen_hash::hash_multiple({ siblingPath[i], leaf });
+        } else {
+            leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
+        }
+    }
+    return leaf;
+}
+
+template <size_t N> std::array<fr, N> get_sibling_path(stdlib::merkle_tree::MemoryTree tree, size_t leafIndex)
+{
+    std::array<fr, N> siblingPath;
+    auto path = tree.get_hash_path(leafIndex);
+
+    for (size_t i = 0; i < N; i++) {
+        //
+        if (leafIndex & (1 << i)) {
+            siblingPath[i] = path[i].first;
+        } else {
+            siblingPath[i] = path[i].second;
+        }
+    }
+    return siblingPath;
+}
+
+TEST_F(root_rollup_tests, blabber)
+{
+    // Base Rollup 1 and 2
+    BaseRollupInputs base_inputs_1 = getEmptyBaseRollupInputs();
+    BaseRollupInputs base_inputs_2 = getEmptyBaseRollupInputs();
+
+    // Insert commitments into base rollup 2
+    stdlib::merkle_tree::MemoryTree data_tree = stdlib::merkle_tree::MemoryTree(PRIVATE_DATA_TREE_HEIGHT);
+
+    for (uint8_t i = 0; i < 2; i++) {
+        for (uint8_t j = 0; j < 4; j++) {
+            base_inputs_2.kernel_data[i].public_inputs.end.new_commitments[j] = fr(i * 4 + j + 1);
+            data_tree.update_element(i * 4 + j, fr(i * 4 + j + 1));
+        }
+    }
+
+    // Compute a sibling path for the new commitment subtree. Get the full first, and then shorten it.
+    auto sibling_path = get_sibling_path<PRIVATE_DATA_TREE_HEIGHT>(data_tree, 0);
+    std::array<fr, PRIVATE_DATA_SUBTREE_INCLUSION_CHECK_DEPTH> new_commitments_subtree_sibling_path;
+    for (size_t i = PRIVATE_DATA_SUBTREE_INCLUSION_CHECK_DEPTH; i < PRIVATE_DATA_TREE_HEIGHT; i++) {
+        new_commitments_subtree_sibling_path[i - PRIVATE_DATA_SUBTREE_INCLUSION_CHECK_DEPTH] = sibling_path[i];
+    }
+    std::cout << "new_commitments_subtree_sibling_path" << new_commitments_subtree_sibling_path << std::endl;
+    base_inputs_2.new_commitments_subtree_sibling_path = new_commitments_subtree_sibling_path;
+
+    std::cout << data_tree.root() << std::endl;
+
+    // Historic trees
+    stdlib::merkle_tree::MemoryTree historic_data_tree =
+        stdlib::merkle_tree::MemoryTree(PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT);
+
+    auto historic_sibling_path = get_sibling_path<PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>(historic_data_tree, 0);
+
+    AppendOnlyTreeSnapshot<NT> historic_data_tree_snapshot = { .root = historic_data_tree.root(),
+                                                               .next_available_leaf_index = 0 };
+
+    base_inputs_1.constants.start_tree_of_historic_private_data_tree_roots_snapshot = historic_data_tree_snapshot;
+    base_inputs_2.constants.start_tree_of_historic_private_data_tree_roots_snapshot = historic_data_tree_snapshot;
+
+    historic_data_tree.update_element(0, historic_data_tree.root());
+    AppendOnlyTreeSnapshot<NT> historic_data_tree_snapshot_2 = { .root = historic_data_tree.root(),
+                                                                 .next_available_leaf_index = 1 };
+
+    BaseRollupPublicInputs outputs1 = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(base_inputs_1);
+    BaseRollupPublicInputs outputs2 = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(base_inputs_2);
+
+    PreviousKernelData<NT> mocked_kernel0 = base_inputs_1.kernel_data[0];
+    PreviousKernelData<NT> mocked_kernel1 = base_inputs_1.kernel_data[1];
+
+    PreviousRollupData<NT> r1 = {
+        .base_rollup_public_inputs = outputs1,
+        .proof = mocked_kernel0.proof,
+        .vk = mocked_kernel0.vk,
+        .vk_index = 0,
+        .vk_sibling_path = MembershipWitness<NT, ROLLUP_VK_TREE_HEIGHT>::empty(),
+    };
+
+    PreviousRollupData<NT> r2 = {
+        .base_rollup_public_inputs = outputs1,
+        .proof = mocked_kernel1.proof,
+        .vk = mocked_kernel1.vk,
+        .vk_index = 1,
+        .vk_sibling_path = MembershipWitness<NT, ROLLUP_VK_TREE_HEIGHT>::empty(),
+    };
+
+    std::array<PreviousRollupData<NT>, 2> previous_rollup_data = { r1, r2 };
+
+    RootRollupInputs rootRollupInputs = {
+        .previous_rollup_data = previous_rollup_data,
+        .new_historic_private_data_tree_root_sibling_path = historic_sibling_path,
+        .new_historic_contract_tree_root_sibling_path = { 0 },
+    };
+
+    RootRollupPublicInputs outputs =
+        aztec3::circuits::rollup::native_root_rollup::root_rollup_circuit(rootRollupInputs);
+
+    std::cout << outputs << std::endl;
+
+    // We expect this thing afterwards historic_data_tree_snapshot_2
+
+    std::cout << "pre_historic : " << historic_data_tree_snapshot << std::endl;
+    std::cout << "post_historic: " << historic_data_tree_snapshot_2 << std::endl;
+
+    std::cout << "data root: " << data_tree.root() << std::endl;
+
+    std::cout << r2.base_rollup_public_inputs.end_private_data_tree_snapshot << std::endl;
 
     run_cbind(inputs, outputs, true);
 }
