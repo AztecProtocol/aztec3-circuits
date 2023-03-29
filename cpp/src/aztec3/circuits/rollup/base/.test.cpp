@@ -12,6 +12,8 @@
 #include "barretenberg/crypto/sha256/sha256.hpp"
 #include "barretenberg/ecc/curves/bn254/fr.hpp"
 #include "barretenberg/stdlib/merkle_tree/memory_tree.hpp"
+
+#include "aztec3/circuits/rollup/base/utils.hpp"
 #include "index.hpp"
 #include "init.hpp"
 #include "c_bind.h"
@@ -80,6 +82,7 @@ using aztec3::circuits::apps::test_apps::escrow::deposit;
 // using aztec3::circuits::mock::mock_circuit;
 using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel_with_vk_proof;
 using aztec3::circuits::mock::mock_kernel_circuit;
+using aztec3::circuits::rollup::base::utils::dummy_base_rollup_inputs_with_vk_proof;
 // using aztec3::circuits::mock::mock_kernel_inputs;
 
 using aztec3::circuits::abis::AppendOnlyTreeSnapshot;
@@ -161,61 +164,12 @@ class base_rollup_tests : public ::testing::Test {
         free((void*)public_inputs_buf);
         info("finished retesting via cbinds...");
     }
-
-  protected:
-    BaseRollupInputs getEmptyBaseRollupInputs()
-    {
-        ConstantRollupData constantRollupData = ConstantRollupData::empty();
-
-        std::array<NullifierLeafPreimage<NT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH> low_nullifier_leaf_preimages;
-        std::array<MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH>
-            low_nullifier_membership_witness;
-
-        for (size_t i = 0; i < 2 * KERNEL_NEW_NULLIFIERS_LENGTH; ++i) {
-            low_nullifier_leaf_preimages[i] = NullifierLeafPreimage<NT>::empty();
-            low_nullifier_membership_witness[i] = MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>::empty();
-        }
-
-        std::array<MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>, 2>
-            historic_private_data_tree_root_membership_witnesses = {
-                MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>::empty(),
-                MembershipWitness<NT, PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>::empty()
-            };
-
-        std::array<MembershipWitness<NT, CONTRACT_TREE_ROOTS_TREE_HEIGHT>, 2>
-            historic_contract_tree_root_membership_witnesses = {
-                MembershipWitness<NT, CONTRACT_TREE_ROOTS_TREE_HEIGHT>::empty(),
-                MembershipWitness<NT, CONTRACT_TREE_ROOTS_TREE_HEIGHT>::empty()
-            };
-
-        // Kernels
-        std::array<abis::private_kernel::PreviousKernelData<NT>, 2> kernel_data;
-        // grab mocked previous kernel (need a valid vk, proof, aggobj)
-        kernel_data[0] = dummy_previous_kernel_with_vk_proof();
-        kernel_data[1] = dummy_previous_kernel_with_vk_proof();
-
-        BaseRollupInputs baseRollupInputs = { .kernel_data = kernel_data,
-                                              .start_private_data_tree_snapshot = AppendOnlyTreeSnapshot<NT>::empty(),
-                                              .start_nullifier_tree_snapshot = AppendOnlyTreeSnapshot<NT>::empty(),
-                                              .start_contract_tree_snapshot = AppendOnlyTreeSnapshot<NT>::empty(),
-                                              .low_nullifier_leaf_preimages = low_nullifier_leaf_preimages,
-                                              .low_nullifier_membership_witness = low_nullifier_membership_witness,
-                                              .new_commitments_subtree_sibling_path = { 0 },
-                                              .new_nullifiers_subtree_sibling_path = { 0 },
-                                              .new_contracts_subtree_sibling_path = { 0 },
-                                              .historic_private_data_tree_root_membership_witnesses =
-                                                  historic_private_data_tree_root_membership_witnesses,
-                                              .historic_contract_tree_root_membership_witnesses =
-                                                  historic_contract_tree_root_membership_witnesses,
-                                              .constants = constantRollupData };
-        return baseRollupInputs;
-    }
 };
 
 TEST_F(base_rollup_tests, no_new_contract_leafs)
 {
     // When there are no contract deployments. The contract tree should be inserting 0 leafs, (not empty leafs);
-    BaseRollupInputs emptyInputs = getEmptyBaseRollupInputs();
+    BaseRollupInputs emptyInputs = dummy_base_rollup_inputs_with_vk_proof();
     BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(emptyInputs);
 
     // @todo Check the snaphots are updated accordingly.
@@ -228,7 +182,7 @@ TEST_F(base_rollup_tests, contract_leaf_inserted)
 {
     // When there is a contract deployment, the contract tree should be inserting 1 leaf.
     // The remaining leafs should be 0 leafs, (not empty leafs);
-    BaseRollupInputs inputs = getEmptyBaseRollupInputs();
+    BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
 
     // Create a "mock" contract deployment
     NewContractData<NT> new_contract = {
@@ -261,7 +215,7 @@ TEST_F(base_rollup_tests, empty_block_calldata_hash)
     // calldata_hash should be computed from leafs of 704 0 bytes. (0x00)
     std::vector<uint8_t> zero_bytes_vec(704, 0);
     auto hash = sha256::sha256(zero_bytes_vec);
-    BaseRollupInputs inputs = getEmptyBaseRollupInputs();
+    BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
     BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
 
     std::array<fr, 2> calldata_hash_fr = outputs.calldata_hash;
@@ -283,7 +237,7 @@ TEST_F(base_rollup_tests, calldata_hash)
 {
     // Execute the base rollup circuit with nullifiers, commitments and a contract deployment. Then check the calldata
     // hash against the expected value.
-    BaseRollupInputs inputs = getEmptyBaseRollupInputs();
+    BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
     std::vector<uint8_t> input_data(704, 0);
 
     for (uint8_t i = 0; i < 4; ++i) {
@@ -339,7 +293,7 @@ TEST_F(base_rollup_tests, test_compute_and_insert_subtree) {}
 
 TEST_F(base_rollup_tests, test_cbind_0)
 {
-    BaseRollupInputs inputs = getEmptyBaseRollupInputs();
+    BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
     BaseRollupPublicInputs ignored_public_inputs;
     run_cbind(inputs, ignored_public_inputs, false);
 }
