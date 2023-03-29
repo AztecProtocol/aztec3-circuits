@@ -95,68 +95,6 @@ using aztec3::circuits::abis::FunctionData;
 using aztec3::circuits::abis::OptionallyRevealedData;
 using aztec3::circuits::abis::private_kernel::NewContractData;
 
-void run_cbind(BaseRollupInputs& base_rollup_inputs,
-               BaseRollupPublicInputs& expected_public_inputs,
-               bool compare_pubins = true)
-{
-    uint8_t const* pk_buf;
-    size_t pk_size = base_rollup__init_proving_key(&pk_buf);
-    info("Proving key size: ", pk_size);
-
-    uint8_t const* vk_buf;
-    size_t vk_size = base_rollup__init_verification_key(pk_buf, &vk_buf);
-    info("Verification key size: ", vk_size);
-
-    std::vector<uint8_t> base_rollup_inputs_vec;
-    write(base_rollup_inputs_vec, base_rollup_inputs);
-
-    // uint8_t const* proof_data;
-    // size_t proof_data_size;
-    uint8_t const* public_inputs_buf;
-    info("creating proof");
-    size_t public_inputs_size = base_rollup__sim(base_rollup_inputs_vec.data(), &public_inputs_buf);
-    // info("Proof size: ", proof_data_size);
-    info("PublicInputs size: ", public_inputs_size);
-
-    if (compare_pubins) {
-        BaseRollupPublicInputs public_inputs;
-        info("about to read...");
-        read(public_inputs_buf, public_inputs);
-        info("about to assert...");
-        ASSERT_EQ(public_inputs.calldata_hash.size(), expected_public_inputs.calldata_hash.size());
-        for (size_t i = 0; i < public_inputs.calldata_hash.size(); i++) {
-            ASSERT_EQ(public_inputs.calldata_hash[i], expected_public_inputs.calldata_hash[i]);
-        }
-        info("after assert...");
-
-        // TODO why do the post-write buffers not match?
-        //      something in aggregation object [de]serialization?
-        // info("about to write expected...");
-        // std::vector<uint8_t> expected_public_inputs_vec;
-        // write(expected_public_inputs_vec, expected_public_inputs);
-        // info("about to assert buffers eq...");
-        // ASSERT_EQ(public_inputs_size, expected_public_inputs_vec.size());
-        //// Just compare the first 10 bytes of the serialized public outputs
-        // if (public_inputs_size > 10) {
-        //    // for (size_t 0; i < public_inputs_size; i++) {
-        //    for (size_t i = 0; i < 10; i++) {
-        //        info("testing byte ", i);
-        //        ASSERT_EQ(public_inputs_buf[i], expected_public_inputs_vec[i]);
-        //    }
-        //}
-    }
-    (void)base_rollup_inputs;     // unused
-    (void)expected_public_inputs; // unused
-    (void)compare_pubins;         // unused
-
-    free((void*)pk_buf);
-    free((void*)vk_buf);
-    // free((void*)proof_data);
-    // SCARY WARNING TODO FIXME why does this free cause issues
-    // free((void*)public_inputs_buf);
-    info("finished retesting via cbinds...");
-}
-
 } // namespace
 
 namespace aztec3::circuits::rollup::base::native_base_rollup_circuit {
