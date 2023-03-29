@@ -410,7 +410,7 @@ TEST_F(root_rollup_tests, blabber)
 
     std::cout << r2.base_rollup_public_inputs.end_private_data_tree_snapshot << std::endl;
 
-    run_cbind(inputs, outputs, true);
+    run_cbind(rootRollupInputs, outputs, true);
 }
 
 } // namespace aztec3::circuits::rollup::root::native_root_rollup_circuit
