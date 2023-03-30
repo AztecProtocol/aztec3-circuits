@@ -226,30 +226,18 @@ TEST_F(root_rollup_tests, calldata_hash_empty_blocks)
     run_cbind(inputs, outputs, true);
 }
 
-template <size_t N>
-NT::fr iterate_through_tree_via_sibling_path(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath)
-{
-    for (size_t i = 0; i < siblingPath.size(); i++) {
-        if (leafIndex & (1 << i)) {
-            leaf = crypto::pedersen_hash::hash_multiple({ siblingPath[i], leaf });
-        } else {
-            leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
-        }
-    }
-    return leaf;
-}
-
-template <size_t N> std::array<fr, N> get_sibling_path(MemoryTree tree, size_t leafIndex)
+template <size_t N> std::array<fr, N> get_sibling_path(MemoryTree tree, size_t leafIndex, size_t subtree_depth_to_skip)
 {
     std::array<fr, N> siblingPath;
     auto path = tree.get_hash_path(leafIndex);
+    // slice out the skip
+    leafIndex = leafIndex >> (subtree_depth_to_skip);
 
     for (size_t i = 0; i < N; i++) {
-        //
         if (leafIndex & (1 << i)) {
-            siblingPath[i] = path[i].first;
+            siblingPath[i] = path[subtree_depth_to_skip + i].first;
         } else {
-            siblingPath[i] = path[i].second;
+            siblingPath[i] = path[subtree_depth_to_skip + i].second;
         }
     }
     return siblingPath;
@@ -290,15 +278,11 @@ TEST_F(root_rollup_tests, almost_full_root)
         }
     }
 
-    // Compute a sibling path for the new commitment subtree. Get the full first, and then shorten it.
-    auto new_commitments_sibling_path = get_sibling_path<PRIVATE_DATA_TREE_HEIGHT>(data_tree, 0);
-    std::array<fr, PRIVATE_DATA_SUBTREE_INCLUSION_CHECK_DEPTH> new_commitments_subtree_sibling_path;
-    for (size_t i = 0; i < PRIVATE_DATA_SUBTREE_INCLUSION_CHECK_DEPTH; i++) {
-        new_commitments_subtree_sibling_path[i] = new_commitments_sibling_path[PRIVATE_DATA_SUBTREE_DEPTH + i];
-    }
-    base_inputs_2.new_commitments_subtree_sibling_path = new_commitments_subtree_sibling_path;
+    // Compute a sibling path for the new commitment subtree.
+    base_inputs_2.new_commitments_subtree_sibling_path =
+        get_sibling_path<PRIVATE_DATA_SUBTREE_INCLUSION_CHECK_DEPTH>(data_tree, 0, PRIVATE_DATA_SUBTREE_DEPTH);
 
-    // Contract tree - Something going wrong in here. Not sure what really
+    // Contract tree
     NewContractData<NT> new_contract = {
         .contract_address = fr(1),
         .portal_contract_address = fr(3),
@@ -309,28 +293,19 @@ TEST_F(root_rollup_tests, almost_full_root)
         { new_contract.contract_address, new_contract.portal_contract_address, new_contract.function_tree_root });
     contract_tree.update_element(0, contract_leaf);
 
-    auto new_contracts_sibling_path = get_sibling_path<CONTRACT_TREE_HEIGHT>(contract_tree, 0);
-    std::array<fr, CONTRACT_SUBTREE_INCLUSION_CHECK_DEPTH> new_contracts_subtree_sibling_path;
-    for (size_t i = 0; i < CONTRACT_SUBTREE_INCLUSION_CHECK_DEPTH; i++) {
-        new_contracts_subtree_sibling_path[i] = new_contracts_sibling_path[CONTRACT_SUBTREE_DEPTH + i];
-    }
-    base_inputs_2.new_contracts_subtree_sibling_path = new_contracts_subtree_sibling_path;
+    base_inputs_2.new_contracts_subtree_sibling_path =
+        get_sibling_path<CONTRACT_SUBTREE_INCLUSION_CHECK_DEPTH>(contract_tree, 0, CONTRACT_SUBTREE_DEPTH);
 
     // Historic trees
-    auto historic_data_sibling_path = get_sibling_path<PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>(historic_data_tree, 0);
-    auto historic_contract_sibling_path = get_sibling_path<CONTRACT_TREE_ROOTS_TREE_HEIGHT>(historic_contract_tree, 0);
+    auto historic_data_sibling_path = get_sibling_path<PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>(historic_data_tree, 0, 0);
+    auto historic_contract_sibling_path =
+        get_sibling_path<CONTRACT_TREE_ROOTS_TREE_HEIGHT>(historic_contract_tree, 0, 0);
 
     // The start historic data snapshot
     AppendOnlyTreeSnapshot<NT> start_historic_data_tree_snapshot = { .root = historic_data_tree.root(),
                                                                      .next_available_leaf_index = 0 };
     AppendOnlyTreeSnapshot<NT> start_historic_contract_tree_snapshot = { .root = historic_contract_tree.root(),
                                                                          .next_available_leaf_index = 0 };
-
-    // Set the historic data tree snapshots in constants in base rollup inputs
-    base_inputs_1.constants.start_tree_of_historic_private_data_tree_roots_snapshot = start_historic_data_tree_snapshot;
-    base_inputs_2.constants.start_tree_of_historic_private_data_tree_roots_snapshot = start_historic_data_tree_snapshot;
-    base_inputs_1.constants.start_tree_of_historic_contract_tree_roots_snapshot = start_historic_contract_tree_snapshot;
-    base_inputs_2.constants.start_tree_of_historic_contract_tree_roots_snapshot = start_historic_contract_tree_snapshot;
 
     // Insert the newest data root into the historic tree
     historic_data_tree.update_element(0, data_tree.root());
@@ -347,29 +322,24 @@ TEST_F(root_rollup_tests, almost_full_root)
     BaseRollupPublicInputs base_outputs_2 =
         aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(base_inputs_2);
 
-    PreviousKernelData<NT> mocked_kernel1 = base_inputs_1.kernel_data[0];
-    PreviousKernelData<NT> mocked_kernel2 = base_inputs_2.kernel_data[0];
-
     PreviousRollupData<NT> r1 = {
         .base_rollup_public_inputs = base_outputs_1,
-        .proof = mocked_kernel1.proof,
-        .vk = mocked_kernel1.vk,
+        .proof = base_inputs_1.kernel_data[0].proof,
+        .vk = base_inputs_1.kernel_data[0].vk,
         .vk_index = 0,
         .vk_sibling_path = MembershipWitness<NT, ROLLUP_VK_TREE_HEIGHT>(),
     };
 
     PreviousRollupData<NT> r2 = {
         .base_rollup_public_inputs = base_outputs_2,
-        .proof = mocked_kernel2.proof,
-        .vk = mocked_kernel2.vk,
+        .proof = base_inputs_2.kernel_data[0].proof,
+        .vk = base_inputs_2.kernel_data[0].vk,
         .vk_index = 1,
         .vk_sibling_path = MembershipWitness<NT, ROLLUP_VK_TREE_HEIGHT>(),
     };
 
-    std::array<PreviousRollupData<NT>, 2> previous_rollup_data = { r1, r2 };
-
     RootRollupInputs rootRollupInputs = {
-        .previous_rollup_data = previous_rollup_data,
+        .previous_rollup_data = { r1, r2 },
         .new_historic_private_data_tree_root_sibling_path = historic_data_sibling_path,
         .new_historic_contract_tree_root_sibling_path = historic_contract_sibling_path,
     };
