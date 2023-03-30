@@ -719,7 +719,7 @@ TEST(private_kernel_tests, test_native_basic_contract_deployment)
     CallContext<NT> call_context{
         .msg_sender = msg_sender,
         .storage_contract_address = new_contract_address,
-        .tx_origin = msg_sender,
+        .portal_contract_address = 0,
         .is_delegate_call = false,
         .is_static_call = false,
         .is_contract_deployment = true,
