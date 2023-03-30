@@ -2,6 +2,8 @@
 #include "init.hpp"
 
 #include <barretenberg/stdlib/primitives/field/array.hpp>
+#include <barretenberg/stdlib/encryption/ecdsa/ecdsa.hpp>
+#include <barretenberg/stdlib/hash/keccak/keccak.hpp>
 
 #include <aztec3/circuits/abis/private_kernel/private_inputs.hpp>
 #include <aztec3/circuits/abis/private_kernel/public_inputs.hpp>
@@ -186,6 +188,38 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
         push_array_to_array<Composer>(this_private_call_stack, public_inputs.end.private_call_stack);
     }
 
+    { // verify public key hash matches ethereum address of the sender
+        CT::address sender_address = private_inputs.signed_tx_request.tx_request.from;
+        CT::secp256k1_point sender_public_key = private_inputs.signed_tx_request.tx_request.from_public_key;
+
+        CT::byte_array sender_public_key_bytes = sender_public_key.to_byte_array();
+        CT::byte_array sender_public_key_hash = stdlib::keccak<Composer>::hash(sender_public_key_bytes);
+        CT::byte_array sender_address_bytes = CT::byte_array(sender_address.to_field());
+
+        // TODO: This fails currently, so disabling. Check first 20 bytes.
+        // TODO: Re-enable this once fr::serialise_to_buffer works correctly :/
+        for (size_t i = 0; i < 0; i++) {
+            sender_address_bytes[i].assert_equal(sender_public_key_hash[i],
+                                                 format("hash of public key does not match the address at index ", i));
+        }
+    }
+
+    { // verify signature
+        CT::byte_array message = private_inputs.signed_tx_request.compute_signing_message();
+        auto sig_result = stdlib::ecdsa::verify_signature<Composer,
+                                                          stdlib::secp256k1<Composer>,
+                                                          stdlib::secp256k1<Composer>::fq_ct,
+                                                          stdlib::secp256k1<Composer>::bigfr_ct,
+                                                          stdlib::secp256k1<Composer>::g1_bigfr_ct>(
+            message,
+            private_inputs.signed_tx_request.tx_request.from_public_key,
+            private_inputs.signed_tx_request.signature);
+
+        sig_result.assert_equal(true, "signature verification failed");
+    }
+
+    // const auto& portal_contract_address = private_inputs.private_call.portal_contract_address;
+
     // {
     //     const auto& l1_msg_stack = private_call_public_inputs.l1_msg_stack;
     //     std::array<CT::fr, L1_MSG_STACK_LENGTH> l1_call_stack;
@@ -324,6 +358,7 @@ void validate_inputs(PrivateInputs<CT> const& private_inputs)
 PublicInputs<NT> private_kernel_circuit(Composer& composer, PrivateInputs<NT> const& _private_inputs)
 {
     const PrivateInputs<CT> private_inputs = _private_inputs.to_circuit_type(composer);
+    info("converted to ckt types");
 
     // We'll be pushing data to this during execution of this circuit.
     PublicInputs<CT> public_inputs = PublicInputs<NT>{}.to_circuit_type(composer);

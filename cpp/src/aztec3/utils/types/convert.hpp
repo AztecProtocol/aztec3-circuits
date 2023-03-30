@@ -57,6 +57,12 @@ typename CT<Composer>::bn254_point to_ct(Composer& composer, typename NT::bn254_
 };
 
 template <typename Composer>
+typename CT<Composer>::secp256k1_point to_ct(Composer& composer, typename NT::secp256k1_point const& e)
+{
+    return CT<Composer>::secp256k1_point::from_witness(&composer, e);
+};
+
+template <typename Composer>
 typename CT<Composer>::ecdsa_signature to_ct(Composer& composer, typename NT::ecdsa_signature const& e)
 {
     return plonk::stdlib::ecdsa::from_witness(&composer, e);
@@ -168,6 +174,11 @@ template <typename Composer> typename NT::bn254_point to_nt(typename CT<Composer
     return e.get_value();
 };
 
+template <typename Composer> typename NT::secp256k1_point to_nt(typename CT<Composer>::secp256k1_point const& e)
+{
+    return e.get_value();
+};
+
 template <typename Composer> typename NT::ecdsa_signature to_nt(typename CT<Composer>::ecdsa_signature const& e)
 {
     std::vector<uint8_t> r_bytes = e.r.get_value();
@@ -202,6 +213,12 @@ template <typename Composer>
 std::optional<typename NT::grumpkin_point> to_nt(std::optional<typename CT<Composer>::grumpkin_point> const& e)
 {
     return e ? std::make_optional<typename NT::grumpkin_point>(to_nt<Composer>(*e)) : std::nullopt;
+};
+
+template <typename Composer>
+std::optional<typename NT::secp256k1_point> to_nt(std::optional<typename CT<Composer>::secp256k1_point> const& e)
+{
+    return e ? std::make_optional<typename NT::secp256k1_point>(to_nt<Composer>(*e)) : std::nullopt;
 };
 
 template <typename Composer>

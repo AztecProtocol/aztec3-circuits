@@ -14,11 +14,13 @@ using aztec3::utils::types::CircuitTypes;
 using aztec3::utils::types::NativeTypes;
 
 template <typename NCT> struct TxRequest {
+    typedef typename NCT::secp256k1_point secp256k1_point;
     typedef typename NCT::address address;
     typedef typename NCT::fr fr;
     typedef typename NCT::boolean boolean;
 
     address from = 0;
+    secp256k1_point from_public_key;
     address to = 0;
     FunctionData<NCT> function_data{};
     std::array<fr, ARGS_LENGTH> args = zero_array<fr, ARGS_LENGTH>();
@@ -28,8 +30,9 @@ template <typename NCT> struct TxRequest {
 
     boolean operator==(TxContext<NCT> const& other) const
     {
-        return from == other.from && to == other.to && function_data == other.function_data && args == other.args &&
-               nonce == other.nonce && tx_context == other.tx_context && chain_id == other.chain_id;
+        return from == other.from && from_public_key == other.from_public_key && to == other.to &&
+               function_data == other.function_data && args == other.args && nonce == other.nonce &&
+               tx_context == other.tx_context && chain_id == other.chain_id;
     };
 
     template <typename Composer> TxRequest<CircuitTypes<Composer>> to_circuit_type(Composer& composer) const
@@ -41,9 +44,8 @@ template <typename NCT> struct TxRequest {
         auto to_circuit_type = [&](auto& e) { return e.to_circuit_type(composer); };
 
         TxRequest<CircuitTypes<Composer>> tx_request = {
-            to_ct(from),     to_ct(to),    to_circuit_type(function_data),
-            to_ct(args),     to_ct(nonce), to_circuit_type(tx_context),
-            to_ct(chain_id),
+            to_ct(from),  to_ct(from_public_key),      to_ct(to),       to_circuit_type(function_data), to_ct(args),
+            to_ct(nonce), to_circuit_type(tx_context), to_ct(chain_id),
         };
 
         return tx_request;
@@ -74,6 +76,7 @@ template <typename NCT> void read(uint8_t const*& it, TxRequest<NCT>& tx_request
     using serialize::read;
 
     read(it, tx_request.from);
+    read(it, tx_request.from_public_key);
     read(it, tx_request.to);
     read(it, tx_request.function_data);
     read(it, tx_request.args);
@@ -87,6 +90,7 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, TxRequest<NCT> con
     using serialize::write;
 
     write(buf, tx_request.from);
+    write(buf, tx_request.from_public_key);
     write(buf, tx_request.to);
     write(buf, tx_request.function_data);
     write(buf, tx_request.args);
@@ -98,6 +102,7 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, TxRequest<NCT> con
 template <typename NCT> std::ostream& operator<<(std::ostream& os, TxRequest<NCT> const& tx_request)
 {
     return os << "from: " << tx_request.from << "\n"
+              << "from_public_key: " << tx_request.from_public_key << "\n"
               << "to: " << tx_request.to << "\n"
               << "function_data: " << tx_request.function_data << "\n"
               << "args: " << tx_request.args << "\n"

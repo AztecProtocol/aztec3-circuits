@@ -170,9 +170,9 @@ PrivateInputs<NT> do_private_call_get_kernel_inputs(bool const is_constructor,
     const NT::fr contract_address_salt = 34567;
     const NT::fr acir_hash = 12341234;
 
-    const NT::fr msg_sender_private_key = 123456789;
-    const NT::address msg_sender =
-        NT::fr(uint256_t(0x01071e9a23e0f7edULL, 0x5d77b35d1830fa3eULL, 0xc6ba3660bb1f0c0bULL, 0x2ef9f7f09867fd6eULL));
+    const NT::secp256k1_fr msg_sender_private_key = NT::secp256k1_fr::random_element();
+    const NT::secp256k1_point msg_sender_public_key = NT::secp256k1_group::one * msg_sender_private_key;
+    const NT::address msg_sender = compute_ethereum_address(msg_sender_public_key);
     const NT::address tx_origin = msg_sender;
 
     FunctionData<NT> function_data{

@@ -41,6 +41,11 @@ struct NativeTypes {
     // typedef barretenberg::g1::element bn254_jac_point;
     // typedef barretenberg::g1 bn254_group;
 
+    typedef secp256k1::g1 secp256k1_group;
+    typedef secp256k1::g1::Fr secp256k1_fr;
+    typedef secp256k1::g1::element secp256k1_jac_point;
+    typedef secp256k1::g1::affine_element secp256k1_point;
+
     typedef std::vector<bool> bit_array;
     typedef std::vector<uint8_t> byte_array;
     typedef std::string packed_byte_array;
