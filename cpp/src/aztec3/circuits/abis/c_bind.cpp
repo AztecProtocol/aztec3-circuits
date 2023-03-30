@@ -265,10 +265,8 @@ WASM_EXPORT void abis__compute_function_tree(uint8_t const* function_leaves_buf,
     std::vector<NT::fr> tree =
         compute_partial_left_tree<aztec3::FUNCTION_TREE_HEIGHT>(function_leaves_buf, num_leaves, zero_leaf);
 
-    info("got tree, writing... ", tree.size());
     // serialize and return tree
     write(output, tree);
-    info("returning buffer");
 }
 
 /**
