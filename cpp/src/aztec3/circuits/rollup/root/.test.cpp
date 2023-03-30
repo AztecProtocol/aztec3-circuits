@@ -256,20 +256,6 @@ TEST_F(root_rollup_tests, almost_full_root)
     BaseRollupInputs base_inputs_1 = dummy_base_rollup_inputs_with_vk_proof();
     BaseRollupInputs base_inputs_2 = dummy_base_rollup_inputs_with_vk_proof();
 
-    // Start private data trees
-    base_inputs_1.start_private_data_tree_snapshot = {
-        .root = data_tree.root(),
-        .next_available_leaf_index = 0,
-    };
-    base_inputs_2.start_private_data_tree_snapshot = base_inputs_1.start_private_data_tree_snapshot;
-
-    // Start contract trees
-    base_inputs_1.start_contract_tree_snapshot = {
-        .root = contract_tree.root(),
-        .next_available_leaf_index = 0,
-    };
-    base_inputs_2.start_contract_tree_snapshot = base_inputs_1.start_contract_tree_snapshot;
-
     // Insert commitments into base rollup 2
     for (uint8_t i = 0; i < 2; i++) {
         for (uint8_t j = 0; j < 4; j++) {
