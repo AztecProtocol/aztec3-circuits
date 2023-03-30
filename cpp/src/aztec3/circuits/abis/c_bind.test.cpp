@@ -226,6 +226,7 @@ TEST(abi_tests, compute_function_tree)
     std::vector<uint8_t> output(sizeof(NT::fr) * num_nodes);
     abis__compute_function_tree(reinterpret_cast<uint8_t*>(leaves.data()), num_nonzero_leaves, output.data());
 
+    info("output ", output);
     using serialize::read;
     // compare cbind results with direct computation
     std::vector<NT::fr> got_tree;
@@ -234,10 +235,12 @@ TEST(abi_tests, compute_function_tree)
     // read(output, got_tree);
     // info("got tree: ", got_tree);
 
-    // get rid of this hideous deserializing
+    // TODO get rid of this hideous deserializing
     for (size_t l = 0; l < num_nodes; l++) {
-        got_tree.push_back(NT::fr::serialize_from_buffer(
-            reinterpret_cast<uint8_t*>(output.data() + sizeof(size_t) + (l * sizeof(NT::fr)))));
+        // four bytes here for the size that was serialized... not sure why read didnt work
+        uint8_t* node_buf = reinterpret_cast<uint8_t*>(output.data() + 4 + (l * sizeof(NT::fr)));
+        NT::fr node = NT::fr::serialize_from_buffer(node_buf);
+        got_tree.push_back(node);
     }
     EXPECT_EQ(got_tree, plonk::stdlib::merkle_tree::compute_tree_native(leaves_frs));
 }
