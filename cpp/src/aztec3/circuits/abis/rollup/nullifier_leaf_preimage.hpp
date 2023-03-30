@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aztec3/utils/types/circuit_types.hpp"
+#include "barretenberg/stdlib/merkle_tree/hash.hpp"
 namespace aztec3::circuits::abis {
 
 using aztec3::utils::types::CircuitTypes;
@@ -13,12 +14,14 @@ template <typename NCT> struct NullifierLeafPreimage {
     typedef typename NCT::uint32 uint32;
 
     fr leaf_value;
-    fr next_value;
     uint32 next_index;
+    fr next_value;
 
     bool operator==(NullifierLeafPreimage<NCT> const&) const = default;
 
     static NullifierLeafPreimage<NCT> empty() { return { 0, 0, 0 }; };
+
+    fr hash() const { return stdlib::merkle_tree::hash_multiple_native({ leaf_value, next_index, next_value }); }
 };
 
 template <typename NCT> void read(uint8_t const*& it, NullifierLeafPreimage<NCT>& obj)
