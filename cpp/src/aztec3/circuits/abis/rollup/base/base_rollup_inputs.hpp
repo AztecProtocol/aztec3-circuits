@@ -26,6 +26,8 @@ template <typename NCT> struct BaseRollupInputs {
     std::array<NullifierLeafPreimage<NCT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH> low_nullifier_leaf_preimages;
     std::array<MembershipWitness<NCT, NULLIFIER_TREE_HEIGHT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH>
         low_nullifier_membership_witness;
+    std::array<MembershipWitness<NCT, NULLIFIER_TREE_HEIGHT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH>
+        new_insertion_membership_witness;
 
     // For inserting the new subtrees into their respective trees:
     // Note: the insertion leaf index can be derived from the above snapshots' `next_available_leaf_index` values.
@@ -53,6 +55,7 @@ template <typename NCT> void read(uint8_t const*& it, BaseRollupInputs<NCT>& obj
     read(it, obj.start_contract_tree_snapshot);
     read(it, obj.low_nullifier_leaf_preimages);
     read(it, obj.low_nullifier_membership_witness);
+    read(it, obj.new_insertion_membership_witness);
     read(it, obj.new_commitments_subtree_sibling_path);
     read(it, obj.new_nullifiers_subtree_sibling_path);
     read(it, obj.new_contracts_subtree_sibling_path);
@@ -71,6 +74,7 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, BaseRollupInputs<N
     write(buf, obj.start_contract_tree_snapshot);
     write(buf, obj.low_nullifier_leaf_preimages);
     write(buf, obj.low_nullifier_membership_witness);
+    write(buf, obj.new_insertion_membership_witness);
     write(buf, obj.new_commitments_subtree_sibling_path);
     write(buf, obj.new_nullifiers_subtree_sibling_path);
     write(buf, obj.new_contracts_subtree_sibling_path);
@@ -89,6 +93,8 @@ template <typename NCT> std::ostream& operator<<(std::ostream& os, BaseRollupInp
               << obj.low_nullifier_leaf_preimages << "\n"
               << "low_nullifier_membership_witness:\n"
               << obj.low_nullifier_membership_witness << "\n"
+              << "new_insertion_membership_witness:\n"
+              << obj.new_insertion_membership_witness << "\n"
               << "new_commitments_subtree_sibling_path:\n"
               << obj.new_commitments_subtree_sibling_path << "\n"
               << "new_nullifiers_subtree_sibling_path:\n"
