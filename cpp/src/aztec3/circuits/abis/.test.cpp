@@ -20,7 +20,7 @@ TEST(abi_tests, test_read_write_native_call_context)
     CallContext<NT> call_context = {
         .msg_sender = 1,
         .storage_contract_address = 2,
-        .tx_origin = 3, // MIKE FIX THIS!
+        .portal_contract_address = 3,
         .is_delegate_call = false,
         .is_static_call = false,
         .is_contract_deployment = false,
@@ -89,7 +89,7 @@ TEST(abi_tests, test_native_call_context)
     CallContext<NT> call_context = {
         .msg_sender = 10,
         .storage_contract_address = 11,
-        .tx_origin = 12,
+        .portal_contract_address = 12,
         .is_delegate_call = false,
         .is_static_call = false,
     };
@@ -102,7 +102,7 @@ TEST(abi_tests, test_native_to_circuit_call_context)
     CallContext<NT> native_call_context = {
         .msg_sender = 10,
         .storage_contract_address = 11,
-        .tx_origin = 12,
+        .portal_contract_address = 12,
         .is_delegate_call = false,
         .is_static_call = false,
     };
