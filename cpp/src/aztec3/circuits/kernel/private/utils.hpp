@@ -5,12 +5,10 @@
 namespace {
 using NT = aztec3::utils::types::NativeTypes;
 using aztec3::circuits::abis::private_kernel::PreviousKernelData;
-using namespace plonk::stdlib::types;
 } // namespace
 
 namespace aztec3::circuits::kernel::private_kernel::utils {
 
-// TODO rename dummy
-PreviousKernelData<NT> default_previous_kernel();
+PreviousKernelData<NT> dummy_previous_kernel_with_vk_proof();
 
 } // namespace aztec3::circuits::kernel::private_kernel::utils
