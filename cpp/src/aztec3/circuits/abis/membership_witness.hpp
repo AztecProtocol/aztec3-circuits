@@ -15,7 +15,7 @@ template <typename NCT, unsigned int N> struct MembershipWitness {
     typedef typename NCT::boolean boolean;
 
     uint32 leaf_index;
-    std::array<fr, N> sibling_path = std::array<fr, N>({ 0, { 0 } });
+    std::array<fr, N> sibling_path = { 0 };
 
     boolean operator==(MembershipWitness<NCT, N> const& other) const
     {
