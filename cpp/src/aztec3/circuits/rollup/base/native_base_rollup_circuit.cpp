@@ -22,7 +22,16 @@ namespace aztec3::circuits::rollup::native_base_rollup {
 
 const NT::fr EMPTY_COMMITMENTS_SUBTREE_ROOT = MerkleTree(PRIVATE_DATA_SUBTREE_DEPTH).root();
 const NT::fr EMPTY_CONTRACTS_SUBTREE_ROOT = MerkleTree(CONTRACT_COMMITMENTS_SUBTREE_DEPTH).root();
-const NT::fr EMPTY_NULLIFIER_SUBTREE_ROOT = MerkleTree(NULLIFIER_SUBTREE_DEPTH).root();
+
+// Note: this is temporary until I work out how to encode a large fr in a constant
+NT::fr calculate_empty_nullifier_subtree_root()
+{
+    MerkleTree empty_nullifier_tree = MerkleTree(NULLIFIER_SUBTREE_DEPTH);
+    for (size_t i = 0; i < KERNEL_NEW_NULLIFIERS_LENGTH * 2; i++) {
+        empty_nullifier_tree.update_element(i, NullifierLeaf{ .value = 0, .nextIndex = 0, .nextValue = 0 }.hash());
+    }
+    return empty_nullifier_tree.root();
+}
 
 // TODO: can we aggregate proofs if we do not have a working circuit impl
 
@@ -104,6 +113,34 @@ NT::fr iterate_through_tree_via_sibling_path(NT::fr leaf, NT::uint32 leafIndex, 
     return leaf;
 }
 
+template <size_t N>
+NT::fr iterate_through_tree_via_sibling_path_traced(NT::fr leaf,
+                                                    NT::uint32 leafIndex,
+                                                    std::array<NT::fr, N> siblingPath)
+{
+    for (size_t i = 0; i < siblingPath.size(); i++) {
+        if (leafIndex & (1 << i)) {
+            info(siblingPath[i], " ", leaf);
+            leaf = crypto::pedersen_hash::hash_multiple({ siblingPath[i], leaf });
+        } else {
+            info(leaf, " ", siblingPath[i]);
+            leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
+        }
+    }
+    return leaf;
+}
+
+template <size_t N>
+void check_membership_trace(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath, NT::fr root)
+{
+    auto calculatedRoot = iterate_through_tree_via_sibling_path(leaf, leafIndex, siblingPath);
+    info("CHECK MEMBERSHIP");
+    info(calculatedRoot);
+    info(root);
+    if (calculatedRoot != root) {
+        // throw std::runtime_error("Merkle membership check failed");
+    }
+}
 template <size_t N>
 void check_membership(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath, NT::fr root)
 {
@@ -329,6 +366,7 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(BaseRo
                 auto is_next_greater_than = low_nullifier_preimage.next_value > nullifier;
                 if (!(is_less_than_nullifier && is_next_greater_than)) {
                     if (low_nullifier_preimage.next_index != 0 && low_nullifier_preimage.next_value != 0) {
+                        info("THIS IS INVALID");
                         // throw std::runtime_error("Low nullifier preimage is incorrect");
                     }
                 }
@@ -339,12 +377,18 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(BaseRo
                     .nextIndex = low_nullifier_preimage.next_index,
                     .nextValue = low_nullifier_preimage.next_value,
                 };
+                info("Iteration", nullifier_index);
+                info("Nullifier", nullifier);
+                info("Original low nullifier val: ", original_low_nullifier.value);
+                info("Original low nullifier nextIdx: ", original_low_nullifier.nextIndex);
+                info("Original low nullifier nextVal: ", original_low_nullifier.nextValue);
 
+                info("membership check");
                 // perform membership check for the low nullifier
-                check_membership<NULLIFIER_TREE_HEIGHT>(original_low_nullifier.hash(),
-                                                        witness.leaf_index,
-                                                        witness.sibling_path,
-                                                        current_nullifier_tree_root);
+                check_membership_trace<NULLIFIER_TREE_HEIGHT>(original_low_nullifier.hash(),
+                                                              witness.leaf_index,
+                                                              witness.sibling_path,
+                                                              current_nullifier_tree_root);
 
                 // Calculate the new value of the low_nullifier_leaf
                 NullifierLeaf updated_low_nullifier = NullifierLeaf{ .value = low_nullifier_preimage.leaf_value,
@@ -396,6 +440,9 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(BaseRo
 
 BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
 {
+    // TODO: move this into a constant - calc empty nullifier_subtree hash
+    // calc empty subtree root
+    const NT::fr EMPTY_NULLIFIER_SUBTREE_ROOT = calculate_empty_nullifier_subtree_root();
 
     // First we compute the contract tree leaves
 
@@ -415,15 +462,15 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
     // next_available_leaf_index is at the leaf level. We need at the subtree level (say height 3). So divide by 8.
     // (if leaf is at index x, its parent is at index floor >> depth)
     auto leafIndexAtSubtreeDepth =
-        baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index >> (PRIVATE_DATA_SUBTREE_DEPTH + 1);
+        baseRollupInputs.start_private_data_tree_snapshot.next_available_leaf_index >> (PRIVATE_DATA_SUBTREE_DEPTH);
     check_membership(EMPTY_COMMITMENTS_SUBTREE_ROOT,
                      leafIndexAtSubtreeDepth,
                      baseRollupInputs.new_commitments_subtree_sibling_path,
                      baseRollupInputs.start_private_data_tree_snapshot.root);
 
     // check for contracts
-    auto leafIndexContractsSubtreeDepth = baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index >>
-                                          (CONTRACT_COMMITMENTS_SUBTREE_DEPTH + 1);
+    auto leafIndexContractsSubtreeDepth =
+        baseRollupInputs.start_contract_tree_snapshot.next_available_leaf_index >> (CONTRACT_COMMITMENTS_SUBTREE_DEPTH);
     check_membership(EMPTY_CONTRACTS_SUBTREE_ROOT,
                      leafIndexContractsSubtreeDepth,
                      baseRollupInputs.new_contracts_subtree_sibling_path,
@@ -431,7 +478,7 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
 
     // check for nullifiers
     auto leafIndexNullifierSubtreeDepth =
-        baseRollupInputs.start_nullifier_tree_snapshot.next_available_leaf_index >> (NULLIFIER_SUBTREE_DEPTH + 1);
+        uint32_t(baseRollupInputs.start_nullifier_tree_snapshot.next_available_leaf_index >> NULLIFIER_SUBTREE_DEPTH);
     check_membership(EMPTY_NULLIFIER_SUBTREE_ROOT,
                      leafIndexNullifierSubtreeDepth,
                      baseRollupInputs.new_nullifiers_subtree_sibling_path,
