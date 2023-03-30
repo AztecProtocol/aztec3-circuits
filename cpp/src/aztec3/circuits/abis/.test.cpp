@@ -4,6 +4,9 @@
 #include "index.hpp"
 #include <barretenberg/stdlib/types/types.hpp>
 
+#include "private_kernel/previous_kernel_data.hpp"
+#include "private_kernel/private_inputs.hpp"
+
 namespace aztec3::circuits::abis {
 
 using Composer = plonk::stdlib::types::Composer;
@@ -12,7 +15,26 @@ using NT = aztec3::utils::types::NativeTypes;
 
 class abi_tests : public ::testing::Test {};
 
-TEST(abi_tests, test_native_function_data)
+TEST(abi_tests, test_read_write_native_call_context)
+{
+    CallContext<NT> call_context = {
+        .msg_sender = 1,
+        .storage_contract_address = 2,
+        .tx_origin = 3, // MIKE FIX THIS!
+        .is_delegate_call = false,
+        .is_static_call = false,
+        .is_contract_deployment = false,
+    };
+
+    info("call_context: ", call_context);
+
+    auto buffer = to_buffer(call_context);
+    auto call_context_2 = from_buffer<CallContext<NT>>(buffer.data());
+
+    EXPECT_EQ(call_context, call_context_2);
+}
+
+TEST(abi_tests, test_read_write_native_function_data)
 {
     FunctionData<NT> function_data = {
         .function_selector = 11,
@@ -26,6 +48,24 @@ TEST(abi_tests, test_native_function_data)
     auto function_data_2 = from_buffer<FunctionData<NT>>(buffer.data());
 
     EXPECT_EQ(function_data, function_data_2);
+}
+
+TEST(abi_tests, test_read_write_native_previous_kernel_data)
+{
+    private_kernel::PreviousKernelData<NT> previous_kernel_data = {
+        .public_inputs = private_kernel::PublicInputs<NT>(),
+        .proof = NT::Proof(),
+        .vk = nullptr,
+        .vk_index = 0,
+        .vk_path = { 0 },
+    };
+
+    info("previous_kernel_data: ", previous_kernel_data);
+
+    auto buffer = to_buffer(previous_kernel_data);
+    auto previous_kernel_data_2 = from_buffer<private_kernel::PreviousKernelData<NT>>(buffer.data());
+
+    EXPECT_EQ(previous_kernel_data, previous_kernel_data_2);
 }
 
 TEST(abi_tests, test_native_to_circuit_function_data)

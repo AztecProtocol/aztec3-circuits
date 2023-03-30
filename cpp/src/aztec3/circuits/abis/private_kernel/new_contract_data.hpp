@@ -14,10 +14,17 @@ using std::is_same;
 template <typename NCT> struct NewContractData {
     typedef typename NCT::address address;
     typedef typename NCT::fr fr;
+    typedef typename NCT::boolean boolean;
 
     address contract_address;
     address portal_contract_address;
     fr function_tree_root;
+
+    boolean operator==(NewContractData<NCT> const& other) const
+    {
+        return contract_address == other.contract_address && portal_contract_address == other.portal_contract_address &&
+               function_tree_root == other.function_tree_root;
+    };
 
     template <typename Composer> NewContractData<CircuitTypes<Composer>> to_circuit_type(Composer& composer) const
     {
