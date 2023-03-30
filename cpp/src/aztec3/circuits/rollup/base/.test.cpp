@@ -174,6 +174,8 @@ class base_rollup_tests : public ::testing::Test {
         std::array<NullifierLeafPreimage<NT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH> low_nullifier_leaf_preimages;
         std::array<MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH>
             low_nullifier_membership_witness;
+        std::array<MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH>
+            new_insertion_membership_witness;
 
         for (size_t i = 0; i < 2 * KERNEL_NEW_NULLIFIERS_LENGTH; ++i) {
             low_nullifier_leaf_preimages[i] = NullifierLeafPreimage<NT>::empty();
@@ -204,6 +206,7 @@ class base_rollup_tests : public ::testing::Test {
                                               .start_contract_tree_snapshot = AppendOnlyTreeSnapshot<NT>::empty(),
                                               .low_nullifier_leaf_preimages = low_nullifier_leaf_preimages,
                                               .low_nullifier_membership_witness = low_nullifier_membership_witness,
+                                              .new_insertion_membership_witness = new_insertion_membership_witness,
                                               .new_commitments_subtree_sibling_path = { 0 },
                                               .new_nullifiers_subtree_sibling_path = { 0 },
                                               .new_contracts_subtree_sibling_path = { 0 },
@@ -214,7 +217,7 @@ class base_rollup_tests : public ::testing::Test {
                                               .constants = constantRollupData };
         return baseRollupInputs;
     }
-};
+}; // namespace aztec3::circuits::rollup::base::native_base_rollup_circuit
 
 TEST_F(base_rollup_tests, no_new_contract_leafs)
 {
@@ -261,21 +264,21 @@ template <size_t N> NT::fr calc_root(NT::fr leaf, NT::uint32 leafIndex, std::arr
 {
     for (size_t i = 0; i < siblingPath.size(); i++) {
         if (leafIndex & (1 << i)) {
-            info(siblingPath[i], " ", leaf);
+            // info(siblingPath[i], " ", leaf);
             leaf = crypto::pedersen_hash::hash_multiple({ siblingPath[i], leaf });
         } else {
-            info(leaf, " ", siblingPath[i]);
+            // info(leaf, " ", siblingPath[i]);
             leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
         }
     }
     return leaf;
 }
 
-fr calc_root_sibling_path(std::vector<std::pair<fr, fr>> siblingPath)
+fr calc_root_hash_path(std::vector<std::pair<fr, fr>> hash_path)
 {
     fr leaf = 0;
-    for (size_t i = 0; i < siblingPath.size(); i++) {
-        leaf = crypto::pedersen_hash::hash_multiple({ siblingPath[i].first, siblingPath[i].second });
+    for (size_t i = 0; i < hash_path.size(); i++) {
+        leaf = crypto::pedersen_hash::hash_multiple({ hash_path[i].first, hash_path[i].second });
     }
     return leaf;
 }
@@ -406,55 +409,65 @@ TEST_F(base_rollup_tests, new_nullifier_tree_all_larger)
     };
 
     // TODO: unify the nullifier preimage types to fit the ones used in the nullifier tree
-    std::array<NullifierLeafPreimage<NT>, KERNEL_NEW_NULLIFIERS_LENGTH * 2> new_nullifier_leaves;
-    std::array<NullifierLeafPreimage<NT>, KERNEL_NEW_NULLIFIERS_LENGTH * 2> low_nullifier_leaves_preimages;
-    std::array<MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>, KERNEL_NEW_NULLIFIERS_LENGTH * 2>
+    const size_t NUMBER_OF_NULLIFIERS = KERNEL_NEW_NULLIFIERS_LENGTH * 2;
+    std::array<NullifierLeafPreimage<NT>, NUMBER_OF_NULLIFIERS> new_nullifier_leaves;
+    std::array<NullifierLeafPreimage<NT>, NUMBER_OF_NULLIFIERS> low_nullifier_leaves_preimages;
+    std::array<MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>, NUMBER_OF_NULLIFIERS>
         low_nullifier_leaves_preimages_witnesses;
+    // std::array<MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>, NUMBER_OF_NULLIFIERS> new_membership_witnesses;
 
     // Calculate the low nullifier pre-images (spoiler, its will be the same leaf for each of them, with a different
     // val)
-    const size_t NUMBER_OF_NULLIFIERS = KERNEL_NEW_NULLIFIERS_LENGTH * 2;
     for (size_t i = 0; i < NUMBER_OF_NULLIFIERS; ++i) {
 
-        info("before");
-        info(NUMBER_OF_NULLIFIERS + i);
-        size_t insert_value = 8 + i;
-        nullifier_tree.update_element(insert_value);
-        info("after");
-
-        // // Create a new leaf at the end of the tree
-        // NullifierLeafPreimage<NT> low_nullifier_preimage = NullifierLeafPreimage<NT>{
-        //     .leaf_value = NUMBER_OF_NULLIFIERS + i,
-        //     .next_index = 0,
-        //     .next_value = 0,
-        // };
-        // // Update the tree to include this value at the end
-        // nullifier_tree.update_element(KERNEL_NEW_NULLIFIERS_LENGTH * 2, low_nullifier_preimage.hash());
-        // low_nullifier_leaves_preimages[i] = low_nullifier_preimage;
-
-        // // Update the previous node in the linked list
-        // NullifierLeafPreimage<NT> updated_low_nullifier_preimage = NullifierLeafPreimage<NT>{
-        //    .leaf_value = NUMBER_OF_NULLIFIERS + i - 1,
-        //     .next_index = uint32_t(NUMBER_OF_NULLIFIERS + i),
-        //     .next_value = NUMBER_OF_NULLIFIERS + i,
-        // };
-        // nullifier_tree.update_element(NUMBER_OF_NULLIFIERS + i - 1, updated_low_nullifier_preimage.hash());
+        // Get preimage and membership proof of the leaf below
+        native_base_rollup::NullifierLeaf low_tree_leaf = nullifier_tree.get_leaf(NUMBER_OF_NULLIFIERS + i - 1);
+        NullifierLeafPreimage<NT> low_leaf = NullifierLeafPreimage<NT>{ .leaf_value = low_tree_leaf.value,
+                                                                        .next_index = low_tree_leaf.nextIndex,
+                                                                        .next_value = low_tree_leaf.nextValue };
 
         // Create membership witness array
-        std::vector<fr> frontier_path_vec = nullifier_tree.get_frontier_path(NUMBER_OF_NULLIFIERS + i);
+        std::vector<std::pair<fr, fr>> hash_path = nullifier_tree.get_hash_path(NUMBER_OF_NULLIFIERS + i - 1);
+        std::vector<fr> frontier_path_vec = nullifier_tree.get_frontier_path(NUMBER_OF_NULLIFIERS + i - 1);
         std::array<fr, NULLIFIER_TREE_HEIGHT> frontier_arr;
         std::copy(frontier_path_vec.begin(), frontier_path_vec.end(), frontier_arr.begin());
+
+        // auto leaves = nullifier_tree.get_leaves();
+        // for (size_t i = 0; i < leaves.size(); ++i) {
+        //     info("leaf", i);
+        //     info(leaves[i].value);
+        // }
+
+        // info("all leaves");
+        // info("\n");
+        // info("root for element :", NUMBER_OF_NULLIFIERS + i);
+        // info(nullifier_tree.root());
+        // info("\n");
+        // info("leaf", low_tree_leaf.hash());
+        // info("corresponding hash path");
+        // info(hash_path);
 
         // clear mem for vec
         frontier_path_vec.clear();
         frontier_path_vec.shrink_to_fit();
 
         MembershipWitness<NT, NULLIFIER_TREE_HEIGHT> membership_witness = {
-            .leaf_index = uint32_t(NUMBER_OF_NULLIFIERS + i),
+            .leaf_index = uint32_t(NUMBER_OF_NULLIFIERS + i - 1),
             .sibling_path = frontier_arr,
         };
         low_nullifier_leaves_preimages_witnesses[i] = membership_witness;
+        low_nullifier_leaves_preimages[i] = low_leaf;
+
+        // insert elem
+        nullifier_tree.update_element(NUMBER_OF_NULLIFIERS + i);
     }
+
+    // Expected end state
+    AppendOnlyTreeSnapshot<NT> nullifier_tree_end_snapshot = {
+        .root = nullifier_tree.root(),
+        .next_available_leaf_index = 16,
+    };
+
     // Generate a new empty subtree that will be added to the tree
     stdlib::types::merkle_tree::MemoryTree new_nullifier_subtree =
         stdlib::types::merkle_tree::MemoryTree(NULLIFIER_SUBTREE_DEPTH);
@@ -465,41 +478,36 @@ TEST_F(base_rollup_tests, new_nullifier_tree_all_larger)
     // insertion will update the same note, so we will need to provide a preimage for each note
 
     // Create all of the leafs first, then update them and check the preimages
-    for (size_t i = 0; i < start_next_index + KERNEL_NEW_NULLIFIERS_LENGTH * 2; ++i) {
+    // for (size_t i = 0; i < NEW_NULLIFIERS_LENGTH; ++i) {
+    //     if (i == (NEW_NULLIFIERS_LENGTH)-1) {
+    //         // This will need to point at the first leaf, as it is the largest value
+    //         new_nullifier_leaves[i] =
+    //             NullifierLeafPreimage<NT>{ .leaf_value = NEW_NULLIFIERS_LENGTH + i, .next_index = 0, .next_value = 0
+    //             };
+    //     } else {
+    //         // base case
+    //         new_nullifier_leaves[i] = NullifierLeafPreimage<NT>{ .leaf_value = NEW_NULLIFIERS_LENGTH + i,
+    //                                                              .next_index = uint32_t(NEW_NULLIFIERS_LENGTH + i +
+    //                                                              1), .next_value = NEW_NULLIFIERS_LENGTH + 1 };
+    //     }
 
-        if (i == (start_next_index + KERNEL_NEW_NULLIFIERS_LENGTH * 2) - 1) {
-            // This will need to point at the first leaf, as it is the largest value
-            new_nullifier_leaves[i] = NullifierLeafPreimage<NT>{ .leaf_value = i, .next_index = 0, .next_value = 0 };
-        } else {
-            // base case
-            new_nullifier_leaves[i] =
-                NullifierLeafPreimage<NT>{ .leaf_value = i, .next_index = uint32_t(i + 1), .next_value = i + 1 };
-        }
+    //     new_nullifier_subtree.update_element(i, new_nullifier_leaves[i].hash());
+    // }
+    // // info("NEW NULLIFIER SUBTREE ROOT");
+    // // info(new_nullifier_subtree.root());
 
-        new_nullifier_subtree.update_element(i, new_nullifier_leaves[i].hash());
-    }
-    info("NEW NULLIFIER SUBTREE ROOT");
-    info(new_nullifier_subtree.root());
-
-    fr subtree_root = new_nullifier_subtree.root();
+    // fr subtree_root = new_nullifier_subtree.root();
 
     // Get the sibling path, we should be able to use the same path to get to the end root
     std::vector<fr> frontier_path = nullifier_tree.get_frontier_path(start_next_index);
-
+    std::array<fr, NULLIFIER_SUBTREE_INCLUSION_CHECK_DEPTH> frontier_path_array;
     // Chop the first 3 levels from the frontier_path
     frontier_path.erase(frontier_path.begin(), frontier_path.begin() + 3);
-    std::array<fr, NULLIFIER_SUBTREE_INCLUSION_CHECK_DEPTH> frontier_path_array;
     std::copy(frontier_path.begin(), frontier_path.end(), frontier_path_array.begin());
 
     // Use subtree root and sibling path to calculate the expected *end* state
-    auto end_next_index = start_next_index + uint32_t(KERNEL_NEW_NULLIFIERS_LENGTH * 2);
-    fr root = calc_root(subtree_root, end_next_index >> (NULLIFIER_SUBTREE_DEPTH + 1), frontier_path_array);
-
-    // Expected end state
-    AppendOnlyTreeSnapshot<NT> nullifier_tree_end_snapshot = {
-        .root = root,
-        .next_available_leaf_index = end_next_index,
-    };
+    // auto end_next_index = start_next_index + uint32_t(KERNEL_NEW_NULLIFIERS_LENGTH * 2);
+    // fr root = calc_root(subtree_root, end_next_index >> (NULLIFIER_SUBTREE_DEPTH + 1), frontier_path_array);
 
     // Update our start state
     // Nullifier trees
@@ -511,6 +519,155 @@ TEST_F(base_rollup_tests, new_nullifier_tree_all_larger)
 
     inputs.low_nullifier_leaf_preimages = low_nullifier_leaves_preimages;
     inputs.low_nullifier_membership_witness = low_nullifier_leaves_preimages_witnesses;
+    // inputs.new_insertion_membership_witness = new_membership_witnesses;
+
+    /*
+     * RUN
+     */
+
+    // Run the circuit
+    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
+
+    /**
+     * ASSERT
+     */
+    // Start state
+    ASSERT_EQ(outputs.start_nullifier_tree_snapshot.root, nullifier_tree_start_snapshot.root);
+    ASSERT_EQ(outputs.start_nullifier_tree_snapshot.next_available_leaf_index,
+              nullifier_tree_start_snapshot.next_available_leaf_index);
+
+    // End state
+    ASSERT_EQ(outputs.end_nullifier_tree_snapshot.root, nullifier_tree_end_snapshot.root);
+    ASSERT_EQ(outputs.end_nullifier_tree_snapshot.next_available_leaf_index,
+              nullifier_tree_end_snapshot.next_available_leaf_index);
+}
+
+native_base_rollup::NullifierTree get_initial_nullifier_tree(size_t spacing = 5)
+{
+    // Create a nullifier tree with 8 nullifiers, this padding is required so that the default 0 value in an indexed
+    // merkle tree does not affect our tests Nullifier tree at the start
+    native_base_rollup::NullifierTree nullifier_tree = native_base_rollup::NullifierTree(NULLIFIER_TREE_HEIGHT);
+    // Insert 7 nullifiers so that the tree is now balanced
+    for (size_t i = 1; i < 8; ++i) {
+        // insert 5, 10, 15, 20 ...
+        nullifier_tree.update_element(i * spacing);
+    }
+    return nullifier_tree;
+}
+
+AppendOnlyTreeSnapshot<NT> get_snapshot_of_tree_state(native_base_rollup::NullifierTree nullifier_tree)
+{
+    return {
+        .root = nullifier_tree.root(),
+        .next_available_leaf_index = uint32_t(8),
+    };
+}
+
+TEST_F(base_rollup_tests, new_nullifier_tree_sparse)
+{
+    /**
+     * DESCRIPTION
+     */
+    // Check nullifier insertion for a distinct sparse tree
+    // Doing a batch insertion at the end
+
+    /**
+     * SETUP
+     */
+    BaseRollupInputs inputs = getEmptyBaseRollupInputs();
+
+    // Get initial tree with values , 0, 5, 10, 15
+    native_base_rollup::NullifierTree nullifier_tree = get_initial_nullifier_tree(5);
+    AppendOnlyTreeSnapshot<NT> nullifier_tree_start_snapshot = get_snapshot_of_tree_state(nullifier_tree);
+
+    // TODO: unify the nullifier preimage types to fit the ones used in the nullifier tree
+    const size_t NUMBER_OF_NULLIFIERS = KERNEL_NEW_NULLIFIERS_LENGTH * 2;
+    std::array<NullifierLeafPreimage<NT>, NUMBER_OF_NULLIFIERS> new_nullifier_leaves;
+    std::array<NullifierLeafPreimage<NT>, NUMBER_OF_NULLIFIERS> low_nullifier_leaves_preimages;
+    std::array<MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>, NUMBER_OF_NULLIFIERS>
+        low_nullifier_leaves_preimages_witnesses;
+    std::array<MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>, NUMBER_OF_NULLIFIERS> new_membership_witnesses;
+
+    // Calculate the low nullifier pre-images (spoiler, its will be the same leaf for each of them, with a different
+    // val)
+    for (size_t i = 0; i < NUMBER_OF_NULLIFIERS; ++i) {
+
+        auto insertion_value = i * 5 + 1;
+
+        // Get preimage and membership proof of the leaf below
+        std::pair<native_base_rollup::NullifierLeaf, size_t> low_tree_leaf_location =
+            nullifier_tree.find_lower(insertion_value);
+        native_base_rollup::NullifierLeaf low_tree_leaf = low_tree_leaf_location.first;
+        size_t low_tree_leaf_index = low_tree_leaf_location.second;
+
+        NullifierLeafPreimage<NT> low_leaf = NullifierLeafPreimage<NT>{ .leaf_value = low_tree_leaf.value,
+                                                                        .next_index = low_tree_leaf.nextIndex,
+                                                                        .next_value = low_tree_leaf.nextValue };
+
+        // Create membership witness array
+        std::vector<std::pair<fr, fr>> hash_path = nullifier_tree.get_hash_path(low_tree_leaf_index);
+        std::vector<fr> frontier_path_vec = nullifier_tree.get_frontier_path(low_tree_leaf_index);
+        std::array<fr, NULLIFIER_TREE_HEIGHT> frontier_arr;
+        std::copy(frontier_path_vec.begin(), frontier_path_vec.end(), frontier_arr.begin());
+
+        // // clear mem for vec // frontier_path_vec.clear(); // frontier_path_vec.shrink_to_fit();
+
+        MembershipWitness<NT, NULLIFIER_TREE_HEIGHT> membership_witness = {
+            .leaf_index = uint32_t(low_tree_leaf_index),
+            .sibling_path = frontier_arr,
+        };
+        low_nullifier_leaves_preimages_witnesses[i] = membership_witness;
+        low_nullifier_leaves_preimages[i] = low_leaf;
+
+        // insert elem
+        nullifier_tree.update_element(insertion_value);
+        auto new_nullifier_leaf = nullifier_tree.get_leaf(NUMBER_OF_NULLIFIERS + i);
+
+        // get new insertion membership witness
+        std::vector<fr> new_mem_fp = nullifier_tree.get_frontier_path(NUMBER_OF_NULLIFIERS + i);
+        std::array<fr, NULLIFIER_TREE_HEIGHT> new_mem_arr;
+        std::copy(new_mem_fp.begin(), new_mem_fp.end(), new_mem_arr.begin());
+
+        MembershipWitness<NT, NULLIFIER_TREE_HEIGHT> new_insert_membership_witness = {
+            .leaf_index = uint32_t(NUMBER_OF_NULLIFIERS + i),
+            .sibling_path = new_mem_arr,
+        };
+        new_membership_witnesses[i] = new_insert_membership_witness;
+    }
+
+    // Expected end state
+    AppendOnlyTreeSnapshot<NT> nullifier_tree_end_snapshot = {
+        .root = nullifier_tree.root(),
+        .next_available_leaf_index = 16,
+    };
+
+    // Generate a new empty subtree that will be added to the tree
+    stdlib::types::merkle_tree::MemoryTree new_nullifier_subtree =
+        stdlib::types::merkle_tree::MemoryTree(NULLIFIER_SUBTREE_DEPTH);
+
+    // For each entry into the new merkle tree, we must calculate each of the low nullifier preimages and their
+    // inclusion proofs For this test, each of the nullifiers will be larger than the existing leaves, therefore no
+    // The preimage will be the last node, which will insert to the 0 leaf, in its current impl, each
+    // insertion will update the same note, so we will need to provide a preimage for each note
+
+    // Get the sibling path, we should be able to use the same path to get to the end root
+    std::vector<fr> frontier_path = nullifier_tree.get_frontier_path(8);
+    std::array<fr, NULLIFIER_SUBTREE_INCLUSION_CHECK_DEPTH> frontier_path_array;
+    // Chop the first 3 levels from the frontier_path
+    frontier_path.erase(frontier_path.begin(), frontier_path.begin() + 3);
+    std::copy(frontier_path.begin(), frontier_path.end(), frontier_path_array.begin());
+
+    // Update our start state
+    // Nullifier trees
+    inputs.start_nullifier_tree_snapshot = nullifier_tree_start_snapshot;
+    inputs.new_nullifiers_subtree_sibling_path = frontier_path_array;
+    // TODO: automate creating these two arrays
+    inputs.kernel_data[0].public_inputs.end.new_nullifiers = { 1, 6, 11, 16 };
+    inputs.kernel_data[1].public_inputs.end.new_nullifiers = { 21, 26, 31, 36 };
+
+    inputs.low_nullifier_leaf_preimages = low_nullifier_leaves_preimages;
+    inputs.low_nullifier_membership_witness = low_nullifier_leaves_preimages_witnesses;
+    inputs.new_insertion_membership_witness = new_membership_witnesses;
 
     /**
      * RUN
