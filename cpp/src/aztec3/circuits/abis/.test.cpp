@@ -55,7 +55,7 @@ TEST(abi_tests, test_read_write_native_previous_kernel_data)
     private_kernel::PreviousKernelData<NT> previous_kernel_data = {
         .public_inputs = private_kernel::PublicInputs<NT>(),
         .proof = NT::Proof(),
-        .vk = nullptr,
+        .vk = std::make_shared<NT::VK>(),
         .vk_index = 0,
         .vk_path = { 0 },
     };

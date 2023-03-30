@@ -38,7 +38,7 @@ template <typename NCT> struct FunctionLeafPreimage {
     boolean operator==(FunctionLeafPreimage<NCT> const& other) const
     {
         return function_selector == other.function_selector && is_private == other.is_private &&
-               vk_hash == other.vk_hash && vk_hash == other.vk_hash;
+               vk_hash == other.vk_hash && acir_hash == other.acir_hash;
     };
 
     template <typename Composer> FunctionLeafPreimage<CircuitTypes<Composer>> to_circuit_type(Composer& composer) const

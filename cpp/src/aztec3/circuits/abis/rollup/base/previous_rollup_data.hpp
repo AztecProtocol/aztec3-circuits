@@ -31,7 +31,7 @@ template <typename NCT> void read(uint8_t const*& it, PreviousRollupData<NCT>& o
 
     read(it, obj.base_rollup_public_inputs);
     read(it, obj.proof);
-    // read(it, obj.vk);
+    read(it, obj.vk);
     read(it, obj.vk_index);
     read(it, obj.vk_sibling_path);
 };
@@ -42,7 +42,7 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, PreviousRollupData
 
     write(buf, obj.base_rollup_public_inputs);
     write(buf, obj.proof);
-    // write(buf, *obj.vk);
+    write(buf, *obj.vk);
     write(buf, obj.vk_index);
     write(buf, obj.vk_sibling_path);
 };
@@ -50,9 +50,8 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, PreviousRollupData
 template <typename NCT> std::ostream& operator<<(std::ostream& os, PreviousRollupData<NCT> const& obj)
 {
     return os << "merge_rollup_public_inputs: " << obj.base_rollup_public_inputs << "\n"
-              << "proof: " << obj.proof
-              << "\n"
-              //   << "vk: " << *(obj.vk) << "\n"
+              << "proof: " << obj.proof << "\n"
+              << "vk: " << *(obj.vk) << "\n"
               << "vk_index: " << obj.vk_index << "\n"
               << "vk_sibling_path: " << obj.vk_sibling_path << "\n";
 };
