@@ -480,9 +480,6 @@ TEST(private_kernel_tests, test_basic_contract_deployment)
         NT::fr(uint256_t(0x01071e9a23e0f7edULL, 0x5d77b35d1830fa3eULL, 0xc6ba3660bb1f0c0bULL, 0x2ef9f7f09867fd6eULL));
     const NT::address tx_origin = msg_sender;
 
-    Composer constructor_composer = Composer("../barretenberg/cpp/srs_db/ignition");
-    DB db;
-
     FunctionData<NT> function_data{
         .function_selector = 1, // TODO: deduce this from the contract, somehow.
         .is_private = true,
@@ -498,8 +495,47 @@ TEST(private_kernel_tests, test_basic_contract_deployment)
         .is_contract_deployment = true,
     };
 
-    std::shared_ptr<NT::VK> constructor_vk = constructor_composer.compute_verification_key();
+    NT::fr arg0 = 5;
+    NT::fr arg1 = 1;
+    NT::fr arg2 = 999;
+
+    Composer dummy_constructor_composer = Composer("../barretenberg/cpp/srs_db/ignition");
+    {
+        // Dummmy invokation, in order to derive the vk of this circuit
+
+        // We need to use _dummy_ contract_deployment_data first, because the _proper_ version of the
+        // contract_deployment_data will need to contain the constructor_vk_hash... but the constructor's vk can only be
+        // computed after the composer has composed the circuit!
+        ContractDeploymentData<NT> dummy_contract_deployment_data{
+            .constructor_vk_hash = 0, // dummy
+            .function_tree_root = 0,  // TODO actually get this?
+            .contract_address_salt = contract_address_salt,
+            .portal_contract_address = new_portal_contract_address,
+        };
+
+        DB dummy_db;
+        NativeOracle dummy_constructor_oracle = NativeOracle(dummy_db,
+                                                             new_contract_address,
+                                                             function_data,
+                                                             call_context,
+                                                             dummy_contract_deployment_data,
+                                                             msg_sender_private_key);
+        OracleWrapper dummy_constructor_oracle_wrapper =
+            OracleWrapper(dummy_constructor_composer, dummy_constructor_oracle);
+
+        FunctionExecutionContext dummy_constructor_ctx(dummy_constructor_composer, dummy_constructor_oracle_wrapper);
+
+        constructor(dummy_constructor_ctx, arg0, arg1, arg2);
+    }
+
+    // Now we can derive the vk:
+    std::shared_ptr<NT::VK> constructor_vk = dummy_constructor_composer.compute_verification_key();
     auto constructor_vk_hash = stdlib::recursion::verification_key<CT::bn254>::compress_native(constructor_vk);
+
+    // Now, we can proceed with the proper (non-dummy) invokation of our constructor circuit:
+
+    Composer constructor_composer = Composer("../barretenberg/cpp/srs_db/ignition");
+    DB db;
 
     ContractDeploymentData<NT> contract_deployment_data{
         .constructor_vk_hash = constructor_vk_hash, // TODO actually get this?
@@ -513,10 +549,6 @@ TEST(private_kernel_tests, test_basic_contract_deployment)
     OracleWrapper constructor_oracle_wrapper = OracleWrapper(constructor_composer, constructor_oracle);
 
     FunctionExecutionContext constructor_ctx(constructor_composer, constructor_oracle_wrapper);
-
-    auto arg0 = NT::fr(5);
-    auto arg1 = NT::fr(1);
-    auto arg2 = NT::fr(999);
 
     OptionalPrivateCircuitPublicInputs<NT> opt_constructor_public_inputs =
         constructor(constructor_ctx, arg0, arg1, arg2);
@@ -678,9 +710,6 @@ TEST(private_kernel_tests, test_native_basic_contract_deployment)
      * convert it to native types, so that it can be fed into the kernel circuit.
      *
      */
-    Composer constructor_composer = Composer("../barretenberg/cpp/srs_db/ignition");
-    DB db;
-
     FunctionData<NT> function_data{
         .function_selector = 1, // TODO: deduce this from the contract, somehow.
         .is_private = true,
@@ -696,8 +725,47 @@ TEST(private_kernel_tests, test_native_basic_contract_deployment)
         .is_contract_deployment = true,
     };
 
-    std::shared_ptr<NT::VK> constructor_vk = constructor_composer.compute_verification_key();
+    NT::fr arg0 = 5;
+    NT::fr arg1 = 1;
+    NT::fr arg2 = 999;
+
+    Composer dummy_constructor_composer = Composer("../barretenberg/cpp/srs_db/ignition");
+    {
+        // Dummmy invokation, in order to derive the vk of this circuit
+
+        // We need to use _dummy_ contract_deployment_data first, because the _proper_ version of the
+        // contract_deployment_data will need to contain the constructor_vk_hash... but the constructor's vk can only be
+        // computed after the composer has composed the circuit!
+        ContractDeploymentData<NT> dummy_contract_deployment_data{
+            .constructor_vk_hash = 0, // dummy
+            .function_tree_root = 0,  // TODO actually get this?
+            .contract_address_salt = contract_address_salt,
+            .portal_contract_address = new_portal_contract_address,
+        };
+
+        DB dummy_db;
+        NativeOracle dummy_constructor_oracle = NativeOracle(dummy_db,
+                                                             new_contract_address,
+                                                             function_data,
+                                                             call_context,
+                                                             dummy_contract_deployment_data,
+                                                             msg_sender_private_key);
+        OracleWrapper dummy_constructor_oracle_wrapper =
+            OracleWrapper(dummy_constructor_composer, dummy_constructor_oracle);
+
+        FunctionExecutionContext dummy_constructor_ctx(dummy_constructor_composer, dummy_constructor_oracle_wrapper);
+
+        constructor(dummy_constructor_ctx, arg0, arg1, arg2);
+    }
+
+    // Now we can derive the vk:
+    std::shared_ptr<NT::VK> constructor_vk = dummy_constructor_composer.compute_verification_key();
     auto constructor_vk_hash = stdlib::recursion::verification_key<CT::bn254>::compress_native(constructor_vk);
+
+    // Now, we can proceed with the proper (non-dummy) invokation of our constructor circuit:
+
+    Composer constructor_composer = Composer("../barretenberg/cpp/srs_db/ignition");
+    DB db;
 
     ContractDeploymentData<NT> contract_deployment_data{
         .constructor_vk_hash = constructor_vk_hash, // TODO actually get this?
@@ -711,10 +779,6 @@ TEST(private_kernel_tests, test_native_basic_contract_deployment)
     OracleWrapper constructor_oracle_wrapper = OracleWrapper(constructor_composer, constructor_oracle);
 
     FunctionExecutionContext constructor_ctx(constructor_composer, constructor_oracle_wrapper);
-
-    auto arg0 = NT::fr(5);
-    auto arg1 = NT::fr(1);
-    auto arg2 = NT::fr(999);
 
     OptionalPrivateCircuitPublicInputs<NT> opt_constructor_public_inputs =
         constructor(constructor_ctx, arg0, arg1, arg2);
