@@ -52,6 +52,12 @@ template <typename NCT> struct NewContractData {
         return new_contract_data;
     };
 
+    boolean is_empty() const
+    {
+        return ((contract_address.to_field() == fr(0)) && (portal_contract_address.to_field() == fr(0)) &&
+                (function_tree_root == fr(0)));
+    }
+
     void set_public()
     {
         static_assert(!(std::is_same<NativeTypes, NCT>::value));
@@ -70,6 +76,14 @@ template <typename NCT> struct NewContractData {
         };
 
         return NCT::compress(inputs, GeneratorIndex::CONTRACT_LEAF);
+    }
+
+    void conditional_select(const boolean& condition, const NewContractData<NCT>& other)
+    {
+        contract_address = address::conditional_assign(condition, other.contract_address, contract_address);
+        portal_contract_address =
+            address::conditional_assign(condition, other.portal_contract_address, portal_contract_address);
+        function_tree_root = fr::conditional_assign(condition, other.function_tree_root, function_tree_root);
     }
 };
 
