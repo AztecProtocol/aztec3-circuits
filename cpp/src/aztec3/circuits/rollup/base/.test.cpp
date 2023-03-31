@@ -328,17 +328,16 @@ TEST_F(base_rollup_tests, new_nullifier_tree_empty)
     fr subtree_root = new_nullifier_subtree.root();
 
     // Get the sibling path, we should be able to use the same path to get to the end root
-    std::vector<std::pair<fr, fr>> sibling_path = nullifier_tree.get_hash_path(start_next_index);
-    std::vector<fr> frontier_path = nullifier_tree.get_frontier_path(start_next_index);
+    std::vector<fr> sibling_path = nullifier_tree.get_sibling_path(start_next_index);
 
-    // Chop the first 3 levels from the frontier_path
-    frontier_path.erase(frontier_path.begin(), frontier_path.begin() + 3);
-    std::array<fr, NULLIFIER_SUBTREE_INCLUSION_CHECK_DEPTH> frontier_path_array;
-    std::copy(frontier_path.begin(), frontier_path.end(), frontier_path_array.begin());
+    // Chop the first 3 levels from the sibling_path
+    sibling_path.erase(sibling_path.begin(), sibling_path.begin() + 3);
+    std::array<fr, NULLIFIER_SUBTREE_INCLUSION_CHECK_DEPTH> sibling_path_array;
+    std::copy(sibling_path.begin(), sibling_path.end(), sibling_path_array.begin());
 
     // Use subtree root and sibling path to calculate the expected end state
     auto end_next_index = start_next_index + uint32_t(KERNEL_NEW_NULLIFIERS_LENGTH * 2);
-    fr root = calc_root(subtree_root, end_next_index >> (NULLIFIER_SUBTREE_DEPTH + 1), frontier_path_array);
+    fr root = calc_root(subtree_root, end_next_index >> (NULLIFIER_SUBTREE_DEPTH + 1), sibling_path_array);
 
     // Expected end state
     AppendOnlyTreeSnapshot<NT> nullifier_tree_end_snapshot = {
@@ -348,7 +347,7 @@ TEST_F(base_rollup_tests, new_nullifier_tree_empty)
 
     // Update our start state
     inputs.start_nullifier_tree_snapshot = nullifier_tree_start_snapshot;
-    inputs.new_nullifiers_subtree_sibling_path = frontier_path_array;
+    inputs.new_nullifiers_subtree_sibling_path = sibling_path_array;
 
     /**
      * RUN
@@ -474,16 +473,16 @@ generate_nullifier_tree_testing_values(BaseRollupInputs inputs, size_t starting_
     };
 
     // Get the sibling path, we should be able to use the same path to get to the end root
-    std::vector<fr> frontier_path = parallel_insertion_tree.get_frontier_path(8);
-    std::array<fr, NULLIFIER_SUBTREE_INCLUSION_CHECK_DEPTH> frontier_path_array;
-    // Chop the first 3 levels from the frontier_path
-    frontier_path.erase(frontier_path.begin(), frontier_path.begin() + 3);
-    std::copy(frontier_path.begin(), frontier_path.end(), frontier_path_array.begin());
+    std::vector<fr> sibling_path = parallel_insertion_tree.get_sibling_path(8);
+    std::array<fr, NULLIFIER_SUBTREE_INCLUSION_CHECK_DEPTH> sibling_path_array;
+    // Chop the first 3 levels from the sibling_path
+    sibling_path.erase(sibling_path.begin(), sibling_path.begin() + 3);
+    std::copy(sibling_path.begin(), sibling_path.end(), sibling_path_array.begin());
 
     // Update our start state
     // Nullifier trees
     inputs.start_nullifier_tree_snapshot = nullifier_tree_start_snapshot;
-    inputs.new_nullifiers_subtree_sibling_path = frontier_path_array;
+    inputs.new_nullifiers_subtree_sibling_path = sibling_path_array;
 
     inputs.kernel_data[0].public_inputs.end.new_nullifiers = new_nullifiers_kernel_1;
     inputs.kernel_data[1].public_inputs.end.new_nullifiers = new_nullifiers_kernel_2;

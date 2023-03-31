@@ -62,7 +62,7 @@ NullifierMemoryTreeTestingHarness::circuit_prep_batch_insert(std::vector<fr> con
             }
 
             // Get the sibling path for existence of the old leaf
-            std::vector<fr> sibling_path = this->get_frontier_path(current);
+            std::vector<fr> sibling_path = this->get_sibling_path(current);
 
             sibling_paths.push_back(sibling_path);
             low_nullifier_indexes.push_back(static_cast<uint32_t>(current));
