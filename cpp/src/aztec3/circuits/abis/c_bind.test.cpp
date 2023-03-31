@@ -222,13 +222,13 @@ TEST(abi_tests, compute_function_tree)
     constexpr size_t num_nodes = (2 << aztec3::FUNCTION_TREE_HEIGHT) - 1;
 
     // call cbind and get output (root)
-    std::vector<uint8_t> output(sizeof(NT::fr) * num_nodes);
-    abis__compute_function_tree(reinterpret_cast<uint8_t*>(leaves.data()), num_nonzero_leaves, output.data());
+    uint8_t* output = (uint8_t*)malloc(sizeof(NT::fr) * num_nodes);
+    abis__compute_function_tree(reinterpret_cast<uint8_t*>(leaves.data()), num_nonzero_leaves, output);
 
     using serialize::read;
     // compare cbind results with direct computation
     std::vector<NT::fr> got_tree;
-    uint8_t const* output_copy = output.data();
+    uint8_t const* output_copy = output;
     read(output_copy, got_tree);
 
     EXPECT_EQ(got_tree, plonk::stdlib::merkle_tree::compute_tree_native(leaves_frs));

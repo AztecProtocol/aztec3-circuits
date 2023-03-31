@@ -95,7 +95,6 @@ compute_partial_left_tree(uint8_t const* leaves_buf, uint8_t num_leaves, NT::fr 
         leaves[l] = leaf;
     }
 
-    info("computing tree itself from bberg");
     // compute the root of this complete tree, return
     return plonk::stdlib::merkle_tree::compute_tree_native(leaves);
 }
