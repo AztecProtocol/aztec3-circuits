@@ -28,6 +28,10 @@ class NullifierMemoryTreeTestingHarness : public stdlib::merkle_tree::NullifierM
     // Get the value immediately lower than the given value
     std::pair<nullifier_leaf, size_t> find_lower(fr const& value);
 
+    // Utilities to inspect tree
+    fr size() const { return total_size_; }
+    fr depth() const { return depth_; }
+
     // Get all of the sibling paths and low nullifier values required to craft an non membership / inclusion proofs
     std::pair<std::vector<nullifier_leaf>, std::pair<std::vector<std::vector<fr>>, std::vector<uint32_t>>>
     circuit_prep_batch_insert(std::vector<fr> const& values, std::vector<fr> const& insertion_locations);
