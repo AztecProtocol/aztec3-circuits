@@ -179,8 +179,6 @@ class base_rollup_tests : public ::testing::Test {
         std::array<NullifierLeafPreimage<NT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH> low_nullifier_leaf_preimages;
         std::array<MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH>
             low_nullifier_membership_witness;
-        std::array<MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>, 2 * KERNEL_NEW_NULLIFIERS_LENGTH>
-            new_insertion_membership_witness;
 
         for (size_t i = 0; i < 2 * KERNEL_NEW_NULLIFIERS_LENGTH; ++i) {
             low_nullifier_leaf_preimages[i] = NullifierLeafPreimage<NT>::empty();
@@ -211,7 +209,6 @@ class base_rollup_tests : public ::testing::Test {
                                               .start_contract_tree_snapshot = AppendOnlyTreeSnapshot<NT>::empty(),
                                               .low_nullifier_leaf_preimages = low_nullifier_leaf_preimages,
                                               .low_nullifier_membership_witness = low_nullifier_membership_witness,
-                                              .new_insertion_membership_witness = new_insertion_membership_witness,
                                               .new_commitments_subtree_sibling_path = { 0 },
                                               .new_nullifiers_subtree_sibling_path = { 0 },
                                               .new_contracts_subtree_sibling_path = { 0 },
