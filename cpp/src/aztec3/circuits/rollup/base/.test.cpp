@@ -51,6 +51,8 @@
 #include <tuple>
 #include <vector>
 
+// Nullifier tree building lib
+#include "./nullifier_tree_testing_harness.hpp"
 // #include <aztec3/constants.hpp>
 // #include <barretenberg/crypto/pedersen/pedersen.hpp>
 // #include <barretenberg/stdlib/hash/pedersen/pedersen.hpp>
@@ -262,7 +264,7 @@ TEST_F(base_rollup_tests, contract_leaf_inserted)
     run_cbind(inputs, outputs);
 }
 
-// TODO: move into helper file
+// TODO : move into helper file
 template <size_t N> NT::fr calc_root(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath)
 {
     for (size_t i = 0; i < siblingPath.size(); i++) {
@@ -303,7 +305,7 @@ TEST_F(base_rollup_tests, new_nullifier_tree_empty)
 
     // Create a nullifier tree with 8 nullifiers, this padding is required so that the default 0 value in an indexed
     // merkle tree does not affect our tests Nullifier tree at the start
-    native_base_rollup::NullifierTree nullifier_tree = native_base_rollup::NullifierTree(NULLIFIER_TREE_HEIGHT);
+    NullifierMemoryTreeTestingHarness nullifier_tree = NullifierMemoryTreeTestingHarness(NULLIFIER_TREE_HEIGHT);
     // Insert 7 nullifiers so that the tree is now balanced
     for (size_t i = 1; i < 8; ++i) {
         nullifier_tree.update_element(i);
@@ -375,11 +377,11 @@ TEST_F(base_rollup_tests, new_nullifier_tree_empty)
     ASSERT_EQ(outputs.end_nullifier_tree_snapshot.root, outputs.start_nullifier_tree_snapshot.root);
 }
 
-native_base_rollup::NullifierTree get_initial_nullifier_tree(size_t spacing = 5)
+NullifierMemoryTreeTestingHarness get_initial_nullifier_tree(size_t spacing = 5)
 {
     // Create a nullifier tree with 8 nullifiers, this padding is required so that the default 0 value in an indexed
     // merkle tree does not affect our tests Nullifier tree at the start
-    native_base_rollup::NullifierTree nullifier_tree = native_base_rollup::NullifierTree(NULLIFIER_TREE_HEIGHT);
+    NullifierMemoryTreeTestingHarness nullifier_tree = NullifierMemoryTreeTestingHarness(NULLIFIER_TREE_HEIGHT);
     // Start from 1 as 0 is always inserted
     for (size_t i = 1; i < 8; ++i) {
         // insert 5, 10, 15, 20 ...
@@ -388,7 +390,7 @@ native_base_rollup::NullifierTree get_initial_nullifier_tree(size_t spacing = 5)
     return nullifier_tree;
 }
 
-AppendOnlyTreeSnapshot<NT> get_snapshot_of_tree_state(native_base_rollup::NullifierTree nullifier_tree)
+AppendOnlyTreeSnapshot<NT> get_snapshot_of_tree_state(NullifierMemoryTreeTestingHarness nullifier_tree)
 {
     return {
         .root = nullifier_tree.root(),
@@ -402,8 +404,8 @@ generate_nullifier_tree_testing_values(BaseRollupInputs inputs, size_t starting_
 
     // Generate nullifier tree testing values
 
-    native_base_rollup::NullifierTree nullifier_tree = get_initial_nullifier_tree(spacing);
-    native_base_rollup::NullifierTree parallel_insertion_tree = get_initial_nullifier_tree(spacing);
+    NullifierMemoryTreeTestingHarness nullifier_tree = get_initial_nullifier_tree(spacing);
+    NullifierMemoryTreeTestingHarness parallel_insertion_tree = get_initial_nullifier_tree(spacing);
 
     AppendOnlyTreeSnapshot<NT> nullifier_tree_start_snapshot = get_snapshot_of_tree_state(nullifier_tree);
 
@@ -418,8 +420,16 @@ generate_nullifier_tree_testing_values(BaseRollupInputs inputs, size_t starting_
     // Get insertion values
     std::vector<fr> insertion_values;
     std::vector<fr> insertion_locations;
+    std::array<fr, KERNEL_NEW_NULLIFIERS_LENGTH> new_nullifiers_kernel_1;
+    std::array<fr, KERNEL_NEW_NULLIFIERS_LENGTH> new_nullifiers_kernel_2;
     for (size_t i = 0; i < NUMBER_OF_NULLIFIERS; ++i) {
         auto insertion_val = starting_insertion_index + i * spacing;
+
+        if (i < KERNEL_NEW_NULLIFIERS_LENGTH) {
+            new_nullifiers_kernel_1[i] = insertion_val;
+        } else {
+            new_nullifiers_kernel_2[i - KERNEL_NEW_NULLIFIERS_LENGTH] = insertion_val;
+        }
         insertion_values.push_back(insertion_val);
         insertion_locations.push_back(NUMBER_OF_NULLIFIERS + i);
         parallel_insertion_tree.update_element(insertion_val);
@@ -447,10 +457,8 @@ generate_nullifier_tree_testing_values(BaseRollupInputs inputs, size_t starting_
             .sibling_path = witness_array,
         };
         new_membership_witnesses[i] = witness;
-    }
 
-    // Create circuit compatible pre-images
-    for (size_t i = 0; i < NUMBER_OF_NULLIFIERS; i++) {
+        // Create circuit compatible preimages - issue created to remove this step
         NullifierLeafPreimage<NT> preimage = {
             .leaf_value = new_nullifier_leaves_preimages[i].value,
             .next_index = new_nullifier_leaves_preimages[i].nextIndex,
@@ -479,9 +487,9 @@ generate_nullifier_tree_testing_values(BaseRollupInputs inputs, size_t starting_
     // Nullifier trees
     inputs.start_nullifier_tree_snapshot = nullifier_tree_start_snapshot;
     inputs.new_nullifiers_subtree_sibling_path = frontier_path_array;
-    // TODO: automate creating these two arrays
-    inputs.kernel_data[0].public_inputs.end.new_nullifiers = { 8, 9, 10, 11 };
-    inputs.kernel_data[1].public_inputs.end.new_nullifiers = { 12, 13, 14, 15 };
+
+    inputs.kernel_data[0].public_inputs.end.new_nullifiers = new_nullifiers_kernel_1;
+    inputs.kernel_data[1].public_inputs.end.new_nullifiers = new_nullifiers_kernel_2;
 
     inputs.low_nullifier_leaf_preimages = new_nullifier_leaves;
     inputs.low_nullifier_membership_witness = new_membership_witnesses;
