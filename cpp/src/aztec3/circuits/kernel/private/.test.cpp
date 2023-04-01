@@ -251,7 +251,7 @@ TEST(private_kernel_tests, test_deposit)
     Prover final_kernel_prover = private_kernel_composer.create_prover();
     NT::Proof final_kernel_proof = final_kernel_prover.construct_proof();
 
-    TurboVerifier final_kernel_verifier = private_kernel_composer.create_verifier();
+    stdlib::types::Verifier final_kernel_verifier = private_kernel_composer.create_verifier();
     auto final_result = final_kernel_verifier.verify_proof(final_kernel_proof);
     EXPECT_EQ(final_result, true);
 
@@ -447,7 +447,7 @@ TEST(private_kernel_tests, test_native_deposit)
     // Prover final_kernel_prover = private_kernel_composer.create_prover();
     // NT::Proof final_kernel_proof = final_kernel_prover.construct_proof();
 
-    // TurboVerifier final_kernel_verifier = private_kernel_composer.create_verifier();
+    // stdlib::types::Verifier final_kernel_verifier = private_kernel_composer.create_verifier();
     // auto final_result = final_kernel_verifier.verify_proof(final_kernel_proof);
     // EXPECT_EQ(final_result, true);
 
