@@ -1,3 +1,4 @@
+#include "aztec3/constants.hpp"
 #include "init.hpp"
 
 #include <barretenberg/stdlib/primitives/field/array.hpp>
@@ -112,7 +113,7 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
             .must_imply(storage_contract_address != CT::fr(0),
                         "storage_contract_address is zero for a private function");
 
-        auto private_call_vk_hash = private_inputs.private_call.vk->compress();
+        auto private_call_vk_hash = private_inputs.private_call.vk->compress(GeneratorIndex::VK);
         auto constructor_hash =
             CT::compress({ private_inputs.signed_tx_request.tx_request.function_data.hash(),
                            CT::compress<ARGS_LENGTH>(private_call_public_inputs.args, CONSTRUCTOR_ARGS),
