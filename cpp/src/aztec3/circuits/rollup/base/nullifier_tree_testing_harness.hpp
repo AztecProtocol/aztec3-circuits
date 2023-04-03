@@ -33,7 +33,7 @@ class NullifierMemoryTreeTestingHarness : public stdlib::merkle_tree::NullifierM
     fr depth() const { return depth_; }
 
     // Get all of the sibling paths and low nullifier values required to craft an non membership / inclusion proofs
-    std::pair<std::vector<nullifier_leaf>, std::pair<std::vector<std::vector<fr>>, std::vector<uint32_t>>>
+    std::tuple<std::vector<nullifier_leaf>, std::vector<std::vector<fr>>, std::vector<uint32_t>>
     circuit_prep_batch_insert(std::vector<fr> const& values, std::vector<fr> const& insertion_locations);
 
   protected:

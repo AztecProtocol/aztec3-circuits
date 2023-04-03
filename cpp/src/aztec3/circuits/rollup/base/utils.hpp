@@ -19,4 +19,6 @@ abis::AppendOnlyTreeSnapshot<NT> get_snapshot_of_tree_state(NullifierMemoryTreeT
 
 std::tuple<BaseRollupInputs<NT>, abis::AppendOnlyTreeSnapshot<NT>, abis::AppendOnlyTreeSnapshot<NT>>
 generate_nullifier_tree_testing_values(BaseRollupInputs<NT> inputs, size_t starting_insertion_index, size_t spacing);
+
+template <size_t N> NT::fr calc_root(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath);
 } // namespace aztec3::circuits::rollup::base::utils

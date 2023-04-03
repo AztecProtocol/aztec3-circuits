@@ -1,6 +1,7 @@
 #include "nullifier_tree_testing_harness.hpp"
 #include <barretenberg/stdlib/merkle_tree/nullifier_tree/nullifier_memory_tree.hpp>
 #include <barretenberg/stdlib/merkle_tree/nullifier_tree/nullifier_leaf.hpp>
+#include <tuple>
 
 using NullifierMemoryTree = stdlib::merkle_tree::NullifierMemoryTree;
 using nullifier_leaf = stdlib::merkle_tree::nullifier_leaf;
@@ -10,7 +11,7 @@ NullifierMemoryTreeTestingHarness::NullifierMemoryTreeTestingHarness(size_t dept
 {}
 
 // handle synthetic membership assertions
-std::pair<std::vector<nullifier_leaf>, std::pair<std::vector<std::vector<fr>>, std::vector<uint32_t>>>
+std::tuple<std::vector<nullifier_leaf>, std::vector<std::vector<fr>>, std::vector<uint32_t>>
 NullifierMemoryTreeTestingHarness::circuit_prep_batch_insert(std::vector<fr> const& values,
                                                              std::vector<fr> const& insertion_locations)
 {
@@ -37,13 +38,10 @@ NullifierMemoryTreeTestingHarness::circuit_prep_batch_insert(std::vector<fr> con
         std::tie(current, is_already_present) = find_closest_leaf(leaves_, value);
 
         // If the low_nullifier node has been touched this sub tree insertion, we provide a dummy sibling path
-        // If it has not been touched, we provide a sibling path then update the nodes pointers
+        // It will be up to the circuit to check if the included node is valid vs the other nodes that have been
+        // inserted before it If it has not been touched, we provide a sibling path then update the nodes pointers
         if (touched_nodes.contains(current)) {
-            // TODO: make more efficient
-            std::vector<fr> sp;
-            for (size_t i = 0; i < depth_; ++i) {
-                sp.push_back(0);
-            }
+            std::vector<fr> sp(depth_, 0);
             auto empty_leaf = nullifier_leaf{ 0, 0, 0 };
 
             // empty low nullifier
@@ -54,14 +52,6 @@ NullifierMemoryTreeTestingHarness::circuit_prep_batch_insert(std::vector<fr> con
             touched_nodes.insert(current);
 
             nullifier_leaf low_nullifier = leaves_[current];
-
-            // TODO: find a way to remove this
-            // should never be true for our tests
-            if (is_already_present) {
-                info("leaf already present: ");
-            }
-
-            // Get the sibling path for existence of the old leaf
             std::vector<fr> sibling_path = this->get_sibling_path(current);
 
             sibling_paths.push_back(sibling_path);
@@ -79,7 +69,7 @@ NullifierMemoryTreeTestingHarness::circuit_prep_batch_insert(std::vector<fr> con
     }
 
     // Return tuple of low nullifiers and sibling paths
-    return std::make_pair(low_nullifiers, std::make_pair(sibling_paths, low_nullifier_indexes));
+    return std::make_tuple(low_nullifiers, sibling_paths, low_nullifier_indexes);
 }
 
 std::pair<nullifier_leaf, size_t> NullifierMemoryTreeTestingHarness::find_lower(fr const& value)

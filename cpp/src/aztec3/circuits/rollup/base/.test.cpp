@@ -335,30 +335,6 @@ TEST_F(base_rollup_tests, new_commitments_tree)
     run_cbind(inputs, outputs);
 }
 
-// TODO : move into helper file
-template <size_t N> NT::fr calc_root(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath)
-{
-    for (size_t i = 0; i < siblingPath.size(); i++) {
-        if (leafIndex & (1 << i)) {
-            // info(siblingPath[i], " ", leaf);
-            leaf = crypto::pedersen_hash::hash_multiple({ siblingPath[i], leaf });
-        } else {
-            // info(leaf, " ", siblingPath[i]);
-            leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
-        }
-    }
-    return leaf;
-}
-
-fr calc_root_hash_path(std::vector<std::pair<fr, fr>> hash_path)
-{
-    fr leaf = 0;
-    for (size_t i = 0; i < hash_path.size(); i++) {
-        leaf = crypto::pedersen_hash::hash_multiple({ hash_path[i].first, hash_path[i].second });
-    }
-    return leaf;
-}
-
 TEST_F(base_rollup_tests, new_nullifier_tree_empty)
 {
     /**
@@ -411,7 +387,7 @@ TEST_F(base_rollup_tests, new_nullifier_tree_empty)
 
     // Use subtree root and sibling path to calculate the expected end state
     auto end_next_index = start_next_index + uint32_t(KERNEL_NEW_NULLIFIERS_LENGTH * 2);
-    fr root = calc_root(subtree_root, end_next_index >> (NULLIFIER_SUBTREE_DEPTH + 1), sibling_path_array);
+    fr root = utils::calc_root(subtree_root, end_next_index >> (NULLIFIER_SUBTREE_DEPTH + 1), sibling_path_array);
 
     // Expected end state
     AppendOnlyTreeSnapshot<NT> nullifier_tree_end_snapshot = {

@@ -121,6 +121,18 @@ AppendOnlyTreeSnapshot<NT> get_snapshot_of_tree_state(NullifierMemoryTreeTesting
     };
 }
 
+template <size_t N> NT::fr calc_root(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath)
+{
+    for (size_t i = 0; i < siblingPath.size(); i++) {
+        if (leafIndex & (1 << i)) {
+            leaf = crypto::pedersen_hash::hash_multiple({ siblingPath[i], leaf });
+        } else {
+            leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
+        }
+    }
+    return leaf;
+}
+
 std::tuple<BaseRollupInputs<NT>, AppendOnlyTreeSnapshot<NT>, AppendOnlyTreeSnapshot<NT>>
 generate_nullifier_tree_testing_values(BaseRollupInputs<NT> inputs,
                                        size_t starting_insertion_index = 0,
@@ -162,11 +174,9 @@ generate_nullifier_tree_testing_values(BaseRollupInputs<NT> inputs,
     // Get the hash paths etc from the insertion values
     auto witnesses_and_preimages = nullifier_tree.circuit_prep_batch_insert(insertion_values, insertion_locations);
 
-    std::vector<stdlib::merkle_tree::nullifier_leaf> new_nullifier_leaves_preimages = witnesses_and_preimages.first;
-    std::pair<std::vector<std::vector<fr>>, std::vector<uint32_t>> new_nullifier_leaves_witnesses =
-        witnesses_and_preimages.second;
-    auto new_nullifier_leaves_sibling_paths = new_nullifier_leaves_witnesses.first;
-    auto new_nullifier_leave_indexes = new_nullifier_leaves_witnesses.second;
+    auto new_nullifier_leaves_preimages = std::get<0>(witnesses_and_preimages);
+    auto new_nullifier_leaves_sibling_paths = std::get<1>(witnesses_and_preimages);
+    auto new_nullifier_leave_indexes = std::get<2>(witnesses_and_preimages);
 
     // Create witness values from this
     std::array<MembershipWitness<NT, NULLIFIER_TREE_HEIGHT>, NUMBER_OF_NULLIFIERS> new_membership_witnesses;
