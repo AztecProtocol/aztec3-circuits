@@ -358,7 +358,7 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(BaseRo
                         }
                     }
                     // if not matched, our subtree will misformed - we must reject
-                    ASSERT(matched);
+                    assert(matched);
 
                 } else {
                     auto is_less_than_nullifier = uint256_t(low_nullifier_preimage.leaf_value) < uint256_t(nullifier);
@@ -366,7 +366,7 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(BaseRo
 
                     if (!(is_less_than_nullifier && is_next_greater_than)) {
                         if (low_nullifier_preimage.next_index != 0 && low_nullifier_preimage.next_value != 0) {
-                            ASSERT(false);
+                            assert(false);
                         }
                     }
 
