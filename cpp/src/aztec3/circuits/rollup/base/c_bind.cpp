@@ -20,8 +20,6 @@ namespace {
 using NT = aztec3::utils::types::NativeTypes;
 using aztec3::circuits::abis::BaseRollupInputs;
 using aztec3::circuits::abis::BaseRollupPublicInputs;
-using aztec3::circuits::abis::PreviousRollupData;
-using aztec3::circuits::rollup::base::utils::dummy_previous_rollup_with_vk_proof;
 using aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit;
 
 using plonk::TurboComposer;
@@ -54,21 +52,6 @@ WASM_EXPORT size_t base_rollup__init_verification_key(uint8_t const* pk_buf, uin
     *vk_buf = raw_buf;
 
     return vk_vec.size();
-}
-
-WASM_EXPORT size_t base_rollup__dummy_previous_rollup(uint8_t const** previous_rollup_buf)
-{
-    PreviousRollupData<NT> previous_rollup = dummy_previous_rollup_with_vk_proof();
-
-    std::vector<uint8_t> previous_rollup_vec;
-    write(previous_rollup_vec, previous_rollup);
-
-    auto raw_buf = (uint8_t*)malloc(previous_rollup_vec.size());
-    memcpy(raw_buf, (void*)previous_rollup_vec.data(), previous_rollup_vec.size());
-
-    *previous_rollup_buf = raw_buf;
-
-    return previous_rollup_vec.size();
 }
 
 WASM_EXPORT size_t base_rollup__sim(uint8_t const* base_rollup_inputs_buf,

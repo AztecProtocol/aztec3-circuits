@@ -18,7 +18,7 @@ template <typename NCT> struct PreviousRollupData {
     MergeRollupPublicInputs<NCT> merge_rollup_public_inputs;
 
     NativeTypes::Proof proof;
-    NativeTypes::VK vk;
+    std::shared_ptr<NativeTypes::VK> vk;
     NativeTypes::uint32 vk_index;
     MembershipWitness<NCT, ROLLUP_VK_TREE_HEIGHT> vk_sibling_path;
 

@@ -7,11 +7,12 @@
 #include "aztec3/circuits/abis/membership_witness.hpp"
 #include "aztec3/circuits/abis/private_kernel/new_contract_data.hpp"
 #include "aztec3/circuits/abis/private_kernel/previous_kernel_data.hpp"
-#include "aztec3/circuits/abis/rollup/base/previous_rollup_data.hpp"
+#include "aztec3/circuits/abis/rollup/merge/previous_rollup_data.hpp"
 #include "aztec3/circuits/abis/rollup/nullifier_leaf_preimage.hpp"
 #include "aztec3/circuits/rollup/base/init.hpp"
 #include "aztec3/circuits/rollup/base/utils.hpp"
 #include "aztec3/circuits/kernel/private/utils.hpp"
+#include "aztec3/circuits/rollup/merge/utils.hpp"
 #include "aztec3/constants.hpp"
 #include "barretenberg/crypto/sha256/sha256.hpp"
 #include "barretenberg/ecc/curves/bn254/fr.hpp"
@@ -86,7 +87,8 @@ using aztec3::circuits::apps::test_apps::escrow::deposit;
 using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel_with_vk_proof;
 using aztec3::circuits::mock::mock_kernel_circuit;
 using aztec3::circuits::rollup::base::utils::dummy_base_rollup_inputs_with_vk_proof;
-using aztec3::circuits::rollup::base::utils::dummy_previous_rollup_with_vk_proof;
+using aztec3::circuits::rollup::merge::utils::convert_base_public_inputs_to_merge_public_inputs;
+using aztec3::circuits::rollup::merge::utils::dummy_previous_rollup_with_vk_proof;
 // using aztec3::circuits::mock::mock_kernel_inputs;
 
 using aztec3::circuits::abis::AppendOnlyTreeSnapshot;
@@ -183,8 +185,8 @@ class root_rollup_tests : public ::testing::Test {
             dummy_previous_rollup_with_vk_proof(),
         };
 
-        previous_rollup_data[1].base_rollup_public_inputs.constants =
-            previous_rollup_data[0].base_rollup_public_inputs.constants;
+        previous_rollup_data[1].merge_rollup_public_inputs.constants =
+            previous_rollup_data[0].merge_rollup_public_inputs.constants;
 
         RootRollupInputs rootRollupInputs = {
             .previous_rollup_data = previous_rollup_data,
@@ -313,16 +315,18 @@ TEST_F(root_rollup_tests, almost_full_root)
     base_inputs_2.constants = base_inputs_1.constants;
 
     PreviousRollupData<NT> r1 = {
-        .base_rollup_public_inputs = base_outputs_1,
-        .proof = base_inputs_1.kernel_data[0].proof,
+        .merge_rollup_public_inputs = convert_base_public_inputs_to_merge_public_inputs(base_outputs_1),
+        .proof = base_inputs_1.kernel_data[0].proof, // TODO: this is a hack, we should be able to use the proof from
+                                                     // base_outputs_1
         .vk = base_inputs_1.kernel_data[0].vk,
         .vk_index = 0,
         .vk_sibling_path = MembershipWitness<NT, ROLLUP_VK_TREE_HEIGHT>(),
     };
 
     PreviousRollupData<NT> r2 = {
-        .base_rollup_public_inputs = base_outputs_2,
-        .proof = base_inputs_1.kernel_data[0].proof,
+        .merge_rollup_public_inputs = convert_base_public_inputs_to_merge_public_inputs(base_outputs_2),
+        .proof = base_inputs_1.kernel_data[0].proof, // TODO: this is a hack, we should be able to use the proof from
+                                                     // base_outputs_2
         .vk = base_inputs_1.kernel_data[0].vk,
         .vk_index = 0,
         .vk_sibling_path = MembershipWitness<NT, ROLLUP_VK_TREE_HEIGHT>(),

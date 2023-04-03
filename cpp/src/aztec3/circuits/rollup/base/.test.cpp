@@ -90,7 +90,6 @@ using aztec3::circuits::abis::AppendOnlyTreeSnapshot;
 
 using aztec3::circuits::abis::MembershipWitness;
 using aztec3::circuits::abis::NullifierLeafPreimage;
-using aztec3::circuits::abis::PreviousRollupData;
 using aztec3::circuits::rollup::native_base_rollup::BaseRollupInputs;
 using aztec3::circuits::rollup::native_base_rollup::BaseRollupPublicInputs;
 using aztec3::circuits::rollup::native_base_rollup::ConstantRollupData;
@@ -461,25 +460,6 @@ TEST_F(base_rollup_tests, test_cbind_0)
     BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
     BaseRollupPublicInputs ignored_public_inputs;
     run_cbind(inputs, ignored_public_inputs, false);
-}
-
-TEST(private_kernel_tests, test_dummy_previous_rollup_cbind)
-{
-    uint8_t const* cbind_previous_buf;
-    size_t cbind_buf_size = base_rollup__dummy_previous_rollup(&cbind_previous_buf);
-
-    PreviousRollupData<NT> previous = utils::dummy_previous_rollup_with_vk_proof();
-    std::vector<uint8_t> expected_vec;
-    write(expected_vec, previous);
-
-    // Just compare the first 10 bytes of the serialized public outputs
-    // TODO this is not a good test
-    if (cbind_buf_size > 10) {
-        // for (size_t 0; i < public_inputs_size; i++) {
-        for (size_t i = 0; i < 10; i++) {
-            ASSERT_EQ(cbind_previous_buf[i], expected_vec[i]);
-        }
-    }
 }
 
 } // namespace aztec3::circuits::rollup::base::native_base_rollup_circuit
