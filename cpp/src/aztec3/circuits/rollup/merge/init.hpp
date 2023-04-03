@@ -19,6 +19,7 @@ namespace aztec3::circuits::rollup::native_merge_rollup {
 using NT = aztec3::utils::types::NativeTypes;
 
 // Params
+using ConstantRollupData = abis::ConstantRollupData<NT>;
 using MergeRollupInputs = abis::MergeRollupInputs<NT>;
 using MergeRollupPublicInputs = abis::MergeRollupPublicInputs<NT>;
 

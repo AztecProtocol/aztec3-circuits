@@ -30,10 +30,7 @@ template <typename NCT> struct BaseRollupPublicInputs {
     AppendOnlyTreeSnapshot<NCT> end_contract_tree_snapshot;
 
     // Hashes (probably sha256) to make public inputs constant-sized (to then be unpacked on-chain)
-    // UPDATE we should instead just hash all of the below into a single value. See big diagram of sha256 hashing
-    // bottom-right of here.
-    // TODO I've put `fr`, but these hash values' types might need to be two fields if we want all 256-bits, for
-    // security purposes.
+    // Needs to be two fields to accomodate all 256-bits of the hash
     std::array<fr, 2> calldata_hash;
 
     bool operator==(BaseRollupPublicInputs<NCT> const&) const = default;
