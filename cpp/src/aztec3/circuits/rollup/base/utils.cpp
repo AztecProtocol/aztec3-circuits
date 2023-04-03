@@ -118,14 +118,6 @@ NullifierMemoryTreeTestingHarness get_initial_nullifier_tree(size_t spacing = 5)
     return nullifier_tree;
 }
 
-AppendOnlyTreeSnapshot<NT> get_snapshot_of_tree_state(NullifierMemoryTreeTestingHarness nullifier_tree)
-{
-    return {
-        .root = nullifier_tree.root(),
-        .next_available_leaf_index = uint32_t(8),
-    };
-}
-
 std::tuple<BaseRollupInputs<NT>, AppendOnlyTreeSnapshot<NT>, AppendOnlyTreeSnapshot<NT>>
 generate_nullifier_tree_testing_values(BaseRollupInputs<NT> inputs,
                                        size_t starting_insertion_value = 0,
@@ -150,7 +142,10 @@ generate_nullifier_tree_testing_values(BaseRollupInputs<NT> rollupInputs,
     NullifierMemoryTreeTestingHarness nullifier_tree = get_initial_nullifier_tree(spacing_prefill);
     NullifierMemoryTreeTestingHarness parallel_insertion_tree = get_initial_nullifier_tree(spacing_prefill);
 
-    AppendOnlyTreeSnapshot<NT> nullifier_tree_start_snapshot = get_snapshot_of_tree_state(nullifier_tree);
+    AppendOnlyTreeSnapshot<NT> nullifier_tree_start_snapshot = {
+        .root = nullifier_tree.root(),
+        .next_available_leaf_index = uint32_t(8),
+    };
 
     const size_t NUMBER_OF_NULLIFIERS = KERNEL_NEW_NULLIFIERS_LENGTH * 2;
     std::array<NullifierLeafPreimage<NT>, NUMBER_OF_NULLIFIERS> new_nullifier_leaves;

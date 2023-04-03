@@ -354,87 +354,39 @@ TEST_F(base_rollup_tests, new_nullifier_tree_empty)
     /**
      * DESCRIPTION
      */
+
     // This test checks for insertions of all 0 values
     // In this special case we will not need to provide sibling paths to check insertion of the nullifier values
     // This is because 0 values are not actually inserted into the tree, rather the inserted subtree is left
-    // empty to begin with
+    // empty to begin with.
 
-    /**
-     * SETUP
-     */
-    BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
+    BaseRollupInputs empty_inputs = dummy_base_rollup_inputs_with_vk_proof();
+    std::array<fr, KERNEL_NEW_NULLIFIERS_LENGTH* 2> new_nullifiers = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    std::tuple<BaseRollupInputs, AppendOnlyTreeSnapshot<NT>, AppendOnlyTreeSnapshot<NT>> inputs_and_snapshots =
+        utils::generate_nullifier_tree_testing_values(empty_inputs, new_nullifiers, 1);
 
-    // Create a nullifier tree with 8 nullifiers, this padding is required so that the default 0 value in an indexed
-    // merkle tree does not affect our tests Nullifier tree at the start
-    NullifierMemoryTreeTestingHarness nullifier_tree = NullifierMemoryTreeTestingHarness(NULLIFIER_TREE_HEIGHT);
-    // Insert 7 nullifiers so that the tree is now balanced
-    for (size_t i = 1; i < 8; ++i) {
-        nullifier_tree.update_element(i);
-    }
-
-    // Get nullifier tree start state
-    fr start_subtree_root = nullifier_tree.root();
-    uint32_t start_next_index = 8;
-    AppendOnlyTreeSnapshot<NT> nullifier_tree_start_snapshot = {
-        .root = start_subtree_root,
-        .next_available_leaf_index = start_next_index,
-    };
-
-    // Generate a new empty subtree that will be added to the tree
-    stdlib::types::merkle_tree::MemoryTree new_nullifier_subtree =
-        stdlib::types::merkle_tree::MemoryTree(NULLIFIER_SUBTREE_DEPTH);
-    // TODO: remove this when making empty hash 0
-    for (size_t i = 0; i < 8; ++i) {
-        new_nullifier_subtree.update_element(
-            i, native_base_rollup::NullifierLeaf{ .value = 0, .nextIndex = 0, .nextValue = 0 }.hash());
-    }
-    // sub tree roots are same in contract and out
-    fr subtree_root = new_nullifier_subtree.root();
-
-    // Get the sibling path, we should be able to use the same path to get to the end root
-    std::vector<fr> sibling_path = nullifier_tree.get_sibling_path(start_next_index);
-
-    // Chop the first 3 levels from the sibling_path
-    sibling_path.erase(sibling_path.begin(), sibling_path.begin() + 3);
-    std::array<fr, NULLIFIER_SUBTREE_INCLUSION_CHECK_DEPTH> sibling_path_array;
-    std::copy(sibling_path.begin(), sibling_path.end(), sibling_path_array.begin());
-
-    // Use subtree root and sibling path to calculate the expected end state
-    auto end_next_index = start_next_index + uint32_t(KERNEL_NEW_NULLIFIERS_LENGTH * 2);
-    fr root = calc_root(subtree_root, start_next_index >> NULLIFIER_SUBTREE_DEPTH, sibling_path_array);
-
-    // Expected end state
-    AppendOnlyTreeSnapshot<NT> nullifier_tree_end_snapshot = {
-        .root = root,
-        .next_available_leaf_index = end_next_index,
-    };
-
-    // Update our start state
-    inputs.start_nullifier_tree_snapshot = nullifier_tree_start_snapshot;
-    inputs.new_nullifiers_subtree_sibling_path = sibling_path_array;
+    BaseRollupInputs testing_inputs = std::get<0>(inputs_and_snapshots);
+    AppendOnlyTreeSnapshot<NT> nullifier_tree_start_snapshot = std::get<1>(inputs_and_snapshots);
+    AppendOnlyTreeSnapshot<NT> nullifier_tree_end_snapshot = std::get<2>(inputs_and_snapshots);
 
     /**
      * RUN
      */
 
     // Run the circuit
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
+    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(testing_inputs);
 
     /**
      * ASSERT
      */
     // Start state
-    ASSERT_EQ(outputs.start_nullifier_tree_snapshot.root, nullifier_tree_start_snapshot.root);
-    ASSERT_EQ(outputs.start_nullifier_tree_snapshot.next_available_leaf_index,
-              nullifier_tree_start_snapshot.next_available_leaf_index);
+    ASSERT_EQ(outputs.start_nullifier_tree_snapshot, nullifier_tree_start_snapshot);
 
     // End state
-    ASSERT_EQ(outputs.end_nullifier_tree_snapshot.root, nullifier_tree_end_snapshot.root);
-    ASSERT_EQ(outputs.end_nullifier_tree_snapshot.next_available_leaf_index,
-              nullifier_tree_end_snapshot.next_available_leaf_index);
-
-    // As adding empty subtree, start root == end root
+    ASSERT_EQ(outputs.end_nullifier_tree_snapshot, nullifier_tree_end_snapshot);
     ASSERT_EQ(outputs.end_nullifier_tree_snapshot.root, outputs.start_nullifier_tree_snapshot.root);
+    ASSERT_EQ(outputs.end_nullifier_tree_snapshot.next_available_leaf_index,
+              outputs.start_nullifier_tree_snapshot.next_available_leaf_index + 8);
 }
 
 TEST_F(base_rollup_tests, new_nullifier_tree_all_larger)
@@ -461,14 +413,10 @@ TEST_F(base_rollup_tests, new_nullifier_tree_all_larger)
      * ASSERT
      */
     // Start state
-    ASSERT_EQ(outputs.start_nullifier_tree_snapshot.root, nullifier_tree_start_snapshot.root);
-    ASSERT_EQ(outputs.start_nullifier_tree_snapshot.next_available_leaf_index,
-              nullifier_tree_start_snapshot.next_available_leaf_index);
+    ASSERT_EQ(outputs.start_nullifier_tree_snapshot, nullifier_tree_start_snapshot);
 
     // End state
-    ASSERT_EQ(outputs.end_nullifier_tree_snapshot.root, nullifier_tree_end_snapshot.root);
-    ASSERT_EQ(outputs.end_nullifier_tree_snapshot.next_available_leaf_index,
-              nullifier_tree_end_snapshot.next_available_leaf_index);
+    ASSERT_EQ(outputs.end_nullifier_tree_snapshot, nullifier_tree_end_snapshot);
 }
 
 TEST_F(base_rollup_tests, new_nullifier_tree_sparse)
@@ -496,14 +444,10 @@ TEST_F(base_rollup_tests, new_nullifier_tree_sparse)
      * ASSERT
      */
     // Start state
-    ASSERT_EQ(outputs.start_nullifier_tree_snapshot.root, nullifier_tree_start_snapshot.root);
-    ASSERT_EQ(outputs.start_nullifier_tree_snapshot.next_available_leaf_index,
-              nullifier_tree_start_snapshot.next_available_leaf_index);
+    ASSERT_EQ(outputs.start_nullifier_tree_snapshot, nullifier_tree_start_snapshot);
 
     // End state
-    ASSERT_EQ(outputs.end_nullifier_tree_snapshot.root, nullifier_tree_end_snapshot.root);
-    ASSERT_EQ(outputs.end_nullifier_tree_snapshot.next_available_leaf_index,
-              nullifier_tree_end_snapshot.next_available_leaf_index);
+    ASSERT_EQ(outputs.end_nullifier_tree_snapshot, nullifier_tree_end_snapshot);
 }
 
 TEST_F(base_rollup_tests, new_nullifier_tree_sparse_attack)
