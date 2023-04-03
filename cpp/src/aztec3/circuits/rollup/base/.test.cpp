@@ -506,6 +506,24 @@ TEST_F(base_rollup_tests, new_nullifier_tree_sparse)
               nullifier_tree_end_snapshot.next_available_leaf_index);
 }
 
+TEST_F(base_rollup_tests, new_nullifier_tree_sparse_attack)
+{
+    // @todo THIS SHOULD NOT BE PASSING. The circuit should fail with an assert as we are trying to double-spend.
+    /**
+     * DESCRIPTION
+     */
+
+    BaseRollupInputs empty_inputs = dummy_base_rollup_inputs_with_vk_proof();
+
+    std::array<fr, KERNEL_NEW_NULLIFIERS_LENGTH* 2> new_nullifiers = { 11, 0, 11, 0, 0, 0, 0, 0 };
+    std::tuple<BaseRollupInputs, AppendOnlyTreeSnapshot<NT>, AppendOnlyTreeSnapshot<NT>> inputs_and_snapshots =
+        utils::generate_nullifier_tree_testing_values(empty_inputs, new_nullifiers, 1);
+    BaseRollupInputs testing_inputs = std::get<0>(inputs_and_snapshots);
+
+    // Run the circuit (SHOULD FAIL WITH AN ASSERT INSTEAD OF THIS!)
+    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(testing_inputs);
+}
+
 // TEST_F(base_rollup_tests, new_commitments_tree) {}
 
 TEST_F(base_rollup_tests, empty_block_calldata_hash)

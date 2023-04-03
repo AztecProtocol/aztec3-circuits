@@ -345,6 +345,7 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(BaseRo
                 // Assuming populated premier subtree
                 if (low_nullifier_preimage.leaf_value == 0 && low_nullifier_preimage.next_value == 0) {
                     // check previous nullifier leaves
+                    // TODO: this is a hack, and insecure, we need to fix this
                     bool matched = false;
                     for (size_t k = 0; k < nullifier_index; k++) {
                         if ((uint256_t(nullifier_leaves[k].nextValue) > uint256_t(nullifier) &&
