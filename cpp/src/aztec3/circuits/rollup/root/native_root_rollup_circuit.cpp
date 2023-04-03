@@ -38,18 +38,9 @@ AggregationObject aggregate_proofs(RootRollupInputs const& rootRollupInputs)
     return rootRollupInputs.previous_rollup_data[0].base_rollup_public_inputs.end_aggregation_object;
 }
 
-void assert_equal_constants(ConstantRollupData left, ConstantRollupData right)
+bool is_constants_equal(ConstantRollupData left, ConstantRollupData right)
 {
-    assert(left.base_rollup_vk_hash == right.base_rollup_vk_hash);
-    assert(left.merge_rollup_vk_hash == right.merge_rollup_vk_hash);
-    assert(left.private_kernel_vk_tree_root == right.private_kernel_vk_tree_root);
-    assert(left.public_kernel_vk_tree_root == right.public_kernel_vk_tree_root);
-    assert(left.start_tree_of_historic_private_data_tree_roots_snapshot ==
-           right.start_tree_of_historic_private_data_tree_roots_snapshot);
-    assert(left.start_tree_of_historic_contract_tree_roots_snapshot ==
-           right.start_tree_of_historic_contract_tree_roots_snapshot);
-    assert(left.tree_of_historic_l1_to_l2_msg_tree_roots_snapshot ==
-           right.tree_of_historic_l1_to_l2_msg_tree_roots_snapshot);
+    return left == right;
 }
 
 template <size_t N>
@@ -150,7 +141,7 @@ RootRollupPublicInputs root_rollup_circuit(RootRollupInputs const& rootRollupInp
     auto right = rootRollupInputs.previous_rollup_data[1].base_rollup_public_inputs;
 
     // Constants must be the same between left and right
-    assert_equal_constants(left.constants, right.constants);
+    assert(is_constants_equal(left.constants, right.constants));
 
     // Update the historic private data tree
     AppendOnlySnapshot end_tree_of_historic_private_data_tree_roots_snapshot =
