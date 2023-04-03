@@ -183,6 +183,9 @@ class root_rollup_tests : public ::testing::Test {
             dummy_previous_rollup_with_vk_proof(),
         };
 
+        previous_rollup_data[1].base_rollup_public_inputs.constants =
+            previous_rollup_data[0].base_rollup_public_inputs.constants;
+
         RootRollupInputs rootRollupInputs = {
             .previous_rollup_data = previous_rollup_data,
             .new_historic_private_data_tree_root_sibling_path = { 0 },
@@ -307,6 +310,7 @@ TEST_F(root_rollup_tests, almost_full_root)
         aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(base_inputs_1);
     BaseRollupPublicInputs base_outputs_2 =
         aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(base_inputs_2);
+    base_inputs_2.constants = base_inputs_1.constants;
 
     PreviousRollupData<NT> r1 = {
         .base_rollup_public_inputs = base_outputs_1,
@@ -318,9 +322,9 @@ TEST_F(root_rollup_tests, almost_full_root)
 
     PreviousRollupData<NT> r2 = {
         .base_rollup_public_inputs = base_outputs_2,
-        .proof = base_inputs_2.kernel_data[0].proof,
-        .vk = base_inputs_2.kernel_data[0].vk,
-        .vk_index = 1,
+        .proof = base_inputs_1.kernel_data[0].proof,
+        .vk = base_inputs_1.kernel_data[0].vk,
+        .vk_index = 0,
         .vk_sibling_path = MembershipWitness<NT, ROLLUP_VK_TREE_HEIGHT>(),
     };
 
