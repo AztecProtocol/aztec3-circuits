@@ -53,6 +53,8 @@
 #include <tuple>
 #include <vector>
 
+#include "utils.hpp"
+
 // Nullifier tree building lib
 #include "./nullifier_tree_testing_harness.hpp"
 // #include <aztec3/constants.hpp>
@@ -335,6 +337,18 @@ TEST_F(base_rollup_tests, new_commitments_tree)
     run_cbind(inputs, outputs);
 }
 
+template <size_t N> NT::fr calc_root(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath)
+{
+    for (size_t i = 0; i < siblingPath.size(); i++) {
+        if (leafIndex & (1 << i)) {
+            leaf = crypto::pedersen_hash::hash_multiple({ siblingPath[i], leaf });
+        } else {
+            leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
+        }
+    }
+    return leaf;
+}
+
 TEST_F(base_rollup_tests, new_nullifier_tree_empty)
 {
     /**
@@ -387,7 +401,7 @@ TEST_F(base_rollup_tests, new_nullifier_tree_empty)
 
     // Use subtree root and sibling path to calculate the expected end state
     auto end_next_index = start_next_index + uint32_t(KERNEL_NEW_NULLIFIERS_LENGTH * 2);
-    fr root = utils::calc_root(subtree_root, end_next_index >> (NULLIFIER_SUBTREE_DEPTH + 1), sibling_path_array);
+    fr root = calc_root(subtree_root, start_next_index >> NULLIFIER_SUBTREE_DEPTH, sibling_path_array);
 
     // Expected end state
     AppendOnlyTreeSnapshot<NT> nullifier_tree_end_snapshot = {
@@ -524,15 +538,31 @@ TEST_F(base_rollup_tests, calldata_hash)
     BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
     std::vector<uint8_t> input_data(704, 0);
 
+    // Kernel 1
+    // NOTE: nullifier insertions start from 8 as the generate_nullifier_tree_testing_values will populate the every
+    // nullifier leaf
     for (uint8_t i = 0; i < 4; ++i) {
-        // commitments
-        input_data[i * 32 + 31] = i + 1; // 1
-        inputs.kernel_data[0].public_inputs.end.new_nullifiers[i] = fr(i + 1);
-
         // nullifiers
+        input_data[i * 32 + 31] = i + 8; // 8
+
+        // commitments
         input_data[8 * 32 + i * 32 + 31] = i + 1; // 1
         inputs.kernel_data[0].public_inputs.end.new_commitments[i] = fr(i + 1);
     }
+    // Kernel 2
+    for (uint8_t i = 0; i < 4; ++i) {
+        // nullifiers
+        input_data[(i + 4) * 32 + 31] = i + 12; // 1
+
+        // commitments
+        input_data[8 * 32 + (i + 4) * 32 + 31] = i + 4 + 1; // 1
+        inputs.kernel_data[1].public_inputs.end.new_commitments[i] = fr(i + 4 + 1);
+    }
+
+    // Get nullifier tree data
+    std::tuple<BaseRollupInputs, AppendOnlyTreeSnapshot<NT>, AppendOnlyTreeSnapshot<NT>> inputs_and_snapshots =
+        utils::generate_nullifier_tree_testing_values(inputs, 8, 1);
+    inputs = std::get<0>(inputs_and_snapshots);
 
     // Add a contract deployment
     NewContractData<NT> new_contract = {

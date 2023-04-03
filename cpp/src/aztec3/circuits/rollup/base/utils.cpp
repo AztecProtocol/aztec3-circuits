@@ -121,21 +121,9 @@ AppendOnlyTreeSnapshot<NT> get_snapshot_of_tree_state(NullifierMemoryTreeTesting
     };
 }
 
-template <size_t N> NT::fr calc_root(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> siblingPath)
-{
-    for (size_t i = 0; i < siblingPath.size(); i++) {
-        if (leafIndex & (1 << i)) {
-            leaf = crypto::pedersen_hash::hash_multiple({ siblingPath[i], leaf });
-        } else {
-            leaf = crypto::pedersen_hash::hash_multiple({ leaf, siblingPath[i] });
-        }
-    }
-    return leaf;
-}
-
 std::tuple<BaseRollupInputs<NT>, AppendOnlyTreeSnapshot<NT>, AppendOnlyTreeSnapshot<NT>>
 generate_nullifier_tree_testing_values(BaseRollupInputs<NT> inputs,
-                                       size_t starting_insertion_index = 0,
+                                       size_t starting_insertion_value = 0,
                                        size_t spacing = 5)
 {
 
@@ -159,8 +147,9 @@ generate_nullifier_tree_testing_values(BaseRollupInputs<NT> inputs,
     std::vector<fr> insertion_locations;
     std::array<fr, KERNEL_NEW_NULLIFIERS_LENGTH> new_nullifiers_kernel_1;
     std::array<fr, KERNEL_NEW_NULLIFIERS_LENGTH> new_nullifiers_kernel_2;
+
     for (size_t i = 0; i < NUMBER_OF_NULLIFIERS; ++i) {
-        auto insertion_val = starting_insertion_index + i * spacing;
+        auto insertion_val = starting_insertion_value + i * spacing;
 
         if (i < KERNEL_NEW_NULLIFIERS_LENGTH) {
             new_nullifiers_kernel_1[i] = insertion_val;
