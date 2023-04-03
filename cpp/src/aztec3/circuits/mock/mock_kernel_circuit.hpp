@@ -26,14 +26,12 @@ PublicInputs<NT> mock_kernel_circuit(Composer& composer, PublicInputs<NT> const&
 {
     typedef CircuitTypes<Composer> CT;
     typedef typename CT::fr fr;
-
     auto public_inputs = _public_inputs.to_circuit_type(composer);
-
     {
         std::vector<uint32_t> dummy_witness_indices;
         // 16 is the number of values added to `proof_witness_indices` at the end of `verify_proof`.
         for (size_t i = 0; i < 16; ++i) {
-            fr witness = fr(witness_t(&composer, engine.get_random_uint32()));
+            fr witness = fr(witness_t(&composer, i));
             uint32_t witness_index = witness.get_witness_index();
             dummy_witness_indices.push_back(witness_index);
         }
@@ -47,7 +45,6 @@ PublicInputs<NT> mock_kernel_circuit(Composer& composer, PublicInputs<NT> const&
     // while setting recursion elements as public inputs. These dummy indices would not be used as we're setting
     // contains_recursive_proof to be false.
     composer.contains_recursive_proof = false;
-
     plonk::stdlib::pedersen_commitment<Composer>::compress(fr(witness_t(&composer, 1)), fr(witness_t(&composer, 1)));
     return public_inputs.template to_native_type<Composer>();
 }

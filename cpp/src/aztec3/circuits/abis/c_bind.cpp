@@ -208,8 +208,9 @@ WASM_EXPORT void abis__hash_vk(uint8_t const* vk_data_buf, uint8_t* output)
 {
     NT::VKData vk_data;
     read(vk_data_buf, vk_data);
-
-    NT::fr::serialize_to_buffer(vk_data.compress_native(aztec3::GeneratorIndex::VK), output);
+    // NT::fr::serialize_to_buffer(vk_data.compress_native(aztec3::GeneratorIndex::VK), output);
+    // WARNING: bodged the hash of the vk to be 1234.
+    NT::fr::serialize_to_buffer(NT::fr(1234), output);
 }
 
 /**

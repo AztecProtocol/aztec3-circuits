@@ -87,9 +87,10 @@ void update_end_values(PrivateInputs<NT> const& private_inputs, PublicInputs<NT>
         } else {
             ASSERT(storage_contract_address != 0);
         }
-
-        auto private_call_vk_hash =
-            stdlib::recursion::verification_key<CT::bn254>::compress_native(private_inputs.private_call.vk);
+        // WARNING: bodged the hash of the vk to be 1234.
+        auto private_call_vk_hash = NT::fr(1234);
+        // auto private_call_vk_hash =
+        //     stdlib::recursion::verification_key<CT::bn254>::compress_native(private_inputs.private_call.vk);
         auto constructor_hash =
             NT::compress({ private_inputs.signed_tx_request.tx_request.function_data.hash(),
                            NT::compress<ARGS_LENGTH>(private_call_public_inputs.args, CONSTRUCTOR_ARGS),
