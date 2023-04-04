@@ -95,23 +95,27 @@ WASM_EXPORT size_t private_kernel__sim(uint8_t const* signed_tx_request_buf,
                                        bool first_iteration,
                                        uint8_t const** private_kernel_public_inputs_buf)
 {
+    info("1");
     SignedTxRequest<NT> signed_tx_request;
     read(signed_tx_request_buf, signed_tx_request);
-
+    info("2");
     PrivateCallData<NT> private_call_data;
     read(private_call_buf, private_call_data);
-
+    info("3");
     PreviousKernelData<NT> previous_kernel;
     if (first_iteration) {
+        info("first");
         previous_kernel = dummy_previous_kernel_with_vk_proof();
-
+        info("4");
         previous_kernel.public_inputs.end.private_call_stack[0] = private_call_data.call_stack_item.hash();
         previous_kernel.public_inputs.constants.old_tree_roots.private_data_tree_root =
             private_call_data.call_stack_item.public_inputs.historic_private_data_tree_root;
         previous_kernel.public_inputs.constants.tx_context = signed_tx_request.tx_request.tx_context;
         previous_kernel.public_inputs.is_private = true;
     } else {
+        info("not first");
         read(previous_kernel_buf, previous_kernel);
+        info("4");
     }
 
     PrivateInputs<NT> private_inputs = PrivateInputs<NT>{
@@ -119,17 +123,18 @@ WASM_EXPORT size_t private_kernel__sim(uint8_t const* signed_tx_request_buf,
         .previous_kernel = previous_kernel,
         .private_call = private_call_data,
     };
-
+    info("5");
     PublicInputs<NT> public_inputs = native_private_kernel_circuit(private_inputs);
-
+    info("6");
     // serialize public inputs to bytes vec
     std::vector<uint8_t> public_inputs_vec;
     write(public_inputs_vec, public_inputs);
     // copy public inputs to output buffer
+    info("7");
     auto raw_public_inputs_buf = (uint8_t*)malloc(public_inputs_vec.size());
     memcpy(raw_public_inputs_buf, (void*)public_inputs_vec.data(), public_inputs_vec.size());
     *private_kernel_public_inputs_buf = raw_public_inputs_buf;
-
+    info("8");
     return public_inputs_vec.size();
 }
 
