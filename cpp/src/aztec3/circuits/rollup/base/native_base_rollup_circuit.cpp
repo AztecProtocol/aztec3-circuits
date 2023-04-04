@@ -23,6 +23,8 @@ namespace aztec3::circuits::rollup::native_base_rollup {
 const NT::fr EMPTY_COMMITMENTS_SUBTREE_ROOT = MerkleTree(PRIVATE_DATA_SUBTREE_DEPTH).root();
 const NT::fr EMPTY_CONTRACTS_SUBTREE_ROOT = MerkleTree(CONTRACT_SUBTREE_DEPTH).root();
 
+#define _unused(x) ((void)(x))
+
 // Note: this is temporary until I work out how to encode a large fr in a constant
 NT::fr calculate_empty_nullifier_subtree_root()
 {
@@ -359,6 +361,7 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(BaseRo
                     }
                     // if not matched, our subtree will misformed - we must reject
                     assert(matched);
+                    _unused(matched);
 
                 } else {
                     auto is_less_than_nullifier = uint256_t(low_nullifier_preimage.leaf_value) < uint256_t(nullifier);
