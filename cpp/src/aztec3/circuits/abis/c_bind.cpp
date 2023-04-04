@@ -300,16 +300,7 @@ WASM_EXPORT void abis__hash_constructor(uint8_t const* function_data_buf,
     read(constructor_vk_hash_buf, constructor_vk_hash);
 
     NT::fr constructor_hash = compute_constructor_hash(function_data, args, constructor_vk_hash);
-    // NT::fr function_data_hash = function_data.hash();
-    // NT::fr args_hash = NT::compress(args, aztec3::CONSTRUCTOR_ARGS);
 
-    // std::vector<NT::fr> inputs = {
-    //     function_data_hash,
-    //     args_hash,
-    //     constructor_vk_hash,
-    // };
-
-    // NT::fr constructor_hash = NT::compress(inputs, aztec3::GeneratorIndex::CONSTRUCTOR);
     NT::fr::serialize_to_buffer(constructor_hash, output);
 }
 
@@ -348,14 +339,6 @@ WASM_EXPORT void abis__compute_contract_address(uint8_t const* deployer_address_
     NT::address contract_address =
         compute_contract_address<NT>(deployer_address, contract_address_salt, function_tree_root, constructor_hash);
 
-    // std::vector<NT::fr> inputs = {
-    //     deployer_address,
-    //     contract_address_salt,
-    //     function_tree_root,
-    //     constructor_hash,
-    // };
-
-    // NT::address contract_address = NT::fr(NT::compress(inputs, aztec3::GeneratorIndex::CONTRACT_ADDRESS));
     NT::fr::serialize_to_buffer(contract_address, output);
 }
 

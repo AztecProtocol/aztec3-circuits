@@ -47,4 +47,31 @@ typename NCT::address compute_contract_address(typename NCT::address deployer_ad
 
     return address(NCT::compress(inputs, aztec3::GeneratorIndex::CONTRACT_ADDRESS));
 }
+
+template <typename NCT>
+typename NCT::fr add_contract_address_to_commitment(typename NCT::address contract_address, typename NCT::fr commitment)
+{
+    using fr = typename NCT::fr;
+
+    std::vector<fr> inputs = {
+        contract_address.to_field(),
+        commitment,
+    };
+
+    return NCT::compress(inputs, aztec3::GeneratorIndex::OUTER_COMMITMENT);
+}
+
+template <typename NCT>
+typename NCT::fr add_contract_address_to_nullifier(typename NCT::address contract_address, typename NCT::fr nullifier)
+{
+    using fr = typename NCT::fr;
+
+    std::vector<fr> inputs = {
+        contract_address.to_field(),
+        nullifier,
+    };
+
+    return NCT::compress(inputs, aztec3::GeneratorIndex::OUTER_NULLIFIER);
+}
+
 } // namespace aztec3::circuits
