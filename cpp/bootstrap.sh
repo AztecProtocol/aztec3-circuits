@@ -1,14 +1,13 @@
 #!/bin/bash
 set -eu
 
-export CLEAN=${1:-}
 export WASI_VERSION=12 
 
 # Update the submodule
 git submodule update --init --recursive
 
 # Remove all untracked files and directories.
-if [ -n "$CLEAN" ]; then
+if [ -n "${CLEAN:-}" ]; then
   # Clean.
   rm -rf ./build
   rm -rf ./build-wasm
