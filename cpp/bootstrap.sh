@@ -1,4 +1,6 @@
 #!/bin/bash
+# Takes a list of targets from commandline
+# Takes CLEAN as an environment variable. If passed, cleans build artifacts
 set -eu
 
 export WASI_VERSION=12 
