@@ -110,8 +110,8 @@ TEST(abi_tests, hash_vk)
     // Initialize some random VK data
     NT::VKData vk_data;
     vk_data.composer_type = engine.get_random_uint32();
-    vk_data.circuit_size = engine.get_random_uint32();
-    vk_data.num_public_inputs = (uint32_t(1) << (engine.get_random_uint8() >> 4)); // must be a power of two
+    vk_data.circuit_size = 65536; // must be a power of two
+    vk_data.num_public_inputs = engine.get_random_uint32();
     vk_data.commitments["test1"] = g1::element::random_element();
     vk_data.commitments["test2"] = g1::element::random_element();
     vk_data.commitments["foo1"] = g1::element::random_element();
