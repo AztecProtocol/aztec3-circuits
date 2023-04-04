@@ -133,20 +133,20 @@ MergeRollupPublicInputs merge_rollup_circuit(MergeRollupInputs mergeRollupInputs
     // TODO: Check both previous rollup vks (in previous_rollup_data) against the permitted set of kernel vks.
     // we don't have a set of permitted kernel vks yet.
 
-    // compute calldata hash:
-    auto new_calldata_hash = compute_calldata_hash(mergeRollupInputs);
+    // Check that the constants are the same in both proofs
+    auto left = mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs;
+    auto right = mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs;
+    assert_equal_constants(left.constants, right.constants);
 
     // Ensure the end snapshot of previous_rollup 0 equals the start snapshot of previous_rollup 1 (i.e. ensure they
     // follow on from one-another). This ensures the low_leaves which were updated in rollup 0 are being used as the
     // 'starting' pointers in rollup 1.
     ensure_prev_rollups_follow_on_from_each_other(mergeRollupInputs);
 
-    AggregationObject aggregation_object = aggregate_proofs(mergeRollupInputs);
+    // compute calldata hash:
+    auto new_calldata_hash = compute_calldata_hash(mergeRollupInputs);
 
-    // Check that the constants are the same in both proofs
-    auto left = mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs;
-    auto right = mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs;
-    assert_equal_constants(left.constants, right.constants);
+    AggregationObject aggregation_object = aggregate_proofs(mergeRollupInputs);
 
     MergeRollupPublicInputs public_inputs = {
         .rollup_type = abis::MERGE_ROLLUP_TYPE,

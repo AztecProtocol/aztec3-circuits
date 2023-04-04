@@ -88,7 +88,7 @@ using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel_wit
 using aztec3::circuits::mock::mock_kernel_circuit;
 using aztec3::circuits::rollup::base::utils::dummy_base_rollup_inputs_with_vk_proof;
 using aztec3::circuits::rollup::merge::utils::convert_base_public_inputs_to_merge_public_inputs;
-using aztec3::circuits::rollup::merge::utils::dummy_previous_rollup_with_vk_proof;
+using aztec3::circuits::rollup::merge::utils::previous_rollups_with_vk_proof_that_follow_on;
 // using aztec3::circuits::mock::mock_kernel_inputs;
 
 using aztec3::circuits::abis::AppendOnlyTreeSnapshot;
@@ -180,16 +180,13 @@ class root_rollup_tests : public ::testing::Test {
   protected:
     RootRollupInputs getEmptyRootRollupInputs()
     {
-        std::array<PreviousRollupData<NT>, 2> previous_rollup_data = {
-            dummy_previous_rollup_with_vk_proof(),
-            dummy_previous_rollup_with_vk_proof(),
-        };
+        // std::array<PreviousRollupData<NT>, 2> previous_rollup_data = previous_rollups_with_vk_proof_that_follow_on();
 
-        previous_rollup_data[1].merge_rollup_public_inputs.constants =
-            previous_rollup_data[0].merge_rollup_public_inputs.constants;
+        // previous_rollup_data[1].merge_rollup_public_inputs.constants =
+        //     previous_rollup_data[0].merge_rollup_public_inputs.constants;
 
         RootRollupInputs rootRollupInputs = {
-            .previous_rollup_data = previous_rollup_data,
+            .previous_rollup_data = previous_rollups_with_vk_proof_that_follow_on(),
             .new_historic_private_data_tree_root_sibling_path = { 0 },
             .new_historic_contract_tree_root_sibling_path = { 0 },
         };

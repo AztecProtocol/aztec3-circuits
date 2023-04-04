@@ -1,3 +1,4 @@
+#include "aztec3/circuits/abis/append_only_tree_snapshot.hpp"
 #include "aztec3/circuits/abis/rollup/base/base_rollup_public_inputs.hpp"
 #include "aztec3/circuits/abis/rollup/merge/merge_rollup_inputs.hpp"
 #include "aztec3/circuits/abis/rollup/merge/merge_rollup_public_inputs.hpp"
@@ -53,33 +54,45 @@ MergeRollupPublicInputs<NT> convert_base_public_inputs_to_merge_public_inputs(
     return mergeRollupPublicInputs;
 }
 
-PreviousRollupData<NT> dummy_previous_rollup_with_vk_proof()
+std::array<PreviousRollupData<NT>, 2> previous_rollups_with_vk_proof_that_follow_on()
 {
-    // MergeInput requires base_rollup_public_inputs. So create a dummy BaseRollupInput object and pass it through the
-    // base rollup circuit.
-    auto emptyInputs = base::utils::dummy_base_rollup_inputs_with_vk_proof();
-    BaseRollupPublicInputs dummy_base_public_inputs =
-        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(emptyInputs);
+    auto input1 = base::utils::dummy_base_rollup_inputs_with_vk_proof();
+    BaseRollupPublicInputs base_public_input1 =
+        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(input1);
+
+    auto input2 = input1;
+    input2.start_private_data_tree_snapshot = base_public_input1.end_private_data_tree_snapshot;
+    input2.start_nullifier_tree_snapshot = base_public_input1.end_nullifier_tree_snapshot;
+    input2.start_contract_tree_snapshot = base_public_input1.end_contract_tree_snapshot;
+    BaseRollupPublicInputs base_public_input2 =
+        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(input2);
 
     // just for mocked vk and proof
     // Need a way to extract a proof from Base Rollup Circuit. Until then use kernel as a hack.
     PreviousKernelData<NT> mocked_kernel = dummy_previous_kernel_with_vk_proof();
 
-    PreviousRollupData<NT> previous_rollup = {
-        .merge_rollup_public_inputs = convert_base_public_inputs_to_merge_public_inputs(dummy_base_public_inputs),
+    PreviousRollupData<NT> previous_rollup1 = {
+        .merge_rollup_public_inputs = convert_base_public_inputs_to_merge_public_inputs(base_public_input1),
+        .proof = mocked_kernel.proof,
+        .vk = mocked_kernel.vk,
+        .vk_index = 0,
+        .vk_sibling_path = MembershipWitness<NT, ROLLUP_VK_TREE_HEIGHT>(),
+    };
+    PreviousRollupData<NT> previous_rollup2 = {
+        .merge_rollup_public_inputs = convert_base_public_inputs_to_merge_public_inputs(base_public_input2),
         .proof = mocked_kernel.proof,
         .vk = mocked_kernel.vk,
         .vk_index = 0,
         .vk_sibling_path = MembershipWitness<NT, ROLLUP_VK_TREE_HEIGHT>(),
     };
 
-    return previous_rollup;
+    return { previous_rollup1, previous_rollup2 };
 }
 
 MergeRollupInputs<NT> dummy_merge_rollup_inputs_with_vk_proof()
 {
-    MergeRollupInputs<NT> merge_rollup_inputs = { .previous_rollup_data = { dummy_previous_rollup_with_vk_proof(),
-                                                                            dummy_previous_rollup_with_vk_proof() } };
+    MergeRollupInputs<NT> merge_rollup_inputs = { .previous_rollup_data =
+                                                      previous_rollups_with_vk_proof_that_follow_on() };
     return merge_rollup_inputs;
 }
 } // namespace aztec3::circuits::rollup::merge::utils
