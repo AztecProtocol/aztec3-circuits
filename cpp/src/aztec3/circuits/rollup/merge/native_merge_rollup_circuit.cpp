@@ -1,3 +1,4 @@
+#include "aztec3/circuits/abis/rollup/merge/merge_rollup_public_inputs.hpp"
 #include "aztec3/constants.hpp"
 #include "barretenberg/crypto/pedersen_hash/pedersen.hpp"
 #include "barretenberg/crypto/sha256/sha256.hpp"
@@ -10,6 +11,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <tuple>
 #include <vector>
@@ -36,6 +38,13 @@ void assert_both_input_proofs_of_same_rollup_type(MergeRollupInputs mergeRollupI
     assert(mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.rollup_type ==
            mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.rollup_type);
     (void)mergeRollupInputs;
+}
+
+NT::fr assert_both_input_proofs_of_same_height_and_return(MergeRollupInputs mergeRollupInputs)
+{
+    assert(mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.rollup_subtree_height ==
+           mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.rollup_subtree_height);
+    return mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.rollup_subtree_height;
 }
 
 void assert_equal_constants(ConstantRollupData left, ConstantRollupData right)
@@ -119,6 +128,7 @@ MergeRollupPublicInputs merge_rollup_circuit(MergeRollupInputs mergeRollupInputs
     // check that both input proofs are either both "BASE" or "MERGE" and not a mix!
     // this prevents having wonky commitment, nullifier and contract subtrees.
     assert_both_input_proofs_of_same_rollup_type(mergeRollupInputs);
+    auto current_height = assert_both_input_proofs_of_same_height_and_return(mergeRollupInputs);
 
     // TODO: Check both previous rollup vks (in previous_rollup_data) against the permitted set of kernel vks.
     // we don't have a set of permitted kernel vks yet.
@@ -139,6 +149,8 @@ MergeRollupPublicInputs merge_rollup_circuit(MergeRollupInputs mergeRollupInputs
     assert_equal_constants(left.constants, right.constants);
 
     MergeRollupPublicInputs public_inputs = {
+        .rollup_type = abis::MERGE_ROLLUP_TYPE,
+        .rollup_subtree_height = current_height + 1,
         .end_aggregation_object = aggregation_object,
         .constants = left.constants,
         .start_private_data_tree_snapshot =

@@ -450,6 +450,7 @@ BaseRollupPublicInputs base_rollup_circuit(BaseRollupInputs baseRollupInputs)
     BaseRollupPublicInputs public_inputs = {
         .end_aggregation_object = aggregation_object,
         .constants = baseRollupInputs.constants,
+        .rollup_subtree_height = fr(0),
         .start_private_data_tree_snapshot = baseRollupInputs.start_private_data_tree_snapshot,
         .end_private_data_tree_snapshot = end_private_data_tree_snapshot,
         .start_nullifier_tree_snapshot = baseRollupInputs.start_nullifier_tree_snapshot,

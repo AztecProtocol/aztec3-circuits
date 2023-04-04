@@ -39,6 +39,7 @@ MergeRollupPublicInputs<NT> convert_base_public_inputs_to_merge_public_inputs(
 {
     MergeRollupPublicInputs<NT> mergeRollupPublicInputs = {
         .rollup_type = abis::BASE_ROLLUP_TYPE,
+        .rollup_subtree_height = baseRollupPublicInputs.rollup_subtree_height,
         .end_aggregation_object = baseRollupPublicInputs.end_aggregation_object,
         .constants = baseRollupPublicInputs.constants,
         .start_private_data_tree_snapshot = baseRollupPublicInputs.start_private_data_tree_snapshot,

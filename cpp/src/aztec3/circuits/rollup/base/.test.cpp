@@ -453,6 +453,13 @@ TEST_F(base_rollup_tests, test_aggregate)
               outputs.end_aggregation_object.public_inputs);
 }
 
+TEST_F(base_rollup_tests, test_subtree_height_is_0)
+{
+    BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
+    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
+    ASSERT_EQ(outputs.rollup_subtree_height, fr(0));
+}
+
 TEST_F(base_rollup_tests, test_proof_verification) {}
 
 TEST_F(base_rollup_tests, test_cbind_0)

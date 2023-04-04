@@ -19,6 +19,9 @@ template <typename NCT> struct BaseRollupPublicInputs {
 
     AggregationObject end_aggregation_object;
     ConstantRollupData<NCT> constants;
+    // subtree  height is always 0 for base.
+    // so that we always pass-in two base/merge circuits of the same height into the next level of recursion
+    fr rollup_subtree_height;
 
     AppendOnlyTreeSnapshot<NCT> start_private_data_tree_snapshot;
     AppendOnlyTreeSnapshot<NCT> end_private_data_tree_snapshot;
@@ -42,6 +45,7 @@ template <typename NCT> void read(uint8_t const*& it, BaseRollupPublicInputs<NCT
 
     read(it, obj.end_aggregation_object);
     read(it, obj.constants);
+    read(it, obj.rollup_subtree_height);
     read(it, obj.start_private_data_tree_snapshot);
     read(it, obj.end_private_data_tree_snapshot);
     read(it, obj.start_nullifier_tree_snapshot);
@@ -57,6 +61,7 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, BaseRollupPublicIn
 
     write(buf, obj.end_aggregation_object);
     write(buf, obj.constants);
+    write(buf, obj.rollup_subtree_height);
     write(buf, obj.start_private_data_tree_snapshot);
     write(buf, obj.end_private_data_tree_snapshot);
     write(buf, obj.start_nullifier_tree_snapshot);
@@ -73,6 +78,9 @@ template <typename NCT> std::ostream& operator<<(std::ostream& os, BaseRollupPub
               << "\n"
                  "constants:\n"
               << obj.constants
+              << "\n"
+                 "rollup_subtree_height:\n"
+              << obj.rollup_subtree_height
               << "\n"
                  "start_private_data_tree_snapshot:\n"
               << obj.start_private_data_tree_snapshot

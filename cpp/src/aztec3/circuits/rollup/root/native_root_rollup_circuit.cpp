@@ -45,6 +45,13 @@ void assert_both_input_proofs_of_same_rollup_type(RootRollupInputs rootRollupInp
     (void)rootRollupInputs;
 }
 
+void assert_both_input_proofs_of_same_rollup_height(RootRollupInputs rootRollupInputs)
+{
+    assert(rootRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.rollup_subtree_height ==
+           rootRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.rollup_subtree_height);
+    (void)rootRollupInputs;
+}
+
 bool is_constants_equal(ConstantRollupData left, ConstantRollupData right)
 {
     return left == right;
@@ -139,6 +146,7 @@ RootRollupPublicInputs root_rollup_circuit(RootRollupInputs const& rootRollupInp
     // check that both input proofs are either both "BASE" or "MERGE" and not a mix!
     // this prevents having wonky commitment, nullifier and contract subtrees.
     assert_both_input_proofs_of_same_rollup_type(rootRollupInputs);
+    assert_both_input_proofs_of_same_rollup_height(rootRollupInputs);
 
     AggregationObject aggregation_object = aggregate_proofs(rootRollupInputs);
 
