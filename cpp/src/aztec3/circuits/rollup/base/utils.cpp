@@ -6,9 +6,6 @@
 
 #include <aztec3/circuits/kernel/private/utils.hpp>
 #include <aztec3/circuits/mock/mock_kernel_circuit.hpp>
-#include <cstddef>
-#include <cstdint>
-#include <sys/types.h>
 #include "aztec3/circuits/abis/private_kernel/new_contract_data.hpp"
 #include "aztec3/circuits/abis/rollup/base/previous_rollup_data.hpp"
 
@@ -225,7 +222,7 @@ generate_nullifier_tree_testing_values(BaseRollupInputs<NT> rollupInputs,
     std::vector<fr> sibling_path = parallel_insertion_tree.get_sibling_path(8);
     std::array<fr, NULLIFIER_SUBTREE_INCLUSION_CHECK_DEPTH> sibling_path_array;
     // Chop the first 3 levels from the sibling_path
-    sibling_path.erase(sibling_path.begin(), sibling_path.begin() + 3);
+    sibling_path.erase(sibling_path.begin(), sibling_path.begin() + NULLIFIER_SUBTREE_DEPTH);
     std::copy(sibling_path.begin(), sibling_path.end(), sibling_path_array.begin());
 
     // Update our start state

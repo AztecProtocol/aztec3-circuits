@@ -2,8 +2,6 @@
 #include "aztec3/circuits/rollup/base/nullifier_tree_testing_harness.hpp"
 #include "index.hpp"
 #include "init.hpp"
-#include <cstddef>
-#include <sys/types.h>
 
 namespace aztec3::circuits::rollup::base::utils {
 
