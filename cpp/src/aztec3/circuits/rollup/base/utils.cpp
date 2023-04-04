@@ -132,7 +132,7 @@ generate_nullifier_tree_testing_values(BaseRollupInputs<NT> inputs,
     const size_t NUMBER_OF_NULLIFIERS = KERNEL_NEW_NULLIFIERS_LENGTH * 2;
     std::array<fr, NUMBER_OF_NULLIFIERS> nullifiers;
     for (size_t i = 0; i < NUMBER_OF_NULLIFIERS; ++i) {
-        auto insertion_val = uint(starting_insertion_value + i * spacing);
+        auto insertion_val = (starting_insertion_value + i * spacing);
         nullifiers[i] = fr(insertion_val);
     }
     return generate_nullifier_tree_testing_values(inputs, nullifiers, spacing);
