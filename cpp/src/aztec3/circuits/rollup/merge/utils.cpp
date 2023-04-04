@@ -1,7 +1,6 @@
 #include "aztec3/circuits/abis/rollup/base/base_rollup_public_inputs.hpp"
 #include "aztec3/circuits/abis/rollup/merge/merge_rollup_inputs.hpp"
 #include "aztec3/circuits/abis/rollup/merge/merge_rollup_public_inputs.hpp"
-#include "aztec3/circuits/rollup/merge/utils.hpp"
 #include "aztec3/constants.hpp"
 #include "barretenberg/proof_system/verification_key/verification_key.hpp"
 #include "index.hpp"
@@ -31,7 +30,7 @@ using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel_wit
 using plonk::TurboComposer;
 } // namespace
 
-namespace aztec3::circuits::rollup::base::utils {
+namespace aztec3::circuits::rollup::merge::utils {
 
 // Helper method since MergeRollupInputs.PreviousRollupData can only take the type of `MergeRollupPublicInputs`
 // So we convert the output of base to look like output of merge and add the `rollup_type` field.
@@ -57,7 +56,7 @@ PreviousRollupData<NT> dummy_previous_rollup_with_vk_proof()
 {
     // MergeInput requires base_rollup_public_inputs. So create a dummy BaseRollupInput object and pass it through the
     // base rollup circuit.
-    auto emptyInputs = dummy_base_rollup_inputs_with_vk_proof();
+    auto emptyInputs = base::utils::dummy_base_rollup_inputs_with_vk_proof();
     BaseRollupPublicInputs dummy_base_public_inputs =
         aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(emptyInputs);
 
@@ -82,4 +81,4 @@ MergeRollupInputs<NT> dummy_merge_rollup_inputs_with_vk_proof()
                                                                             dummy_previous_rollup_with_vk_proof() } };
     return merge_rollup_inputs;
 }
-} // namespace aztec3::circuits::rollup::base::utils
+} // namespace aztec3::circuits::rollup::merge::utils

@@ -42,6 +42,7 @@ void assert_both_input_proofs_of_same_rollup_type(RootRollupInputs rootRollupInp
 {
     assert(rootRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.rollup_type ==
            rootRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.rollup_type);
+    (void)rootRollupInputs;
 }
 
 bool is_constants_equal(ConstantRollupData left, ConstantRollupData right)

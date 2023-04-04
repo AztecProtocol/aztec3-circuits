@@ -35,20 +35,14 @@ void assert_both_input_proofs_of_same_rollup_type(MergeRollupInputs mergeRollupI
 {
     assert(mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.rollup_type ==
            mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.rollup_type);
+    (void)mergeRollupInputs;
 }
 
 void assert_equal_constants(ConstantRollupData left, ConstantRollupData right)
 {
-    assert(left.base_rollup_vk_hash == right.base_rollup_vk_hash);
-    assert(left.merge_rollup_vk_hash == right.merge_rollup_vk_hash);
-    assert(left.private_kernel_vk_tree_root == right.private_kernel_vk_tree_root);
-    assert(left.public_kernel_vk_tree_root == right.public_kernel_vk_tree_root);
-    assert(left.start_tree_of_historic_private_data_tree_roots_snapshot ==
-           right.start_tree_of_historic_private_data_tree_roots_snapshot);
-    assert(left.start_tree_of_historic_contract_tree_roots_snapshot ==
-           right.start_tree_of_historic_contract_tree_roots_snapshot);
-    assert(left.tree_of_historic_l1_to_l2_msg_tree_roots_snapshot ==
-           right.tree_of_historic_l1_to_l2_msg_tree_roots_snapshot);
+    assert(left == right);
+    (void)left;
+    (void)right;
 }
 
 // function that does sha256 hash of the calldata from each previous rollup data
@@ -109,6 +103,13 @@ void ensure_prev_rollups_follow_on_from_each_other(MergeRollupInputs mergeRollup
 
     assert(privateDataEndSnapshot0 == privateDataStartSnapshot1 && nullifierEndSnapshot0 == nullifierStartSnapshot1 &&
            contractEndSnapshot0 == contractStartSnapshot1);
+    // void variables since despite using in assert, it says, "unused variable"
+    (void)privateDataEndSnapshot0;
+    (void)privateDataStartSnapshot1;
+    (void)nullifierEndSnapshot0;
+    (void)nullifierStartSnapshot1;
+    (void)contractEndSnapshot0;
+    (void)contractStartSnapshot1;
 }
 
 MergeRollupPublicInputs merge_rollup_circuit(MergeRollupInputs mergeRollupInputs)

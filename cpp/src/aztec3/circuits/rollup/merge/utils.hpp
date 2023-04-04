@@ -13,7 +13,8 @@ using aztec3::circuits::abis::MergeRollupPublicInputs;
 using aztec3::circuits::abis::PreviousRollupData;
 } // namespace
 
-MergeRollupPublicInputs<NT> convert_base_public_inputs_to_merge_public_inputs(BaseRollupPublicInputs<NT>);
+MergeRollupPublicInputs<NT> convert_base_public_inputs_to_merge_public_inputs(
+    BaseRollupPublicInputs<NT> baseRollupPublicInputs);
 MergeRollupInputs<NT> dummy_merge_rollup_inputs_with_vk_proof();
 PreviousRollupData<NT> dummy_previous_rollup_with_vk_proof();
 

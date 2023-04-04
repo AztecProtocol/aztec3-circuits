@@ -51,7 +51,7 @@ template <typename NCT> void read(uint8_t const*& it, MergeRollupPublicInputs<NC
     read(it, obj.start_private_data_tree_snapshot);
     read(it, obj.end_private_data_tree_snapshot);
     read(it, obj.start_nullifier_tree_snapshot);
-    read(it, obj.end_nullifier_tree_snapshots);
+    read(it, obj.end_nullifier_tree_snapshot);
     read(it, obj.start_contract_tree_snapshot);
     read(it, obj.end_contract_tree_snapshot);
     read(it, obj.calldata_hash);
@@ -67,7 +67,7 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, MergeRollupPublicI
     write(buf, obj.start_private_data_tree_snapshot);
     write(buf, obj.end_private_data_tree_snapshot);
     write(buf, obj.start_nullifier_tree_snapshot);
-    write(buf, obj.end_nullifier_tree_snapshots);
+    write(buf, obj.end_nullifier_tree_snapshot);
     write(buf, obj.start_contract_tree_snapshot);
     write(buf, obj.end_contract_tree_snapshot);
     write(buf, obj.calldata_hash);
@@ -91,8 +91,8 @@ template <typename NCT> std::ostream& operator<<(std::ostream& os, MergeRollupPu
                  "start_nullifier_tree_snapshot:\n"
               << obj.start_nullifier_tree_snapshot
               << "\n"
-                 "end_nullifier_tree_snapshots:\n"
-              << obj.end_nullifier_tree_snapshots
+                 "end_nullifier_tree_snapshot:\n"
+              << obj.end_nullifier_tree_snapshot
               << "\n"
                  "start_contract_tree_snapshot:\n"
               << obj.start_contract_tree_snapshot
