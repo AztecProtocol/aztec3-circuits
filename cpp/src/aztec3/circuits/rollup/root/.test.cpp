@@ -178,19 +178,12 @@ class root_rollup_tests : public ::testing::Test {
 
   protected:
     template <size_t N>
-    std::array<fr, N> get_sibling_path(MemoryTree tree, size_t leafIndex, size_t subtree_depth_to_skip)
+    std::array<fr, N> get_subtree_sibling_path(MemoryTree tree, size_t leafIndex, size_t subtree_depth_to_skip)
     {
         std::array<fr, N> siblingPath;
-        auto path = tree.get_hash_path(leafIndex);
-        // slice out the skip
-        leafIndex = leafIndex >> (subtree_depth_to_skip);
-
+        auto path = tree.get_sibling_path(leafIndex);
         for (size_t i = 0; i < N; i++) {
-            if (leafIndex & (1 << i)) {
-                siblingPath[i] = path[subtree_depth_to_skip + i].first;
-            } else {
-                siblingPath[i] = path[subtree_depth_to_skip + i].second;
-            }
+            siblingPath[i] = path[subtree_depth_to_skip + i];
         }
         return siblingPath;
     }
@@ -201,9 +194,9 @@ class root_rollup_tests : public ::testing::Test {
         MemoryTree historic_contract_tree = MemoryTree(CONTRACT_TREE_ROOTS_TREE_HEIGHT);
 
         auto historic_data_sibling_path =
-            get_sibling_path<PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>(historic_data_tree, 0, 0);
+            get_subtree_sibling_path<PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>(historic_data_tree, 0, 0);
         auto historic_contract_sibling_path =
-            get_sibling_path<CONTRACT_TREE_ROOTS_TREE_HEIGHT>(historic_contract_tree, 0, 0);
+            get_subtree_sibling_path<CONTRACT_TREE_ROOTS_TREE_HEIGHT>(historic_contract_tree, 0, 0);
 
         RootRollupInputs rootRollupInputs = {
             .previous_rollup_data = previous_rollups_with_vk_proof_that_follow_on(),
@@ -269,7 +262,7 @@ TEST_F(root_rollup_tests, root_missing_nullifier_logic)
         }
         // Compute sibling path for inserting commitment subtree
         base_inputs[rollup_i].new_commitments_subtree_sibling_path =
-            get_sibling_path<PRIVATE_DATA_SUBTREE_INCLUSION_CHECK_DEPTH>(
+            get_subtree_sibling_path<PRIVATE_DATA_SUBTREE_INCLUSION_CHECK_DEPTH>(
                 data_tree, rollup_i * 8, PRIVATE_DATA_SUBTREE_DEPTH);
 
         if (rollup_i == 0) {
@@ -301,12 +294,13 @@ TEST_F(root_rollup_tests, root_missing_nullifier_logic)
     // Update contract tree
     contract_tree.update_element(2, contract_leaf);
     base_inputs[1].new_contracts_subtree_sibling_path =
-        get_sibling_path<CONTRACT_SUBTREE_INCLUSION_CHECK_DEPTH>(contract_tree, 2, CONTRACT_SUBTREE_DEPTH);
+        get_subtree_sibling_path<CONTRACT_SUBTREE_INCLUSION_CHECK_DEPTH>(contract_tree, 2, CONTRACT_SUBTREE_DEPTH);
 
     // Historic trees
-    auto historic_data_sibling_path = get_sibling_path<PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>(historic_data_tree, 0, 0);
+    auto historic_data_sibling_path =
+        get_subtree_sibling_path<PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>(historic_data_tree, 0, 0);
     auto historic_contract_sibling_path =
-        get_sibling_path<CONTRACT_TREE_ROOTS_TREE_HEIGHT>(historic_contract_tree, 0, 0);
+        get_subtree_sibling_path<CONTRACT_TREE_ROOTS_TREE_HEIGHT>(historic_contract_tree, 0, 0);
 
     // The start historic data snapshot
     AppendOnlyTreeSnapshot<NT> start_historic_data_tree_snapshot = { .root = historic_data_tree.root(),
