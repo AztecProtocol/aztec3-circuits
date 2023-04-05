@@ -59,6 +59,8 @@ NT::fr assert_both_input_proofs_of_same_height_and_return(BaseOrMergeRollupPubli
                                                           BaseOrMergeRollupPublicInputs right)
 {
     assert(left.rollup_subtree_height == right.rollup_subtree_height);
+    (void)left;
+    (void)right;
     return left.rollup_subtree_height;
 }
 
