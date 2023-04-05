@@ -15,6 +15,8 @@ namespace aztec3::circuits::rollup::merge::native_merge_rollup_circuit {
 
 class merge_rollup_tests : public ::testing::Test {};
 
+#ifndef __wasm__ // TODO: temporary hack. WASM doesn't support EXPECT_DEATH or try/catch or EXPECT_THROW so no way to
+                 // test these in wasm.
 TEST_F(merge_rollup_tests, test_different_rollup_type_fails)
 {
     auto mergeInput = dummy_merge_rollup_inputs_with_vk_proof();
@@ -73,6 +75,7 @@ TEST_F(merge_rollup_tests, test_fail_if_previous_rollups_dont_follow_on)
     };
     EXPECT_DEATH(merge_rollup_circuit(inputC), ".*ensure_prev_rollups_follow_on_from_each_other.*");
 }
+#endif
 
 TEST_F(merge_rollup_tests, test_rollup_fields_are_set_correctly)
 {
