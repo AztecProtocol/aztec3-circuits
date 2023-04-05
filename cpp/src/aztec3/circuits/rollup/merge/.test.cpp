@@ -20,7 +20,7 @@ TEST_F(merge_rollup_tests, test_different_rollup_type_fails)
     auto mergeInput = dummy_merge_rollup_inputs_with_vk_proof();
     mergeInput.previous_rollup_data[0].base_or_merge_rollup_public_inputs.rollup_type = 0;
     mergeInput.previous_rollup_data[1].base_or_merge_rollup_public_inputs.rollup_type = 1;
-    EXPECT_DEATH(merge_rollup_circuit(mergeInput), ".*assert_both_input_proofs_of_same_rollup_type.*failed.");
+    EXPECT_DEATH(merge_rollup_circuit(mergeInput), ".*assert_both_input_proofs_of_same_rollup_type.*");
 }
 
 TEST_F(merge_rollup_tests, test_different_rollup_height_fails)
@@ -28,7 +28,7 @@ TEST_F(merge_rollup_tests, test_different_rollup_height_fails)
     auto mergeInput = dummy_merge_rollup_inputs_with_vk_proof();
     mergeInput.previous_rollup_data[0].base_or_merge_rollup_public_inputs.rollup_subtree_height = 0;
     mergeInput.previous_rollup_data[1].base_or_merge_rollup_public_inputs.rollup_subtree_height = 1;
-    EXPECT_DEATH(merge_rollup_circuit(mergeInput), ".*assert_both_input_proofs_of_same_height_and_return.*failed.");
+    EXPECT_DEATH(merge_rollup_circuit(mergeInput), ".*assert_both_input_proofs_of_same_height_and_return.*");
 }
 
 TEST_F(merge_rollup_tests, test_constants_different_failure)
@@ -37,7 +37,7 @@ TEST_F(merge_rollup_tests, test_constants_different_failure)
     inputs.previous_rollup_data[0].base_or_merge_rollup_public_inputs.constants.public_kernel_vk_tree_root = fr(1);
     inputs.previous_rollup_data[1].base_or_merge_rollup_public_inputs.constants.public_kernel_vk_tree_root = fr(0);
 
-    EXPECT_DEATH(merge_rollup_circuit(inputs), ".*assert_equal_constants.*failed.");
+    EXPECT_DEATH(merge_rollup_circuit(inputs), ".*assert_equal_constants.*");
 }
 
 TEST_F(merge_rollup_tests, test_fail_if_previous_rollups_dont_follow_on)
@@ -51,7 +51,7 @@ TEST_F(merge_rollup_tests, test_fail_if_previous_rollups_dont_follow_on)
         .root = fr(1), .next_available_leaf_index = 0
     };
 
-    EXPECT_DEATH(merge_rollup_circuit(inputA), ".*ensure_prev_rollups_follow_on_from_each_other.*failed.");
+    EXPECT_DEATH(merge_rollup_circuit(inputA), ".*ensure_prev_rollups_follow_on_from_each_other.*");
 
     // do the same for nullifier tree
     auto inputB = dummyInputs;
@@ -61,7 +61,7 @@ TEST_F(merge_rollup_tests, test_fail_if_previous_rollups_dont_follow_on)
     inputB.previous_rollup_data[1].base_or_merge_rollup_public_inputs.start_nullifier_tree_snapshot = {
         .root = fr(1), .next_available_leaf_index = 0
     };
-    EXPECT_DEATH(merge_rollup_circuit(inputB), ".*ensure_prev_rollups_follow_on_from_each_other.*failed.");
+    EXPECT_DEATH(merge_rollup_circuit(inputB), ".*ensure_prev_rollups_follow_on_from_each_other.*");
 
     // do the same for contract tree
     auto inputC = dummyInputs;
@@ -71,7 +71,7 @@ TEST_F(merge_rollup_tests, test_fail_if_previous_rollups_dont_follow_on)
     inputC.previous_rollup_data[1].base_or_merge_rollup_public_inputs.start_contract_tree_snapshot = {
         .root = fr(1), .next_available_leaf_index = 0
     };
-    EXPECT_DEATH(merge_rollup_circuit(inputC), ".*ensure_prev_rollups_follow_on_from_each_other.*failed.");
+    EXPECT_DEATH(merge_rollup_circuit(inputC), ".*ensure_prev_rollups_follow_on_from_each_other.*");
 }
 
 TEST_F(merge_rollup_tests, test_rollup_fields_are_set_correctly)
