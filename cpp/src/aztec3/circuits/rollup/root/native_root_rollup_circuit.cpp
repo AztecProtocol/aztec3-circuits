@@ -48,6 +48,7 @@ void check_membership(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> c
     auto computed_root = iterate_through_tree_via_sibling_path(leaf, leafIndex, siblingPath);
     assert(root == computed_root);
     (void)root;
+    (void)computed_root;
 }
 
 template <size_t N>
