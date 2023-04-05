@@ -13,8 +13,8 @@ using NT = aztec3::utils::types::NativeTypes;
 using AggregationObject = aztec3::utils::types::NativeTypes::AggregationObject;
 
 using aztec3::circuits::abis::AppendOnlyTreeSnapshot;
+using aztec3::circuits::abis::BaseOrMergeRollupPublicInputs;
 using aztec3::circuits::abis::BaseRollupInputs;
-using aztec3::circuits::abis::BaseRollupPublicInputs;
 using aztec3::circuits::abis::ConstantRollupData;
 using aztec3::circuits::abis::MembershipWitness;
 using aztec3::circuits::abis::NullifierLeafPreimage;

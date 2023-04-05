@@ -1,4 +1,4 @@
-#include "aztec3/circuits/abis/rollup/merge/merge_rollup_public_inputs.hpp"
+#include "aztec3/circuits/abis/rollup/base/base_or_merge_rollup_public_inputs.hpp"
 #include "aztec3/constants.hpp"
 #include "barretenberg/crypto/pedersen_hash/pedersen.hpp"
 #include "barretenberg/crypto/sha256/sha256.hpp"
@@ -30,21 +30,21 @@ namespace aztec3::circuits::rollup::native_merge_rollup {
 AggregationObject aggregate_proofs(MergeRollupInputs mergeRollupInputs)
 {
     // TODO: NOTE: for now we simply return the aggregation object from the first proof
-    return mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.end_aggregation_object;
+    return mergeRollupInputs.previous_rollup_data[0].base_or_merge_rollup_public_inputs.end_aggregation_object;
 }
 
 void assert_both_input_proofs_of_same_rollup_type(MergeRollupInputs mergeRollupInputs)
 {
-    assert(mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.rollup_type ==
-           mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.rollup_type);
+    assert(mergeRollupInputs.previous_rollup_data[0].base_or_merge_rollup_public_inputs.rollup_type ==
+           mergeRollupInputs.previous_rollup_data[1].base_or_merge_rollup_public_inputs.rollup_type);
     (void)mergeRollupInputs;
 }
 
 NT::fr assert_both_input_proofs_of_same_height_and_return(MergeRollupInputs mergeRollupInputs)
 {
-    assert(mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.rollup_subtree_height ==
-           mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.rollup_subtree_height);
-    return mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.rollup_subtree_height;
+    assert(mergeRollupInputs.previous_rollup_data[0].base_or_merge_rollup_public_inputs.rollup_subtree_height ==
+           mergeRollupInputs.previous_rollup_data[1].base_or_merge_rollup_public_inputs.rollup_subtree_height);
+    return mergeRollupInputs.previous_rollup_data[0].base_or_merge_rollup_public_inputs.rollup_subtree_height;
 }
 
 void assert_equal_constants(ConstantRollupData left, ConstantRollupData right)
@@ -61,7 +61,7 @@ std::array<fr, 2> compute_calldata_hash(MergeRollupInputs mergeRollupInputs)
     std::array<uint8_t, 2 * 32> calldata_hash_input_bytes;
     for (uint8_t i = 0; i < 2; i++) {
         std::array<fr, 2> calldata_hash_fr =
-            mergeRollupInputs.previous_rollup_data[i].merge_rollup_public_inputs.calldata_hash;
+            mergeRollupInputs.previous_rollup_data[i].base_or_merge_rollup_public_inputs.calldata_hash;
 
         auto high_buffer = calldata_hash_fr[0].to_buffer();
         auto low_buffer = calldata_hash_fr[1].to_buffer();
@@ -96,19 +96,19 @@ std::array<fr, 2> compute_calldata_hash(MergeRollupInputs mergeRollupInputs)
 void ensure_prev_rollups_follow_on_from_each_other(MergeRollupInputs mergeRollupInputs)
 {
     auto privateDataEndSnapshot0 =
-        mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.end_private_data_tree_snapshot;
+        mergeRollupInputs.previous_rollup_data[0].base_or_merge_rollup_public_inputs.end_private_data_tree_snapshot;
     auto privateDataStartSnapshot1 =
-        mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.start_private_data_tree_snapshot;
+        mergeRollupInputs.previous_rollup_data[1].base_or_merge_rollup_public_inputs.start_private_data_tree_snapshot;
 
     auto nullifierEndSnapshot0 =
-        mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.end_nullifier_tree_snapshot;
+        mergeRollupInputs.previous_rollup_data[0].base_or_merge_rollup_public_inputs.end_nullifier_tree_snapshot;
     auto nullifierStartSnapshot1 =
-        mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.start_nullifier_tree_snapshot;
+        mergeRollupInputs.previous_rollup_data[1].base_or_merge_rollup_public_inputs.start_nullifier_tree_snapshot;
 
     auto contractEndSnapshot0 =
-        mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.end_contract_tree_snapshot;
+        mergeRollupInputs.previous_rollup_data[0].base_or_merge_rollup_public_inputs.end_contract_tree_snapshot;
     auto contractStartSnapshot1 =
-        mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.start_contract_tree_snapshot;
+        mergeRollupInputs.previous_rollup_data[1].base_or_merge_rollup_public_inputs.start_contract_tree_snapshot;
 
     assert(privateDataEndSnapshot0 == privateDataStartSnapshot1 && nullifierEndSnapshot0 == nullifierStartSnapshot1 &&
            contractEndSnapshot0 == contractStartSnapshot1);
@@ -121,7 +121,7 @@ void ensure_prev_rollups_follow_on_from_each_other(MergeRollupInputs mergeRollup
     (void)contractStartSnapshot1;
 }
 
-MergeRollupPublicInputs merge_rollup_circuit(MergeRollupInputs mergeRollupInputs)
+BaseOrMergeRollupPublicInputs merge_rollup_circuit(MergeRollupInputs mergeRollupInputs)
 {
     // Verify the previous rollup proofs
 
@@ -134,8 +134,8 @@ MergeRollupPublicInputs merge_rollup_circuit(MergeRollupInputs mergeRollupInputs
     // we don't have a set of permitted kernel vks yet.
 
     // Check that the constants are the same in both proofs
-    auto left = mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs;
-    auto right = mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs;
+    auto left = mergeRollupInputs.previous_rollup_data[0].base_or_merge_rollup_public_inputs;
+    auto right = mergeRollupInputs.previous_rollup_data[1].base_or_merge_rollup_public_inputs;
     assert_equal_constants(left.constants, right.constants);
 
     // Ensure the end snapshot of previous_rollup 0 equals the start snapshot of previous_rollup 1 (i.e. ensure they
@@ -148,23 +148,23 @@ MergeRollupPublicInputs merge_rollup_circuit(MergeRollupInputs mergeRollupInputs
 
     AggregationObject aggregation_object = aggregate_proofs(mergeRollupInputs);
 
-    MergeRollupPublicInputs public_inputs = {
+    BaseOrMergeRollupPublicInputs public_inputs = {
         .rollup_type = abis::MERGE_ROLLUP_TYPE,
         .rollup_subtree_height = current_height + 1,
         .end_aggregation_object = aggregation_object,
         .constants = left.constants,
-        .start_private_data_tree_snapshot =
-            mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.start_private_data_tree_snapshot,
+        .start_private_data_tree_snapshot = mergeRollupInputs.previous_rollup_data[0]
+                                                .base_or_merge_rollup_public_inputs.start_private_data_tree_snapshot,
         .end_private_data_tree_snapshot =
-            mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.end_private_data_tree_snapshot,
+            mergeRollupInputs.previous_rollup_data[1].base_or_merge_rollup_public_inputs.end_private_data_tree_snapshot,
         .start_nullifier_tree_snapshot =
-            mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.start_nullifier_tree_snapshot,
+            mergeRollupInputs.previous_rollup_data[0].base_or_merge_rollup_public_inputs.start_nullifier_tree_snapshot,
         .end_nullifier_tree_snapshot =
-            mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.end_nullifier_tree_snapshot,
+            mergeRollupInputs.previous_rollup_data[1].base_or_merge_rollup_public_inputs.end_nullifier_tree_snapshot,
         .start_contract_tree_snapshot =
-            mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.start_contract_tree_snapshot,
+            mergeRollupInputs.previous_rollup_data[0].base_or_merge_rollup_public_inputs.start_contract_tree_snapshot,
         .end_contract_tree_snapshot =
-            mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.end_contract_tree_snapshot,
+            mergeRollupInputs.previous_rollup_data[1].base_or_merge_rollup_public_inputs.end_contract_tree_snapshot,
         .calldata_hash = new_calldata_hash,
     };
 

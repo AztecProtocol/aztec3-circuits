@@ -1,3 +1,4 @@
+#include "aztec3/circuits/abis/rollup/base/base_or_merge_rollup_public_inputs.hpp"
 #include "index.hpp"
 #include "init.hpp"
 #include "utils.hpp"
@@ -18,8 +19,8 @@
 
 namespace {
 using NT = aztec3::utils::types::NativeTypes;
+using aztec3::circuits::abis::BaseOrMergeRollupPublicInputs;
 using aztec3::circuits::abis::BaseRollupInputs;
-using aztec3::circuits::abis::BaseRollupPublicInputs;
 using aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit;
 
 using plonk::TurboComposer;
@@ -55,7 +56,7 @@ WASM_EXPORT size_t base_rollup__init_verification_key(uint8_t const* pk_buf, uin
 }
 
 WASM_EXPORT size_t base_rollup__sim(uint8_t const* base_rollup_inputs_buf,
-                                    uint8_t const** base_rollup_public_inputs_buf)
+                                    uint8_t const** base_or_merge_rollup_public_inputs_buf)
 {
     // TODO accept proving key and use that to initialize composers
     // this info is just to prevent error for unused pk_buf
@@ -65,7 +66,7 @@ WASM_EXPORT size_t base_rollup__sim(uint8_t const* base_rollup_inputs_buf,
     BaseRollupInputs<NT> base_rollup_inputs;
     read(base_rollup_inputs_buf, base_rollup_inputs);
 
-    BaseRollupPublicInputs<NT> public_inputs = base_rollup_circuit(base_rollup_inputs);
+    BaseOrMergeRollupPublicInputs<NT> public_inputs = base_rollup_circuit(base_rollup_inputs);
 
     // TODO for circuit proof version of this function
     // NT::Proof base_rollup_proof;
@@ -80,14 +81,14 @@ WASM_EXPORT size_t base_rollup__sim(uint8_t const* base_rollup_inputs_buf,
     // copy public inputs to output buffer
     auto raw_public_inputs_buf = (uint8_t*)malloc(public_inputs_vec.size());
     memcpy(raw_public_inputs_buf, (void*)public_inputs_vec.data(), public_inputs_vec.size());
-    *base_rollup_public_inputs_buf = raw_public_inputs_buf;
+    *base_or_merge_rollup_public_inputs_buf = raw_public_inputs_buf;
 
     return public_inputs_vec.size();
 }
 
 // WASM_EXPORT size_t base_rollup__sim(uint8_t const* base_rollup_inputs_buf,
 //                                    bool second_present,
-//                                    uint8_t const** base_rollup_public_inputs_buf)
+//                                    uint8_t const** base_or_merge_rollup_public_inputs_buf)
 //{
 //    // TODO accept proving key and use that to initialize composers
 //    // this info is just to prevent error for unused pk_buf
@@ -98,7 +99,7 @@ WASM_EXPORT size_t base_rollup__sim(uint8_t const* base_rollup_inputs_buf,
 //    read(base_rollup_inputs_buf, base_rollup_inputs);
 //
 //    NT::Proof base_rollup_proof;
-//    BaseRollupPublicInputs<NT> public_inputs;
+//    BaseOrMergeRollupPublicInputs<NT> public_inputs;
 //    if (proverless) {
 //        public_inputs = base_rollup_circuit(base_rollup_inputs);
 //        // mocked proof - zeros
@@ -124,7 +125,7 @@ WASM_EXPORT size_t base_rollup__sim(uint8_t const* base_rollup_inputs_buf,
 //    // copy public inputs to output buffer
 //    auto raw_public_inputs_buf = (uint8_t*)malloc(public_inputs_vec.size());
 //    memcpy(raw_public_inputs_buf, (void*)public_inputs_vec.data(), public_inputs_vec.size());
-//    *base_rollup_public_inputs_buf = raw_public_inputs_buf;
+//    *base_or_merge_rollup_public_inputs_buf = raw_public_inputs_buf;
 //
 //    return base_rollup_proof.proof_data.size();
 //}

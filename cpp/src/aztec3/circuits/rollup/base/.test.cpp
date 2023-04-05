@@ -96,8 +96,8 @@ using aztec3::circuits::abis::AppendOnlyTreeSnapshot;
 
 using aztec3::circuits::abis::MembershipWitness;
 using aztec3::circuits::abis::NullifierLeafPreimage;
+using aztec3::circuits::rollup::native_base_rollup::BaseOrMergeRollupPublicInputs;
 using aztec3::circuits::rollup::native_base_rollup::BaseRollupInputs;
-using aztec3::circuits::rollup::native_base_rollup::BaseRollupPublicInputs;
 using aztec3::circuits::rollup::native_base_rollup::ConstantRollupData;
 using aztec3::circuits::rollup::native_base_rollup::NT;
 
@@ -111,7 +111,7 @@ namespace aztec3::circuits::rollup::base::native_base_rollup_circuit {
 class base_rollup_tests : public ::testing::Test {
   protected:
     void run_cbind(BaseRollupInputs& base_rollup_inputs,
-                   BaseRollupPublicInputs& expected_public_inputs,
+                   BaseOrMergeRollupPublicInputs& expected_public_inputs,
                    bool compare_pubins = true)
     {
         // TODO might be able to get rid of proving key buffer
@@ -136,7 +136,7 @@ class base_rollup_tests : public ::testing::Test {
         info("PublicInputs size: ", public_inputs_size);
 
         if (compare_pubins) {
-            BaseRollupPublicInputs public_inputs;
+            BaseOrMergeRollupPublicInputs public_inputs;
             info("about to read...");
             uint8_t const* public_inputs_buf_tmp = public_inputs_buf;
             read(public_inputs_buf_tmp, public_inputs);
@@ -204,7 +204,8 @@ TEST_F(base_rollup_tests, no_new_contract_leafs)
     // Set the new_contracts_subtree_sibling_path
     emptyInputs.new_contracts_subtree_sibling_path = sibling_path_of_0;
 
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(emptyInputs);
+    BaseOrMergeRollupPublicInputs outputs =
+        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(emptyInputs);
 
     AppendOnlyTreeSnapshot<NT> expectedEndContractTreeSnapshot = {
         .root = empty_contract_tree.root(),
@@ -245,7 +246,7 @@ TEST_F(base_rollup_tests, contract_leaf_inserted)
         .root = expeted_end_contracts_snapshot_tree.root(),
         .next_available_leaf_index = 2,
     };
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
+    BaseOrMergeRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
 
     ASSERT_EQ(outputs.start_contract_tree_snapshot, inputs.start_contract_tree_snapshot);
     ASSERT_EQ(outputs.end_contract_tree_snapshot, expected_end_contracts_snapshot);
@@ -291,7 +292,7 @@ TEST_F(base_rollup_tests, contract_leaf_inserted_in_non_empty_snapshot_tree)
         .root = expeted_end_contracts_snapshot_tree.root(),
         .next_available_leaf_index = 14,
     };
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
+    BaseOrMergeRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
 
     ASSERT_EQ(outputs.start_contract_tree_snapshot, inputs.start_contract_tree_snapshot);
     ASSERT_EQ(outputs.end_contract_tree_snapshot, expected_end_contracts_snapshot);
@@ -330,7 +331,7 @@ TEST_F(base_rollup_tests, new_commitments_tree)
         .next_available_leaf_index = 8,
     };
 
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
+    BaseOrMergeRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
     ASSERT_EQ(outputs.start_private_data_tree_snapshot, inputs.start_private_data_tree_snapshot);
     ASSERT_EQ(outputs.end_private_data_tree_snapshot, expected_end_commitments_snapshot);
     run_cbind(inputs, outputs);
@@ -373,7 +374,8 @@ TEST_F(base_rollup_tests, new_nullifier_tree_empty)
      */
 
     // Run the circuit
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(testing_inputs);
+    BaseOrMergeRollupPublicInputs outputs =
+        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(testing_inputs);
 
     /**
      * ASSERT
@@ -406,7 +408,8 @@ TEST_F(base_rollup_tests, new_nullifier_tree_all_larger)
      */
 
     // Run the circuit
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(testing_inputs);
+    BaseOrMergeRollupPublicInputs outputs =
+        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(testing_inputs);
 
     /**
      * ASSERT
@@ -437,7 +440,8 @@ TEST_F(base_rollup_tests, new_nullifier_tree_sparse)
      */
 
     // Run the circuit
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(testing_inputs);
+    BaseOrMergeRollupPublicInputs outputs =
+        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(testing_inputs);
 
     /**
      * ASSERT
@@ -464,7 +468,8 @@ TEST_F(base_rollup_tests, new_nullifier_tree_sparse_attack)
     BaseRollupInputs testing_inputs = std::get<0>(inputs_and_snapshots);
 
     // Run the circuit (SHOULD FAIL WITH AN ASSERT INSTEAD OF THIS!)
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(testing_inputs);
+    BaseOrMergeRollupPublicInputs outputs =
+        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(testing_inputs);
 }
 
 // TEST_F(base_rollup_tests, new_commitments_tree) {}
@@ -475,7 +480,7 @@ TEST_F(base_rollup_tests, empty_block_calldata_hash)
     std::vector<uint8_t> zero_bytes_vec(704, 0);
     auto hash = sha256::sha256(zero_bytes_vec);
     BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
+    BaseOrMergeRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
 
     std::array<fr, 2> calldata_hash_fr = outputs.calldata_hash;
     auto high_buffer = calldata_hash_fr[0].to_buffer();
@@ -545,7 +550,7 @@ TEST_F(base_rollup_tests, calldata_hash)
 
     auto hash = sha256::sha256(input_data);
 
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
+    BaseOrMergeRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
 
     // Take the two fields and stich them together to get the calldata hash.
     std::array<fr, 2> calldata_hash_fr = outputs.calldata_hash;
@@ -585,13 +590,13 @@ TEST_F(base_rollup_tests, test_compute_membership_historic_private_data)
         .sibling_path = sibling_path,
     };
 
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
+    BaseOrMergeRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
 }
 
 TEST_F(base_rollup_tests, test_constants_dont_change)
 {
     BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
+    BaseOrMergeRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
     ASSERT_EQ(inputs.constants, outputs.constants);
     run_cbind(inputs, outputs);
 }
@@ -600,7 +605,7 @@ TEST_F(base_rollup_tests, test_aggregate)
 {
     // TODO: Fix this when aggregation works
     BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
+    BaseOrMergeRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
     ASSERT_EQ(inputs.kernel_data[0].public_inputs.end.aggregation_object.public_inputs,
               outputs.end_aggregation_object.public_inputs);
 }
@@ -608,7 +613,7 @@ TEST_F(base_rollup_tests, test_aggregate)
 TEST_F(base_rollup_tests, test_subtree_height_is_0)
 {
     BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
-    BaseRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
+    BaseOrMergeRollupPublicInputs outputs = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(inputs);
     ASSERT_EQ(outputs.rollup_subtree_height, fr(0));
 }
 
@@ -617,7 +622,7 @@ TEST_F(base_rollup_tests, test_proof_verification) {}
 TEST_F(base_rollup_tests, test_cbind_0)
 {
     BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
-    BaseRollupPublicInputs ignored_public_inputs;
+    BaseOrMergeRollupPublicInputs ignored_public_inputs;
     run_cbind(inputs, ignored_public_inputs, false);
 }
 
