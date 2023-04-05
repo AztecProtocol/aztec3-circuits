@@ -177,17 +177,40 @@ class root_rollup_tests : public ::testing::Test {
     }
 
   protected:
+    template <size_t N>
+    std::array<fr, N> get_sibling_path(MemoryTree tree, size_t leafIndex, size_t subtree_depth_to_skip)
+    {
+        std::array<fr, N> siblingPath;
+        auto path = tree.get_hash_path(leafIndex);
+        // slice out the skip
+        leafIndex = leafIndex >> (subtree_depth_to_skip);
+
+        for (size_t i = 0; i < N; i++) {
+            if (leafIndex & (1 << i)) {
+                siblingPath[i] = path[subtree_depth_to_skip + i].first;
+            } else {
+                siblingPath[i] = path[subtree_depth_to_skip + i].second;
+            }
+        }
+        return siblingPath;
+    }
+
     RootRollupInputs getEmptyRootRollupInputs()
     {
-        // std::array<PreviousRollupData<NT>, 2> previous_rollup_data = previous_rollups_with_vk_proof_that_follow_on();
+        // TODO: Need to setup a sibling path for inserting the unchanged root.
+        MemoryTree historic_data_tree = MemoryTree(PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT);
+        MemoryTree historic_contract_tree = MemoryTree(CONTRACT_TREE_ROOTS_TREE_HEIGHT);
 
-        // previous_rollup_data[1].merge_rollup_public_inputs.constants =
-        //     previous_rollup_data[0].merge_rollup_public_inputs.constants;
+        // Historic trees
+        auto historic_data_sibling_path =
+            get_sibling_path<PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>(historic_data_tree, 0, 0);
+        auto historic_contract_sibling_path =
+            get_sibling_path<CONTRACT_TREE_ROOTS_TREE_HEIGHT>(historic_contract_tree, 0, 0);
 
         RootRollupInputs rootRollupInputs = {
             .previous_rollup_data = previous_rollups_with_vk_proof_that_follow_on(),
-            .new_historic_private_data_tree_root_sibling_path = { 0 },
-            .new_historic_contract_tree_root_sibling_path = { 0 },
+            .new_historic_private_data_tree_root_sibling_path = historic_data_sibling_path,
+            .new_historic_contract_tree_root_sibling_path = historic_contract_sibling_path,
         };
 
         return rootRollupInputs;
@@ -225,23 +248,6 @@ TEST_F(root_rollup_tests, calldata_hash_empty_blocks)
     ASSERT_EQ(hash, calldata_hash);
 
     run_cbind(inputs, outputs, true);
-}
-
-template <size_t N> std::array<fr, N> get_sibling_path(MemoryTree tree, size_t leafIndex, size_t subtree_depth_to_skip)
-{
-    std::array<fr, N> siblingPath;
-    auto path = tree.get_hash_path(leafIndex);
-    // slice out the skip
-    leafIndex = leafIndex >> (subtree_depth_to_skip);
-
-    for (size_t i = 0; i < N; i++) {
-        if (leafIndex & (1 << i)) {
-            siblingPath[i] = path[subtree_depth_to_skip + i].first;
-        } else {
-            siblingPath[i] = path[subtree_depth_to_skip + i].second;
-        }
-    }
-    return siblingPath;
 }
 
 TEST_F(root_rollup_tests, almost_full_root)
