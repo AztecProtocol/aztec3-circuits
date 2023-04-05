@@ -203,8 +203,8 @@ generate_nullifier_tree_testing_values(BaseRollupInputs<NT> rollupInputs,
         // Create circuit compatible preimages - issue created to remove this step
         NullifierLeafPreimage<NT> preimage = {
             .leaf_value = new_nullifier_leaves_preimages[i].value,
-            .next_index = new_nullifier_leaves_preimages[i].nextIndex,
-            .next_value = NT::uint32(new_nullifier_leaves_preimages[i].nextValue),
+            .next_index = NT::uint32(new_nullifier_leaves_preimages[i].nextIndex),
+            .next_value = new_nullifier_leaves_preimages[i].nextValue,
         };
         new_nullifier_leaves[i] = preimage;
     }

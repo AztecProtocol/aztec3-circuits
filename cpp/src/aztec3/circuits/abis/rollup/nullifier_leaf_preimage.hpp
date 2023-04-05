@@ -15,8 +15,8 @@ template <typename NCT> struct NullifierLeafPreimage {
     typedef typename NCT::uint32 uint32;
 
     fr leaf_value;
-    fr next_index;
-    uint32 next_value;
+    uint32 next_index;
+    fr next_value;
 
     bool operator==(NullifierLeafPreimage<NCT> const&) const = default;
 
