@@ -259,19 +259,20 @@ TEST_F(root_rollup_tests, root_missing_nullifier_logic)
     std::array<BaseRollupInputs, 2> base_inputs = { dummy_base_rollup_inputs_with_vk_proof(),
                                                     dummy_base_rollup_inputs_with_vk_proof() };
     // Insert commitments into base rollups
-    for (uint8_t i = 0; i < 2; i++) {
-        for (uint8_t j = 0; j < 2; j++) {
-            for (uint8_t k = 0; k < 2; k++) {
-                auto val = fr(i * 8 + j * 4 + k + 1);
-                base_inputs[i].kernel_data[j].public_inputs.end.new_commitments[k] = val;
-                data_tree.update_element(i * 8 + j * 4 + k, val);
+    for (uint8_t rollup_i = 0; rollup_i < 2; rollup_i++) {
+        for (uint8_t kernel_j = 0; kernel_j < 2; kernel_j++) {
+            for (uint8_t commitment_k = 0; commitment_k < 2; commitment_k++) {
+                auto val = fr(rollup_i * 8 + kernel_j * 4 + commitment_k + 1);
+                base_inputs[rollup_i].kernel_data[kernel_j].public_inputs.end.new_commitments[commitment_k] = val;
+                data_tree.update_element(rollup_i * 8 + kernel_j * 4 + commitment_k, val);
             }
         }
         // Compute sibling path for inserting commitment subtree
-        base_inputs[i].new_commitments_subtree_sibling_path =
-            get_sibling_path<PRIVATE_DATA_SUBTREE_INCLUSION_CHECK_DEPTH>(data_tree, i * 8, PRIVATE_DATA_SUBTREE_DEPTH);
+        base_inputs[rollup_i].new_commitments_subtree_sibling_path =
+            get_sibling_path<PRIVATE_DATA_SUBTREE_INCLUSION_CHECK_DEPTH>(
+                data_tree, rollup_i * 8, PRIVATE_DATA_SUBTREE_DEPTH);
 
-        if (i == 0) {
+        if (rollup_i == 0) {
             // Update starting point for second rollup before
             base_inputs[1].start_private_data_tree_snapshot = {
                 .root = data_tree.root(),
@@ -345,9 +346,9 @@ TEST_F(root_rollup_tests, root_missing_nullifier_logic)
 
     PreviousRollupData<NT> r2 = {
         .base_or_merge_rollup_public_inputs = base_outputs[1],
-        .proof = base_inputs[0].kernel_data[0].proof, // TODO: this is a hack, we should be able to use the proof from
+        .proof = base_inputs[1].kernel_data[0].proof, // TODO: this is a hack, we should be able to use the proof from
                                                       // base_outputs[1]
-        .vk = base_inputs[0].kernel_data[0].vk,
+        .vk = base_inputs[1].kernel_data[0].vk,
         .vk_index = 0,
         .vk_sibling_path = MembershipWitness<NT, ROLLUP_VK_TREE_HEIGHT>(),
     };
