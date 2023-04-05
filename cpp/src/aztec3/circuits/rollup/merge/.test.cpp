@@ -20,7 +20,7 @@ TEST_F(merge_rollup_tests, test_different_rollup_type_fails)
     auto mergeInput = dummy_merge_rollup_inputs_with_vk_proof();
     mergeInput.previous_rollup_data[0].merge_rollup_public_inputs.rollup_type = 0;
     mergeInput.previous_rollup_data[1].merge_rollup_public_inputs.rollup_type = 1;
-    EXPECT_DEATH(merge_rollup_circuit(mergeInput), ".*assert_both_input_proofs_of_same_rollup_type.*");
+    EXPECT_THROW(merge_rollup_circuit(mergeInput), std::runtime_error);
 }
 
 TEST_F(merge_rollup_tests, test_different_rollup_height_fails)

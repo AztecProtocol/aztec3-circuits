@@ -1,5 +1,6 @@
 #include "aztec3/circuits/abis/rollup/merge/merge_rollup_public_inputs.hpp"
 #include "aztec3/constants.hpp"
+#include "barretenberg/common/throw_or_abort.hpp"
 #include "barretenberg/crypto/pedersen_hash/pedersen.hpp"
 #include "barretenberg/crypto/sha256/sha256.hpp"
 #include "barretenberg/ecc/curves/bn254/fr.hpp"
@@ -35,8 +36,10 @@ AggregationObject aggregate_proofs(MergeRollupInputs mergeRollupInputs)
 
 void assert_both_input_proofs_of_same_rollup_type(MergeRollupInputs mergeRollupInputs)
 {
-    assert(mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.rollup_type ==
-           mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.rollup_type);
+    if (mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.rollup_type !=
+        mergeRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.rollup_type) {
+        throw_or_abort("SUP");
+    }
     (void)mergeRollupInputs;
 }
 
