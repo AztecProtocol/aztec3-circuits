@@ -87,7 +87,6 @@ using aztec3::circuits::apps::test_apps::escrow::deposit;
 using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel_with_vk_proof;
 using aztec3::circuits::mock::mock_kernel_circuit;
 using aztec3::circuits::rollup::base::utils::dummy_base_rollup_inputs_with_vk_proof;
-using aztec3::circuits::rollup::merge::utils::convert_base_public_inputs_to_merge_public_inputs;
 using aztec3::circuits::rollup::merge::utils::previous_rollups_with_vk_proof_that_follow_on;
 // using aztec3::circuits::mock::mock_kernel_inputs;
 
@@ -95,8 +94,8 @@ using aztec3::circuits::abis::AppendOnlyTreeSnapshot;
 
 using aztec3::circuits::abis::MembershipWitness;
 using aztec3::circuits::abis::NullifierLeafPreimage;
+using aztec3::circuits::rollup::native_base_rollup::BaseOrMergeRollupPublicInputs;
 using aztec3::circuits::rollup::native_base_rollup::BaseRollupInputs;
-using aztec3::circuits::rollup::native_base_rollup::BaseRollupPublicInputs;
 using aztec3::circuits::rollup::native_base_rollup::ConstantRollupData;
 using aztec3::circuits::rollup::native_base_rollup::NT;
 
@@ -305,14 +304,14 @@ TEST_F(root_rollup_tests, almost_full_root)
     AppendOnlyTreeSnapshot<NT> end_historic_contract_tree_snapshot = { .root = historic_contract_tree.root(),
                                                                        .next_available_leaf_index = 1 };
 
-    BaseRollupPublicInputs base_outputs_1 =
+    BaseOrMergeRollupPublicInputs base_outputs_1 =
         aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(base_inputs_1);
-    BaseRollupPublicInputs base_outputs_2 =
+    BaseOrMergeRollupPublicInputs base_outputs_2 =
         aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(base_inputs_2);
     base_inputs_2.constants = base_inputs_1.constants;
 
     PreviousRollupData<NT> r1 = {
-        .merge_rollup_public_inputs = convert_base_public_inputs_to_merge_public_inputs(base_outputs_1),
+        .base_or_merge_rollup_public_inputs = base_outputs_1,
         .proof = base_inputs_1.kernel_data[0].proof, // TODO: this is a hack, we should be able to use the proof from
                                                      // base_outputs_1
         .vk = base_inputs_1.kernel_data[0].vk,
@@ -321,7 +320,7 @@ TEST_F(root_rollup_tests, almost_full_root)
     };
 
     PreviousRollupData<NT> r2 = {
-        .merge_rollup_public_inputs = convert_base_public_inputs_to_merge_public_inputs(base_outputs_2),
+        .base_or_merge_rollup_public_inputs = base_outputs_2,
         .proof = base_inputs_1.kernel_data[0].proof, // TODO: this is a hack, we should be able to use the proof from
                                                      // base_outputs_2
         .vk = base_inputs_1.kernel_data[0].vk,
