@@ -197,11 +197,9 @@ class root_rollup_tests : public ::testing::Test {
 
     RootRollupInputs getEmptyRootRollupInputs()
     {
-        // TODO: Need to setup a sibling path for inserting the unchanged root.
         MemoryTree historic_data_tree = MemoryTree(PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT);
         MemoryTree historic_contract_tree = MemoryTree(CONTRACT_TREE_ROOTS_TREE_HEIGHT);
 
-        // Historic trees
         auto historic_data_sibling_path =
             get_sibling_path<PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>(historic_data_tree, 0, 0);
         auto historic_contract_sibling_path =
@@ -212,7 +210,6 @@ class root_rollup_tests : public ::testing::Test {
             .new_historic_private_data_tree_root_sibling_path = historic_data_sibling_path,
             .new_historic_contract_tree_root_sibling_path = historic_contract_sibling_path,
         };
-
         return rootRollupInputs;
     }
 };
@@ -250,7 +247,7 @@ TEST_F(root_rollup_tests, calldata_hash_empty_blocks)
     run_cbind(inputs, outputs, true);
 }
 
-TEST_F(root_rollup_tests, almost_full_root)
+TEST_F(root_rollup_tests, root_missing_nullifier_logic)
 {
     MemoryTree data_tree = MemoryTree(PRIVATE_DATA_TREE_HEIGHT);
     MemoryTree contract_tree = MemoryTree(CONTRACT_TREE_HEIGHT);
@@ -259,21 +256,31 @@ TEST_F(root_rollup_tests, almost_full_root)
     MemoryTree historic_data_tree = MemoryTree(PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT);
     MemoryTree historic_contract_tree = MemoryTree(CONTRACT_TREE_ROOTS_TREE_HEIGHT);
 
-    // Base Rollup 1 and 2
-    BaseRollupInputs base_inputs_1 = dummy_base_rollup_inputs_with_vk_proof();
-    BaseRollupInputs base_inputs_2 = dummy_base_rollup_inputs_with_vk_proof();
-
-    // Insert commitments into base rollup 2
+    std::array<BaseRollupInputs, 2> base_inputs = { dummy_base_rollup_inputs_with_vk_proof(),
+                                                    dummy_base_rollup_inputs_with_vk_proof() };
+    // Insert commitments into base rollups
     for (uint8_t i = 0; i < 2; i++) {
-        for (uint8_t j = 0; j < 4; j++) {
-            base_inputs_2.kernel_data[i].public_inputs.end.new_commitments[j] = fr(i * 4 + j + 1);
-            data_tree.update_element(i * 4 + j, fr(i * 4 + j + 1));
+        for (uint8_t j = 0; j < 2; j++) {
+            for (uint8_t k = 0; k < 2; k++) {
+                auto val = fr(i * 8 + j * 4 + k + 1);
+                base_inputs[i].kernel_data[j].public_inputs.end.new_commitments[k] = val;
+                data_tree.update_element(i * 8 + j * 4 + k, val);
+            }
+        }
+        // Compute sibling path for inserting commitment subtree
+        base_inputs[i].new_commitments_subtree_sibling_path =
+            get_sibling_path<PRIVATE_DATA_SUBTREE_INCLUSION_CHECK_DEPTH>(data_tree, i * 8, PRIVATE_DATA_SUBTREE_DEPTH);
+
+        if (i == 0) {
+            // Update starting point for second rollup before
+            base_inputs[1].start_private_data_tree_snapshot = {
+                .root = data_tree.root(),
+                .next_available_leaf_index = 8,
+            };
         }
     }
 
-    // Compute a sibling path for the new commitment subtree.
-    base_inputs_2.new_commitments_subtree_sibling_path =
-        get_sibling_path<PRIVATE_DATA_SUBTREE_INCLUSION_CHECK_DEPTH>(data_tree, 0, PRIVATE_DATA_SUBTREE_DEPTH);
+    // TODO: Add nullifiers
 
     // Contract tree
     NewContractData<NT> new_contract = {
@@ -281,14 +288,19 @@ TEST_F(root_rollup_tests, almost_full_root)
         .portal_contract_address = fr(3),
         .function_tree_root = fr(2),
     };
-    base_inputs_2.kernel_data[0].public_inputs.end.new_contracts[0] = new_contract;
+    base_inputs[1].kernel_data[0].public_inputs.end.new_contracts[0] = new_contract;
     auto contract_leaf = crypto::pedersen_hash::hash_multiple(
-        { new_contract.contract_address, new_contract.portal_contract_address, new_contract.function_tree_root },
+        {
+            new_contract.contract_address,
+            new_contract.portal_contract_address,
+            new_contract.function_tree_root,
+        },
         GeneratorIndex::CONTRACT_LEAF);
-    contract_tree.update_element(0, contract_leaf);
 
-    base_inputs_2.new_contracts_subtree_sibling_path =
-        get_sibling_path<CONTRACT_SUBTREE_INCLUSION_CHECK_DEPTH>(contract_tree, 0, CONTRACT_SUBTREE_DEPTH);
+    // Update contract tree
+    contract_tree.update_element(2, contract_leaf);
+    base_inputs[1].new_contracts_subtree_sibling_path =
+        get_sibling_path<CONTRACT_SUBTREE_INCLUSION_CHECK_DEPTH>(contract_tree, 2, CONTRACT_SUBTREE_DEPTH);
 
     // Historic trees
     auto historic_data_sibling_path = get_sibling_path<PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT>(historic_data_tree, 0, 0);
@@ -311,26 +323,31 @@ TEST_F(root_rollup_tests, almost_full_root)
     AppendOnlyTreeSnapshot<NT> end_historic_contract_tree_snapshot = { .root = historic_contract_tree.root(),
                                                                        .next_available_leaf_index = 1 };
 
-    BaseOrMergeRollupPublicInputs base_outputs_1 =
-        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(base_inputs_1);
-    BaseOrMergeRollupPublicInputs base_outputs_2 =
-        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(base_inputs_2);
-    base_inputs_2.constants = base_inputs_1.constants;
+    std::array<BaseOrMergeRollupPublicInputs, 2> base_outputs;
+    base_outputs[0] = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(base_inputs[0]);
+
+    // Setup the start for the second base rollup
+    base_inputs[1].start_private_data_tree_snapshot = base_outputs[0].end_private_data_tree_snapshot;
+    base_inputs[1].start_nullifier_tree_snapshot = base_outputs[0].end_nullifier_tree_snapshot;
+    base_inputs[1].start_contract_tree_snapshot = base_outputs[0].end_contract_tree_snapshot;
+
+    base_outputs[1] = aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(base_inputs[1]);
+    base_inputs[1].constants = base_inputs[0].constants;
 
     PreviousRollupData<NT> r1 = {
-        .base_or_merge_rollup_public_inputs = base_outputs_1,
-        .proof = base_inputs_1.kernel_data[0].proof, // TODO: this is a hack, we should be able to use the proof from
-                                                     // base_outputs_1
-        .vk = base_inputs_1.kernel_data[0].vk,
+        .base_or_merge_rollup_public_inputs = base_outputs[0],
+        .proof = base_inputs[0].kernel_data[0].proof, // TODO: this is a hack, we should be able to use the proof from
+                                                      // base_outputs[0]
+        .vk = base_inputs[0].kernel_data[0].vk,
         .vk_index = 0,
         .vk_sibling_path = MembershipWitness<NT, ROLLUP_VK_TREE_HEIGHT>(),
     };
 
     PreviousRollupData<NT> r2 = {
-        .base_or_merge_rollup_public_inputs = base_outputs_2,
-        .proof = base_inputs_1.kernel_data[0].proof, // TODO: this is a hack, we should be able to use the proof from
-                                                     // base_outputs_2
-        .vk = base_inputs_1.kernel_data[0].vk,
+        .base_or_merge_rollup_public_inputs = base_outputs[1],
+        .proof = base_inputs[0].kernel_data[0].proof, // TODO: this is a hack, we should be able to use the proof from
+                                                      // base_outputs[1]
+        .vk = base_inputs[0].kernel_data[0].vk,
         .vk_index = 0,
         .vk_sibling_path = MembershipWitness<NT, ROLLUP_VK_TREE_HEIGHT>(),
     };
@@ -345,18 +362,20 @@ TEST_F(root_rollup_tests, almost_full_root)
         aztec3::circuits::rollup::native_root_rollup::root_rollup_circuit(rootRollupInputs);
 
     // Check data trees
-    ASSERT_EQ(outputs.start_private_data_tree_snapshot, base_outputs_1.start_private_data_tree_snapshot);
-    ASSERT_EQ(outputs.end_private_data_tree_snapshot, base_outputs_2.end_private_data_tree_snapshot);
+    ASSERT_EQ(outputs.start_private_data_tree_snapshot, base_outputs[0].start_private_data_tree_snapshot);
+    ASSERT_EQ(outputs.end_private_data_tree_snapshot, base_outputs[1].end_private_data_tree_snapshot);
     AppendOnlyTreeSnapshot<NT> expected_data_tree_snapshot = { .root = data_tree.root(),
-                                                               .next_available_leaf_index = 8 };
+                                                               .next_available_leaf_index = 16 };
     ASSERT_EQ(outputs.end_private_data_tree_snapshot, expected_data_tree_snapshot);
 
     // check contract trees
-    ASSERT_EQ(outputs.start_contract_tree_snapshot, base_outputs_1.start_contract_tree_snapshot);
-    ASSERT_EQ(outputs.end_contract_tree_snapshot, base_outputs_2.end_contract_tree_snapshot);
+    ASSERT_EQ(outputs.start_contract_tree_snapshot, base_outputs[0].start_contract_tree_snapshot);
+    ASSERT_EQ(outputs.end_contract_tree_snapshot, base_outputs[1].end_contract_tree_snapshot);
     AppendOnlyTreeSnapshot<NT> expected_contract_tree_snapshot{ .root = contract_tree.root(),
-                                                                .next_available_leaf_index = 2 };
+                                                                .next_available_leaf_index = 4 };
     ASSERT_EQ(outputs.end_contract_tree_snapshot, expected_contract_tree_snapshot);
+
+    // TODO: Check nullifier trees
 
     // Check historic data trees
     ASSERT_EQ(outputs.start_tree_of_historic_private_data_tree_roots_snapshot, start_historic_data_tree_snapshot);

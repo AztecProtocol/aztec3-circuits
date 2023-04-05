@@ -45,10 +45,9 @@ NT::fr iterate_through_tree_via_sibling_path(NT::fr leaf,
 template <size_t N>
 void check_membership(NT::fr leaf, NT::uint32 leafIndex, std::array<NT::fr, N> const& siblingPath, NT::fr root)
 {
-    assert(root == iterate_through_tree_via_sibling_path(leaf, leafIndex, siblingPath));
-    (void)leaf;
-    (void)leafIndex;
-    (void)siblingPath;
+    auto computed_root = iterate_through_tree_via_sibling_path(leaf, leafIndex, siblingPath);
+    assert(root == computed_root);
+    (void)root;
 }
 
 template <size_t N>
@@ -57,6 +56,8 @@ AppendOnlySnapshot insert_at_empty_in_snapshot_tree(AppendOnlySnapshot const& ol
                                                     NT::fr leaf)
 {
     // check that the value is zero at the path (unused)
+    // TODO: We should be able to actually skip this, because the contract will be indirectly enforce it through
+    // old_snapshot.next_available_leaf_index
     check_membership(fr::zero(), old_snapshot.next_available_leaf_index, siblingPath, old_snapshot.root);
 
     // Compute the new root after the update
@@ -82,7 +83,7 @@ RootRollupPublicInputs root_rollup_circuit(RootRollupInputs const& rootRollupInp
     native_merge_rollup::assert_both_input_proofs_of_same_rollup_type(left, right);
     native_merge_rollup::assert_both_input_proofs_of_same_height_and_return(left, right);
     native_merge_rollup::assert_equal_constants(left, right);
-    // TODO: updates tests and use -> native_merge_rollup::assert_prev_rollups_follow_on_from_each_other(left, right);
+    native_merge_rollup::assert_prev_rollups_follow_on_from_each_other(left, right);
 
     // Update the historic private data tree
     AppendOnlySnapshot end_tree_of_historic_private_data_tree_roots_snapshot =
