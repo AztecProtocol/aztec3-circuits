@@ -52,13 +52,6 @@ void assert_both_input_proofs_of_same_rollup_height(RootRollupInputs rootRollupI
     (void)rootRollupInputs;
 }
 
-void assert_both_input_proofs_of_same_rollup_height(RootRollupInputs rootRollupInputs)
-{
-    assert(rootRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.rollup_subtree_height ==
-           rootRollupInputs.previous_rollup_data[1].merge_rollup_public_inputs.rollup_subtree_height);
-    (void)rootRollupInputs;
-}
-
 bool is_constants_equal(ConstantRollupData left, ConstantRollupData right)
 {
     return left == right;
