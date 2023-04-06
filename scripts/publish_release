@@ -12,7 +12,7 @@ echo "publish_release: Repository: $REPOSITORY"
 echo "publish_release: Project Dir: $PROJECT_DIR"
 echo "publish_release: Working directory: $PWD"
 echo "publish_release: Extract dir: $EXTRACT_DIR"
-echo "publish_release: Artifacts dir: $ARTIFACTS"
+echo "publish_release: Artifacts dir: $ARTIFACTS_DIR"
 
 # Get the contents of the build
 extract_repo $REPOSITORY /usr/src/$PROJECT_DIR $EXTRACT_DIR
