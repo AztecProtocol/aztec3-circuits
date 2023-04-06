@@ -45,9 +45,12 @@ cp $EXTRACT_DIR/build-wasm/bin/aztec3-circuits.wasm $EXTRACT_DIR/barretenberg/cp
 # TODO: if this is a tagged release, just use the tag and drop the commit hash
 VERSION=$(cat VERSION)-$COMMIT_HASH
 
+# Get ghr to make the release and create it, installing golang if needed
+apk add --no-cache git make musl-dev go
+echo "publish_release: Golang version: $(go --version)"
+
+go get github.com/tcnksm/ghr
+
 echo "publish_release: Publishing $VERSION"
 echo "publish_release: $(ls $ARTIFACTS_DIR/)"
-
-# Get ghr to make the release and create it
-go get github.com/tcnksm/ghr
 ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${COMMIT_HASH} -delete ${VERSION} $ARTIFACTS_DIR/
