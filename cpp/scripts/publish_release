@@ -1,0 +1,35 @@
+#!/bin/bash
+set -euo pipefail
+
+# Publishes a release to github (depends on build-system)
+
+REPOSITORY=$1
+PROJECT_DIR=$(query_manifest projectDir $REPOSITORY)
+EXTRACT_DIR=../extracted/$REPOSITORY
+ARTIFACTS_DIR=../artifacts
+
+echo "publish_release: Repository: $REPOSITORY"
+echo "publish_release: Project Dir: $PROJECT_DIR"
+echo "publish_release: Working directory: $PWD"
+echo "publish_release: Extract dir: $EXTRACT_DIR"
+echo "publish_release: Artifacts dir: $ARTIFACTS"
+
+# Get the contents of the build
+extract_repo $REPOSITORY /usr/src/$PROJECT_DIR $EXTRACT_DIR
+echo "publish_release: Extracted $(ls $EXTRACT_DIR)"
+
+# Prepare the artifacts to push
+mkdir -p $ARTIFACTS_DIR
+# TODO: Make these params of the script and not hardcode them here
+cp $EXTRACT_DIR/build-wasm/bin/aztec3-circuits.wasm $EXTRACT_DIR/barretenberg/cpp/build-wasm/bin/primitives.wasm $ARTIFACTS_DIR/
+
+# Version to use for the release 
+# TODO: if this is a tagged release, just use the tag and drop the commit hash
+VERSION=$(cat VERSION)-$COMMIT_HASH
+
+echo "publish_release: Publishing $VERSION"
+echo "publish_release: $(ls $ARTIFACTS_DIR/)"
+
+# Get ghr to make the release and create it
+go get github.com/tcnksm/ghr
+ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${COMMIT_HASH} -delete ${VERSION} $ARTIFACTS_DIR/
