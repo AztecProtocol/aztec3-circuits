@@ -2,7 +2,7 @@
 set -eu
 
 # Update the submodule
-# git submodule update --init --recursive
+git submodule update --init --recursive
 
 # Clean.
 rm -rf ./build
