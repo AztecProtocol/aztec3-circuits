@@ -46,8 +46,7 @@ template <typename NCT> struct PrivateCallData {
                private_call_stack_preimages == other.private_call_stack_preimages && vk == other.vk &&
                function_leaf_membership_witness == other.function_leaf_membership_witness &&
                contract_leaf_membership_witness == other.contract_leaf_membership_witness &&
-               portal_contract_address == other.portal_contract_address;
-        acir_hash == other.acir_hash;
+               portal_contract_address == other.portal_contract_address && acir_hash == other.acir_hash;
     };
 
     // WARNING: the `proof` does NOT get converted! (because the current implementation of `verify_proof` takes a proof
