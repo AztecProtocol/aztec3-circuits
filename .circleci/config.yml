@@ -102,7 +102,7 @@ jobs:
           command: cond_spot_run_build aztec3-circuits-wasm-linux-clang 64
       - run:
           name: 'Publish'
-          command: scripts/publish_release aztec3-circuits-wasm-linux-clang
+          command: ./scripts/publish_release aztec3-circuits-wasm-linux-clang
 
   wasm-linux-clang-assert:
     docker:
