@@ -92,12 +92,12 @@ save_logs: &save_logs
 jobs:
   wasm-linux-clang:
     docker:
-      - image: cimg/base:2023.04
+      - image: cimg/aws:2023.04
     resource_class: small
     steps:
       - run:
           name: Install deps
-          command: pip3 install awscli
+          command: sudo apt update && sudo apt install golang-go && go install github.com/tcnksm/ghr@latest
       - *checkout
       - *setup_env
       - run:
