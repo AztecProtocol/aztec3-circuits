@@ -107,7 +107,7 @@ using aztec3::circuits::abis::FunctionData;
 using aztec3::circuits::abis::OptionallyRevealedData;
 using aztec3::circuits::abis::private_kernel::NewContractData;
 
-using MemoryTree = stdlib::merkle_tree::MemoryTree;
+using MemoryTree = proof_system::plonk::stdlib::merkle_tree::MemoryTree;
 
 } // namespace
 
