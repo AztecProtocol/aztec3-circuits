@@ -27,6 +27,7 @@ using aztec3::utils::push_array_to_array;
 
 using aztec3::circuits::compute_constructor_hash;
 using aztec3::circuits::compute_contract_address;
+using aztec3::circuits::root_from_sibling_path;
 
 // using plonk::stdlib::merkle_tree::
 
@@ -87,17 +88,17 @@ void contract_logic(PrivateInputs<NT> const& private_inputs, PublicInputs<NT>& p
         private_inputs.private_call.vk, GeneratorIndex::VK);
 
     auto constructor_hash = compute_constructor_hash(private_inputs.signed_tx_request.tx_request.function_data,
-                                                    private_call_public_inputs.args,
-                                                    private_call_vk_hash);
+                                                     private_call_public_inputs.args,
+                                                     private_call_vk_hash);
 
     if (is_contract_deployment) {
         ASSERT(contract_deployment_data.constructor_vk_hash == private_call_vk_hash);
     }
 
     auto const new_contract_address = compute_contract_address<NT>(deployer_address,
-                                                                contract_deployment_data.contract_address_salt,
-                                                                contract_deployment_data.function_tree_root,
-                                                                constructor_hash);
+                                                                   contract_deployment_data.contract_address_salt,
+                                                                   contract_deployment_data.function_tree_root,
+                                                                   constructor_hash);
 
     if (is_contract_deployment) {
         // must imply == derived address
@@ -124,17 +125,13 @@ void contract_logic(PrivateInputs<NT> const& private_inputs, PublicInputs<NT>& p
     array_push<NewContractData<NT>, KERNEL_NEW_CONTRACTS_LENGTH>(public_inputs.end.new_contracts,
                                                                  native_new_contract_data);
 
-    // We need to compute the root of the contract tree, starting from the function's VK:
-
-    // Compute the vk_hash (already done above)
-    //
-    // Compute the function_leaf: hash(function_selector, is_private, vk_hash, acir_hash)
-    //
-    // Hash the function_leaf with the function_leaf's sibling_path to get the function_tree_root
-    //
-    // Compute the contract_leaf: hash(contract_address, portal_contract_address, function_tree_root)
-    //
-    // Hash the function_leaf with the contract_leaf's sibling_path to get the contract_tree_root
+    /* We need to compute the root of the contract tree, starting from the function's VK:
+     * - Compute the vk_hash (done above)
+     * - Compute the function_leaf: hash(function_selector, is_private, vk_hash, acir_hash)
+     * - Hash the function_leaf with the function_leaf's sibling_path to get the function_tree_root
+     * - Compute the contract_leaf: hash(contract_address, portal_contract_address, function_tree_root)
+     * - Hash the contract_leaf with the contract_leaf's sibling_path to get the contract_tree_root
+     */
 
     const auto function_leaf_preimage = FunctionLeafPreimage<NT>{
         .function_selector = private_inputs.private_call.call_stack_item.function_data.function_selector,
@@ -145,12 +142,11 @@ void contract_logic(PrivateInputs<NT> const& private_inputs, PublicInputs<NT>& p
 
     const auto function_leaf = function_leaf_preimage.hash();
 
-    // TODO: compute function_tree_root using:
-    // the function_leaf,
-    auto& function_leaf_index = private_inputs.private_call.function_leaf_membership_witness.leaf_index;
-    auto& function_leaf_sibling_path = private_inputs.private_call.function_leaf_membership_witness.sibling_path;
+    const auto& function_leaf_index = private_inputs.private_call.function_leaf_membership_witness.leaf_index;
+    const auto& function_leaf_sibling_path = private_inputs.private_call.function_leaf_membership_witness.sibling_path;
 
-    const auto function_tree_root = 1; // TODO: compute the root properly!!!
+    const auto& function_tree_root =
+        root_from_sibling_path<NT>(function_leaf, function_leaf_index, function_leaf_sibling_path);
 
     const ContractLeafPreimage<NT> contract_leaf_preimage{
         storage_contract_address,
@@ -160,20 +156,11 @@ void contract_logic(PrivateInputs<NT> const& private_inputs, PublicInputs<NT>& p
 
     const auto contract_leaf = contract_leaf_preimage.hash();
 
-    // TODO: compute the contract_tree_root using:
-    // the contract_leaf,
     auto& contract_leaf_index = private_inputs.private_call.contract_leaf_membership_witness.leaf_index;
     auto& contract_leaf_sibling_path = private_inputs.private_call.contract_leaf_membership_witness.sibling_path;
 
-    // TODO remove prints
-    info("function_leaf: ", function_leaf);
-    info("function_leaf_index: ", function_leaf_index);
-    info("function_leaf_sibling_path: ", function_leaf_sibling_path);
-    info("contract_leaf: ", contract_leaf);
-    info("contract_leaf_index: ", contract_leaf_index);
-    info("contract_leaf_sibling_path: ", contract_leaf_sibling_path);
-
-    const auto computed_contract_tree_root = 2; // TODO: compute the root properly!!!
+    const auto& computed_contract_tree_root =
+        root_from_sibling_path<NT>(contract_leaf, contract_leaf_index, contract_leaf_sibling_path);
 
     auto& purported_contract_tree_root =
         private_inputs.private_call.call_stack_item.public_inputs.historic_contract_tree_root;
