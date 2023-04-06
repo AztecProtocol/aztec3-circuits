@@ -14,10 +14,6 @@ echo "publish_release: Working directory: $PWD"
 echo "publish_release: Extract dir: $EXTRACT_DIR"
 echo "publish_release: Artifacts dir: $ARTIFACTS_DIR"
 
-# Ensure we got docker in this image
-apk add --update docker openrc
-echo "publish_release: Docker version: $(docker --version)"
-
 # Get the contents of the build
 # extract_repo $REPOSITORY /usr/src/$PROJECT_DIR $EXTRACT_DIR
 IMAGE_COMMIT_URI=$ECR_DEPLOY_URL/$REPOSITORY:$COMMIT_HASH
@@ -45,10 +41,7 @@ cp $EXTRACT_DIR/build-wasm/bin/aztec3-circuits.wasm $EXTRACT_DIR/barretenberg/cp
 # TODO: if this is a tagged release, just use the tag and drop the commit hash
 VERSION=$(cat VERSION)-$COMMIT_HASH
 
-# Get ghr to make the release and create it, installing golang if needed
-apk add --no-cache git make musl-dev go
-echo "publish_release: Golang version: $(go --version)"
-
+# Get ghr to make the release and create it
 go get github.com/tcnksm/ghr
 
 echo "publish_release: Publishing $VERSION"

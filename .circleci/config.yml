@@ -92,7 +92,7 @@ save_logs: &save_logs
 jobs:
   wasm-linux-clang:
     docker:
-      - image: aztecprotocol/alpine-build-image
+      - image: cimg/base:2023.04
     resource_class: small
     steps:
       - *checkout
@@ -119,7 +119,7 @@ jobs:
     docker:
       - image: aztecprotocol/alpine-build-image
     resource_class: small
-    steps:
+    steps:  
       - *checkout
       - *setup_env
       - run:
