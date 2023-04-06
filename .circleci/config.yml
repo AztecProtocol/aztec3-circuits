@@ -95,6 +95,9 @@ jobs:
       - image: cimg/base:2023.04
     resource_class: small
     steps:
+      - run:
+          name: Install deps
+          command: pip3 install awscli
       - *checkout
       - *setup_env
       - run:
