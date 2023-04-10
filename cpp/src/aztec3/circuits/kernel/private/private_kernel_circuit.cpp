@@ -196,11 +196,14 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
         CT::byte_array sender_public_key_hash = stdlib::keccak<Composer>::hash(sender_public_key_bytes);
         CT::byte_array sender_address_bytes = CT::byte_array(sender_address.to_field());
 
-        // TODO: This fails currently, so disabling. Check first 20 bytes.
-        // TODO: Re-enable this once fr::serialise_to_buffer works correctly :/
-        for (size_t i = 0; i < 0; i++) {
-            sender_address_bytes[i].assert_equal(sender_public_key_hash[i],
-                                                 format("hash of public key does not match the address at index ", i));
+        // Check if the sender address matches the keccak hash of the public key
+        // Specifically, first 12 bytes must be 0, remaining 20 bytes must match.
+        for (size_t i = 0; i < 12; i++) {
+            sender_address_bytes[i].assert_equal(0, format("sender address at index ", i, " is non-zero"));
+        }
+        for (size_t i = 12; i < 32; i++) {
+            sender_address_bytes[i].assert_equal(
+                sender_public_key_hash[i], format("hash of public key does not match the sender address at index ", i));
         }
     }
 
@@ -358,7 +361,6 @@ void validate_inputs(PrivateInputs<CT> const& private_inputs)
 PublicInputs<NT> private_kernel_circuit(Composer& composer, PrivateInputs<NT> const& _private_inputs)
 {
     const PrivateInputs<CT> private_inputs = _private_inputs.to_circuit_type(composer);
-    info("converted to ckt types");
 
     // We'll be pushing data to this during execution of this circuit.
     PublicInputs<CT> public_inputs = PublicInputs<NT>{}.to_circuit_type(composer);
