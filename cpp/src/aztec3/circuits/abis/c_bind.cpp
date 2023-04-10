@@ -8,7 +8,7 @@
 #include "function_data.hpp"
 #include "function_leaf_preimage.hpp"
 #include "rollup/base/base_rollup_inputs.hpp"
-#include "rollup/base/base_rollup_public_inputs.hpp"
+#include "rollup/base/base_or_merge_rollup_public_inputs.hpp"
 #include "rollup/root/root_rollup_public_inputs.hpp"
 #include "rollup/root/root_rollup_inputs.hpp"
 #include "private_kernel/previous_kernel_data.hpp"
@@ -358,8 +358,9 @@ WASM_EXPORT void abis__compute_contract_leaf(uint8_t const* contract_leaf_preima
 {
     NewContractData<NT> leaf_preimage;
     read(contract_leaf_preimage_buf, leaf_preimage);
-    leaf_preimage.hash();
-    NT::fr::serialize_to_buffer(leaf_preimage.hash(), output);
+    // as per the circuit implementation, if contract address == zero then return a zero leaf
+    auto to_write = leaf_preimage.contract_address == NT::address(0) ? NT::fr(0) : leaf_preimage.hash();
+    NT::fr::serialize_to_buffer(to_write, output);
 }
 
 /* Typescript test helpers that call as_string_output() to stress serialization.
@@ -404,16 +405,16 @@ WASM_EXPORT const char* abis__test_roundtrip_serialize_previous_kernel_data(uint
     return as_string_output<aztec3::circuits::abis::private_kernel::PreviousKernelData<NT>>(kernel_data_buf, size);
 }
 
-WASM_EXPORT const char* abis__test_roundtrip_serialize_base_rollup_public_inputs(uint8_t const* rollup_inputs_buf,
-                                                                                 uint32_t* size)
+WASM_EXPORT const char* abis__test_roundtrip_serialize_base_or_merge_rollup_public_inputs(
+    uint8_t const* rollup_inputs_buf, uint32_t* size)
 {
-    return as_string_output<aztec3::circuits::abis::BaseRollupPublicInputs<NT>>(rollup_inputs_buf, size);
+    return as_string_output<aztec3::circuits::abis::BaseOrMergeRollupPublicInputs<NT>>(rollup_inputs_buf, size);
 }
 
-WASM_EXPORT const char* abis__test_roundtrip_reserialize_base_rollup_public_inputs(uint8_t const* rollup_inputs_buf,
-                                                                                   uint32_t* size)
+WASM_EXPORT const char* abis__test_roundtrip_reserialize_base_or_merge_rollup_public_inputs(
+    uint8_t const* rollup_inputs_buf, uint32_t* size)
 {
-    return as_serialized_output<aztec3::circuits::abis::BaseRollupPublicInputs<NT>>(rollup_inputs_buf, size);
+    return as_serialized_output<aztec3::circuits::abis::BaseOrMergeRollupPublicInputs<NT>>(rollup_inputs_buf, size);
 }
 
 WASM_EXPORT const char* abis__test_roundtrip_serialize_root_rollup_inputs(uint8_t const* rollup_inputs_buf,
