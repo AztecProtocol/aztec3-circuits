@@ -221,8 +221,6 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
         sig_result.assert_equal(true, "signature verification failed");
     }
 
-    // const auto& portal_contract_address = private_inputs.private_call.portal_contract_address;
-
     // {
     //     const auto& l1_msg_stack = private_call_public_inputs.l1_msg_stack;
     //     std::array<CT::fr, L1_MSG_STACK_LENGTH> l1_call_stack;
