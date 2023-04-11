@@ -265,6 +265,10 @@ PrivateInputs<NT> do_private_call_get_kernel_inputs(bool const is_constructor,
     //***************************************************************************
     Composer private_circuit_composer = Composer("../barretenberg/cpp/srs_db/ignition");
 
+    // TODO(Suyash): Oracle needs a bn254::fr private key so we are temporarily casting a secp256k1::fr
+    // private key to bn254::fr.
+    // TODO: We still need to figure how many different kinds of keys we will have eventually:
+    // signing key (secp256k1), note/nullifier key (grumpkin), decryption key (grumpkin?)
     DB db;
     NativeOracle oracle =
         is_constructor
