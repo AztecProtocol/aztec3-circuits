@@ -47,7 +47,14 @@ TEST_F(merge_rollup_tests, test_constants_different_failure)
 
     merge_rollup_circuit(composer, inputs);
     ASSERT_TRUE(composer.has_failed());
-    ASSERT_EQ(composer.get_first_failure(), "input proofs have different constants");
+    ASSERT_EQ(composer.get_first_failure(),
+              "input proofs have different constants_random_ramblings-to-check-how-wasm-works-with-asserts!");
+}
+
+TEST_F(merge_rollup_tests, test_wasm_assertions)
+{
+    DummyComposer composer = DummyComposer();
+    ASSERT_TRUE(composer.has_failed()); // nothing happened so has_failed should be false.
 }
 
 TEST_F(merge_rollup_tests, test_fail_if_previous_rollups_dont_follow_on)
