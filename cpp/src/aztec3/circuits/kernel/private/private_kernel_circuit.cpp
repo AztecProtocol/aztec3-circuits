@@ -199,7 +199,7 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
         // Check if the sender address matches the keccak hash of the public key
         // Specifically, first 12 bytes must be 0, remaining 20 bytes must match.
         for (size_t i = 0; i < 12; i++) {
-            sender_address_bytes[i].assert_equal(0, format("sender address at index ", i, " is non-zero"));
+            sender_address_bytes[i].assert_is_zero(format("sender address at index ", i, " is non-zero"));
         }
         for (size_t i = 12; i < 32; i++) {
             sender_address_bytes[i].assert_equal(
