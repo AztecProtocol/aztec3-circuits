@@ -292,6 +292,7 @@ PrivateInputs<NT> do_private_call_get_kernel_inputs(bool const is_constructor,
     //***************************************************************************
     TxRequest<NT> tx_request = TxRequest<NT>{
         .from = tx_origin,
+        .from_public_key = msg_sender_public_key,
         .to = contract_address,
         .function_data = function_data,
         .args = private_circuit_public_inputs.args,
@@ -306,11 +307,8 @@ PrivateInputs<NT> do_private_call_get_kernel_inputs(bool const is_constructor,
         .chain_id = 1,
     };
 
-    SignedTxRequest<NT> signed_tx_request = SignedTxRequest<NT>{
-        .tx_request = tx_request,
-
-        //     .signature = TODO: need a method for signing a TxRequest.
-    };
+    SignedTxRequest<NT> signed_tx_request = SignedTxRequest<NT>{ .tx_request = tx_request };
+    signed_tx_request.compute_signature(msg_sender_private_key);
 
     //***************************************************************************
     // We mock a kernel circuit proof for the base case of kernel recursion (because even the first iteration of the
