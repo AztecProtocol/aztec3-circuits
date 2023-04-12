@@ -16,7 +16,7 @@ template <typename NCT> struct FunctionData {
     typedef typename NCT::boolean boolean;
     typedef typename NCT::fr fr;
 
-    uint32 function_selector = 0; // e.g. 1st 4-bytes of abi-encoding of function.
+    uint32 function_selector; // e.g. 1st 4-bytes of abi-encoding of function.
     boolean is_private = false;
     boolean is_constructor = false;
 

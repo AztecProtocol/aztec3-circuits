@@ -26,7 +26,7 @@ template <typename NCT> struct PreviousKernelData {
 
     // TODO: this index and path are meant to be those of a leaf within the tree of _kernel circuit_ vks; not the tree
     // of functions within the contract tree.
-    uint32 vk_index = 0;
+    uint32 vk_index;
     std::array<fr, VK_TREE_HEIGHT> vk_path = zero_array<fr, VK_TREE_HEIGHT>();
 
     boolean operator==(PreviousKernelData<NCT> const& other) const

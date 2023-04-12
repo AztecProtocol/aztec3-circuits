@@ -15,7 +15,6 @@ using aztec3::utils::types::NativeTypes;
 
 template <typename NCT> struct CallContext {
     typedef typename NCT::address address;
-    typedef typename NCT::grumpkin_point grumpkin_point;
     typedef typename NCT::fr fr;
     typedef typename NCT::boolean boolean;
 

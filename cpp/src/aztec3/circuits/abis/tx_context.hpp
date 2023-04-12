@@ -12,11 +12,9 @@ namespace aztec3::circuits::abis {
 
 using aztec3::utils::types::CircuitTypes;
 using aztec3::utils::types::NativeTypes;
-using plonk::stdlib::witness_t;
 
 template <typename NCT> struct TxContext {
     typedef typename NCT::address address;
-    // typedef typename NCT::grumpkin_point grumpkin_point;
     typedef typename NCT::fr fr;
     typedef typename NCT::boolean boolean;
 

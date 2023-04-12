@@ -13,7 +13,7 @@ template <typename NCT> struct AppendOnlyTreeSnapshot {
     typedef typename NCT::uint32 uint32;
 
     fr root = 0;
-    uint32 next_available_leaf_index = 0;
+    uint32 next_available_leaf_index;
 
     bool operator==(AppendOnlyTreeSnapshot<NCT> const&) const = default;
 };
