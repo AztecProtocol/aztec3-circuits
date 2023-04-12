@@ -29,12 +29,12 @@ template <typename NCT, CallType call_type> struct CallStackItem {
     using PublicInputs = typename std::
         conditional<call_type == CallType::Public, PublicCircuitPublicInputs<T>, PrivateCircuitPublicInputs<T>>::type;
 
-    address contract_address =
-        0; // This is the _actual_ contract address relating to where this function's code resides in the
-           // contract tree. Regardless of whether this is a call or delegatecall, this
-           // `contract_address` _does not change_. Amongst other things, it's used as a lookup for
-           // getting the correct code from the tree. There is a separate `storage_contract_address`
-           // within a CallStackItem which varies depending on whether this is a call or delegatecall.
+    // This is the _actual_ contract address relating to where this function's code resides in the
+    // contract tree. Regardless of whether this is a call or delegatecall, this
+    // `contract_address` _does not change_. Amongst other things, it's used as a lookup for
+    // getting the correct code from the tree. There is a separate `storage_contract_address`
+    // within a CallStackItem which varies depending on whether this is a call or delegatecall.
+    address contract_address = 0;
     FunctionData<NCT> function_data{};
     PublicInputs<NCT> public_inputs{};
 
