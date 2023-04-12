@@ -346,9 +346,9 @@ template <size_t N> NT::fr calc_root(NT::fr leaf, NT::uint32 leafIndex, std::arr
 {
     for (size_t i = 0; i < siblingPath.size(); i++) {
         if (leafIndex & (1 << i)) {
-            leaf = proof_system::plonk::stdlib::merkle_tree::hash_pair_native(siblingPath[i], leaf);
+            leaf = proof_system::plonk::stdlib::merkle_tree::hash_multiple_native({ siblingPath[i], leaf });
         } else {
-            leaf = proof_system::plonk::stdlib::merkle_tree::hash_pair_native(leaf, siblingPath[i]);
+            leaf = proof_system::plonk::stdlib::merkle_tree::hash_multiple_native({ leaf, siblingPath[i] });
         }
     }
     return leaf;
@@ -410,12 +410,6 @@ TEST_F(base_rollup_tests, new_nullifier_tree_all_larger)
     AppendOnlyTreeSnapshot<NT> nullifier_tree_start_snapshot = std::get<1>(inputs_and_snapshots);
     AppendOnlyTreeSnapshot<NT> nullifier_tree_end_snapshot = std::get<2>(inputs_and_snapshots);
 
-    // info("testing inputs");
-    // info(testing_inputs.kernel_data[0].public_inputs.end.new_nullifiers);
-    // info(testing_inputs.kernel_data[1].public_inputs.end.new_nullifiers);
-    // info("should only be one non zero");
-    // info(testing_inputs.low_nullifier_membership_witness);
-
     /**
      * RUN
      */
@@ -475,7 +469,7 @@ TEST_F(base_rollup_tests, nullifier_tree_regression)
 
     // This test runs after some data has already been inserted into the tree
     // This test will pre-populate the tree with 24 values (0 item + 23 more) simulating that a rollup inserting two
-    // random values has already been performed. This rollup then adds two further random values that will end up having
+    // random values has already succeeded. This rollup then adds two further random values that will end up having
     // their low nullifiers point at each other
     std::vector<fr> initial_values(23, 0);
     for (size_t i = 0; i < 7; i++) {
@@ -514,24 +508,27 @@ TEST_F(base_rollup_tests, nullifier_tree_regression)
 }
 
 // Note leaving this test here as there are no negative tests, even though it no longer passes
-// TEST_F(base_rollup_tests, new_nullifier_tree_sparse_attack)
-// {
-//     // @todo THIS SHOULD NOT BE PASSING. The circuit should fail with an assert as we are trying to double-spend.
-//     /**
-//      * DESCRIPTION
-//      */
+TEST_F(base_rollup_tests, new_nullifier_tree_sparse_attack)
+{
+    // @todo THIS SHOULD NOT BE PASSING. The circuit should fail with an assert as we are trying to double-spend.
+    /**
+     * DESCRIPTION
+     */
 
-//     BaseRollupInputs empty_inputs = dummy_base_rollup_inputs_with_vk_proof();
+    DummyComposer composer = DummyComposer();
+    BaseRollupInputs empty_inputs = dummy_base_rollup_inputs_with_vk_proof();
 
-//     std::array<fr, KERNEL_NEW_NULLIFIERS_LENGTH* 2> new_nullifiers = { 11, 0, 11, 0, 0, 0, 0, 0 };
-//     std::tuple<BaseRollupInputs, AppendOnlyTreeSnapshot<NT>, AppendOnlyTreeSnapshot<NT>> inputs_and_snapshots =
-//         utils::generate_nullifier_tree_testing_values(empty_inputs, new_nullifiers, 1);
-//     BaseRollupInputs testing_inputs = std::get<0>(inputs_and_snapshots);
+    std::array<fr, KERNEL_NEW_NULLIFIERS_LENGTH* 2> new_nullifiers = { 11, 0, 11, 0, 0, 0, 0, 0 };
+    std::tuple<BaseRollupInputs, AppendOnlyTreeSnapshot<NT>, AppendOnlyTreeSnapshot<NT>> inputs_and_snapshots =
+        utils::generate_nullifier_tree_testing_values(empty_inputs, new_nullifiers, 1);
+    BaseRollupInputs testing_inputs = std::get<0>(inputs_and_snapshots);
 
-//     // Run the circuit (SHOULD FAIL WITH AN ASSERT INSTEAD OF THIS!)
-//     BaseOrMergeRollupPublicInputs outputs =
-//         aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(testing_inputs);
-// }
+    // Run the circuit (SHOULD FAIL WITH AN ASSERT INSTEAD OF THIS!)
+    BaseOrMergeRollupPublicInputs outputs =
+        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(composer, testing_inputs);
+
+    EXPECT_EQ(composer.has_failed(), true);
+}
 
 TEST_F(base_rollup_tests, empty_block_calldata_hash)
 {
