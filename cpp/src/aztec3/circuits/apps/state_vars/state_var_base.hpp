@@ -31,7 +31,7 @@ template <typename Composer> class StateVar {
     FunctionExecutionContext<Composer>* exec_ctx;
 
     // Must match the name of a state which has been declared to the `Contract`.
-    std::string state_var_name = 0;
+    std::string state_var_name;
 
     // The `start slot` of the state variable is the slot which is assigned to this particular state by the `Contract`,
     // based on the ordering of declarations of the _names_ of states. For container types (mappings/arrays/structs),
