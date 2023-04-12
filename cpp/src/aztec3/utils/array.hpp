@@ -22,9 +22,7 @@ using NT = types::NativeTypes;
 template <typename ELEMS_TYPE, size_t ARRAY_LEN> std::array<ELEMS_TYPE, ARRAY_LEN> zero_array()
 {
     std::array<ELEMS_TYPE, ARRAY_LEN> arr;
-    for (auto& elem : arr) {
-        elem = ELEMS_TYPE(0); // Assumes that integer type can be used here in initialization
-    }
+    arr.fill(ELEMS_TYPE(0)); // Assumes that integer type can be used here in initialization
     return arr;
 }
 
