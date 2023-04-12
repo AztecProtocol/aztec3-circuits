@@ -34,6 +34,22 @@ NT::fr iterate_through_tree_via_sibling_path(NT::fr leaf, NT::uint32 leafIndex, 
 }
 
 template <size_t N>
+NT::fr iterate_through_tree_via_sibling_path_traced(NT::fr leaf,
+                                                    NT::uint32 leafIndex,
+                                                    std::array<NT::fr, N> siblingPath)
+{
+    for (size_t i = 0; i < siblingPath.size(); i++) {
+        if (leafIndex & (1 << i)) {
+            info(siblingPath[i], " ", leaf);
+            leaf = proof_system::plonk::stdlib::merkle_tree::hash_pair_native(siblingPath[i], leaf);
+        } else {
+            info(leaf, " ", siblingPath[i]);
+            leaf = proof_system::plonk::stdlib::merkle_tree::hash_pair_native(leaf, siblingPath[i]);
+        }
+    }
+    return leaf;
+}
+template <size_t N>
 void check_membership(DummyComposer& composer,
                       NT::fr const& leaf,
                       NT::uint32 const& leafIndex,

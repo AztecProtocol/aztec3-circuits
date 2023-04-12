@@ -386,10 +386,22 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(DummyC
     auto nullifier_sibling_path = baseRollupInputs.new_nullifiers_subtree_sibling_path;
     auto nullifier_subtree_root = create_nullifier_subtree(nullifier_insertion_subtree);
 
+    // info("\n");
+    // info("new nt subtree");
+    // for (size_t i = 0; i < nullifier_insertion_subtree.size(); ++i) {
+    //     auto val = nullifier_insertion_subtree[i];
+    //     info("leaf: ", val.value);
+    //     info("next index: ", val.nextIndex);
+    //     info("next value: ", val.nextValue);
+    // }
+
+    // info("new subtree sibling path");
+    // info(nullifier_sibling_path);
+
     // Calculate the new root
     // We are inserting a subtree rather than a full tree here
     auto subtree_index = start_insertion_index >> (NULLIFIER_SUBTREE_DEPTH);
-    auto new_root = components::iterate_through_tree_via_sibling_path(
+    auto new_root = components::iterate_through_tree_via_sibling_path_traced(
         nullifier_subtree_root, subtree_index, nullifier_sibling_path);
 
     // Return the new state of the nullifier tree

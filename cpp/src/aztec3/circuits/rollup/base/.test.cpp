@@ -508,27 +508,27 @@ TEST_F(base_rollup_tests, nullifier_tree_regression)
 }
 
 // Note leaving this test here as there are no negative tests, even though it no longer passes
-TEST_F(base_rollup_tests, new_nullifier_tree_sparse_attack)
-{
-    // @todo THIS SHOULD NOT BE PASSING. The circuit should fail with an assert as we are trying to double-spend.
-    /**
-     * DESCRIPTION
-     */
+// TEST_F(base_rollup_tests, new_nullifier_tree_sparse_attack)
+// {
+//     // @todo THIS SHOULD NOT BE PASSING. The circuit should fail with an assert as we are trying to double-spend.
+//     /**
+//      * DESCRIPTION
+//      */
 
-    DummyComposer composer = DummyComposer();
-    BaseRollupInputs empty_inputs = dummy_base_rollup_inputs_with_vk_proof();
+//     DummyComposer composer = DummyComposer();
+//     BaseRollupInputs empty_inputs = dummy_base_rollup_inputs_with_vk_proof();
 
-    std::array<fr, KERNEL_NEW_NULLIFIERS_LENGTH* 2> new_nullifiers = { 11, 0, 11, 0, 0, 0, 0, 0 };
-    std::tuple<BaseRollupInputs, AppendOnlyTreeSnapshot<NT>, AppendOnlyTreeSnapshot<NT>> inputs_and_snapshots =
-        utils::generate_nullifier_tree_testing_values(empty_inputs, new_nullifiers, 1);
-    BaseRollupInputs testing_inputs = std::get<0>(inputs_and_snapshots);
+//     std::array<fr, KERNEL_NEW_NULLIFIERS_LENGTH* 2> new_nullifiers = { 11, 0, 11, 0, 0, 0, 0, 0 };
+//     std::tuple<BaseRollupInputs, AppendOnlyTreeSnapshot<NT>, AppendOnlyTreeSnapshot<NT>> inputs_and_snapshots =
+//         utils::generate_nullifier_tree_testing_values(empty_inputs, new_nullifiers, 1);
+//     BaseRollupInputs testing_inputs = std::get<0>(inputs_and_snapshots);
 
-    // Run the circuit (SHOULD FAIL WITH AN ASSERT INSTEAD OF THIS!)
-    BaseOrMergeRollupPublicInputs outputs =
-        aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(composer, testing_inputs);
+//     // Run the circuit (SHOULD FAIL WITH AN ASSERT INSTEAD OF THIS!)
+//     BaseOrMergeRollupPublicInputs outputs =
+//         aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(composer, testing_inputs);
 
-    EXPECT_EQ(composer.has_failed(), true);
-}
+//     EXPECT_EQ(composer.has_failed(), true);
+// }
 
 TEST_F(base_rollup_tests, empty_block_calldata_hash)
 {

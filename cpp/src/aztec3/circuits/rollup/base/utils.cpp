@@ -232,9 +232,21 @@ generate_nullifier_tree_testing_values(BaseRollupInputs<NT> rollupInputs,
         .next_available_leaf_index = uint32_t(reference_tree.size()),
     };
 
+    // emit all of the expected nt leaves
+    info("expected");
+    for (size_t i = 0; uint256_t(i) < uint256_t(reference_tree.size()); ++i) {
+        auto val = reference_tree.get_leaf(i);
+        info("leaf: ", val.value);
+        info("next index: ", val.nextIndex);
+        info("next value: ", val.nextValue);
+    }
+
     // Get the sibling path, we should be able to use the same path to get to the end root
     std::vector<fr> sibling_path = reference_tree.get_sibling_path(start_tree_size);
     std::array<fr, NULLIFIER_SUBTREE_INCLUSION_CHECK_DEPTH> sibling_path_array;
+
+    info("entire hash path for subtree");
+    info(reference_tree.get_hash_path(start_tree_size));
 
     // Chop the first 3 levels from the sibling_path
     sibling_path.erase(sibling_path.begin(), sibling_path.begin() + NULLIFIER_SUBTREE_DEPTH);
