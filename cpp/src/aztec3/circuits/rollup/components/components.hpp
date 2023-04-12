@@ -25,9 +25,9 @@ NT::fr iterate_through_tree_via_sibling_path(NT::fr leaf, NT::uint32 leafIndex, 
 {
     for (size_t i = 0; i < siblingPath.size(); i++) {
         if (leafIndex & (1 << i)) {
-            leaf = proof_system::plonk::stdlib::merkle_tree::hash_multiple_native({ siblingPath[i], leaf });
+            leaf = proof_system::plonk::stdlib::merkle_tree::hash_pair_native(siblingPath[i], leaf);
         } else {
-            leaf = proof_system::plonk::stdlib::merkle_tree::hash_multiple_native({ leaf, siblingPath[i] });
+            leaf = proof_system::plonk::stdlib::merkle_tree::hash_pair_native(leaf, siblingPath[i]);
         }
     }
     return leaf;
