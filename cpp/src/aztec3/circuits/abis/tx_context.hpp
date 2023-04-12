@@ -24,7 +24,7 @@ template <typename NCT> struct TxContext {
     boolean is_rebate_payment_tx = false;
     boolean is_contract_deployment_tx = false;
 
-    ContractDeploymentData<NCT> contract_deployment_data = ContractDeploymentData<NCT>();
+    ContractDeploymentData<NCT> contract_deployment_data{};
 
     boolean operator==(TxContext<NCT> const& other) const
     {

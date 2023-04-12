@@ -1,9 +1,11 @@
 #pragma once
 
+#include <aztec3/utils/array.hpp>
 #include "aztec3/utils/types/circuit_types.hpp"
 #include "aztec3/utils/types/convert.hpp"
 namespace aztec3::circuits::abis {
 
+using aztec3::utils::zero_array;
 using aztec3::utils::types::CircuitTypes;
 using aztec3::utils::types::NativeTypes;
 using std::is_same;
@@ -14,8 +16,8 @@ template <typename NCT, unsigned int N> struct MembershipWitness {
     typedef typename NCT::uint32 uint32;
     typedef typename NCT::boolean boolean;
 
-    uint32 leaf_index;
-    std::array<fr, N> sibling_path = { 0 };
+    uint32 leaf_index = 0;
+    std::array<fr, N> sibling_path = zero_array<fr, N>();
 
     boolean operator==(MembershipWitness<NCT, N> const& other) const
     {
