@@ -474,7 +474,9 @@ TEST_F(base_rollup_tests, nullifier_tree_regression)
     BaseRollupInputs empty_inputs = dummy_base_rollup_inputs_with_vk_proof();
 
     // This test runs after some data has already been inserted into the tree
-    // TODO: explain data
+    // This test will pre-populate the tree with 24 values (0 item + 23 more) simulating that a rollup inserting two
+    // random values has already been performed. This rollup then adds two further random values that will end up having
+    // their low nullifiers point at each other
     std::vector<fr> initial_values(23, 0);
     for (size_t i = 0; i < 7; i++) {
         initial_values[i] = i + 1;
@@ -493,7 +495,6 @@ TEST_F(base_rollup_tests, nullifier_tree_regression)
     AppendOnlyTreeSnapshot<NT> nullifier_tree_start_snapshot = std::get<1>(inputs_and_snapshots);
     AppendOnlyTreeSnapshot<NT> nullifier_tree_end_snapshot = std::get<2>(inputs_and_snapshots);
 
-    // We now have the correct tree - can debug in circuit
     /**
      * RUN
      */
@@ -512,6 +513,7 @@ TEST_F(base_rollup_tests, nullifier_tree_regression)
     ASSERT_EQ(outputs.end_nullifier_tree_snapshot, nullifier_tree_end_snapshot);
 }
 
+// Note leaving this test here as there are no negative tests, even though it no longer passes
 // TEST_F(base_rollup_tests, new_nullifier_tree_sparse_attack)
 // {
 //     // @todo THIS SHOULD NOT BE PASSING. The circuit should fail with an assert as we are trying to double-spend.

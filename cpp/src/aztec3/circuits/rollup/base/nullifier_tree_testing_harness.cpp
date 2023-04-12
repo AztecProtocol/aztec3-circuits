@@ -76,8 +76,6 @@ NullifierMemoryTreeTestingHarness::circuit_prep_batch_insert(std::vector<fr> con
     // Start insertion index
     fr start_insertion_index = this->size();
 
-    info(values);
-
     // Low nullifiers
     std::vector<nullifier_leaf> low_nullifiers;
     std::vector<nullifier_leaf> pending_insertion_tree;
@@ -104,10 +102,6 @@ NullifierMemoryTreeTestingHarness::circuit_prep_batch_insert(std::vector<fr> con
         size_t current;
         bool is_already_present;
         std::tie(current, is_already_present) = find_closest_leaf(leaves_, new_value);
-
-        info("new value: ", new_value);
-        info("current");
-        info(current);
 
         // If the inserted value is 0, then we ignore and provide a dummy low nullifier
         if (new_value == 0) {

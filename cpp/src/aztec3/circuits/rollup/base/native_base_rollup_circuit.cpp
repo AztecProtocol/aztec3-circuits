@@ -291,21 +291,12 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(DummyC
 
             // Witness containing index and path
             auto nullifier_index = 4 * i + j;
-            info("nullifier index", nullifier_index);
-
-            // info(nullifier_insertion_subtree);
 
             auto witness = baseRollupInputs.low_nullifier_membership_witness[nullifier_index];
             // Preimage of the lo-index required for a non-membership proof
             auto low_nullifier_preimage = baseRollupInputs.low_nullifier_leaf_preimages[nullifier_index];
             // Newly created nullifier
             auto nullifier = new_nullifiers[j];
-
-            // preimage
-            info("preimage");
-            info("value: ", low_nullifier_preimage.leaf_value);
-            info("next index: ", low_nullifier_preimage.next_index);
-            info("next value: ", low_nullifier_preimage.next_value);
 
             // TODO: reason about this more strongly, can this cause issues?
             if (nullifier != 0) {
