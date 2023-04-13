@@ -59,6 +59,8 @@ using aztec3::circuits::abis::private_kernel::PublicInputs;
 using aztec3::circuits::apps::test_apps::basic_contract_deployment::constructor;
 using aztec3::circuits::apps::test_apps::escrow::deposit;
 
+using DummyComposer = aztec3::utils::DummyComposer;
+
 using aztec3::circuits::mock::mock_kernel_circuit;
 
 // A type representing any private circuit function
@@ -470,8 +472,9 @@ TEST(private_kernel_tests, test_native_deposit)
     NT::fr const& memo = 999;
 
     auto const& private_inputs = do_private_call_get_kernel_inputs(false, deposit, { amount, asset_id, memo });
+    DummyComposer composer;
+    auto const& public_inputs = native_private_kernel_circuit(composer, private_inputs);
 
-    auto const& public_inputs = native_private_kernel_circuit(private_inputs);
     validate_deployed_contract_address(private_inputs, public_inputs);
 }
 
@@ -516,7 +519,8 @@ TEST(private_kernel_tests, test_native_basic_contract_deployment)
     std::vector<NT::fr> args_vec = { arg0, arg1, arg2 };
 
     auto const& private_inputs = do_private_call_get_kernel_inputs(true, constructor, args_vec);
-    auto const& public_inputs = native_private_kernel_circuit(private_inputs);
+    DummyComposer composer;
+    auto const& public_inputs = native_private_kernel_circuit(composer, private_inputs);
 
     validate_deployed_contract_address(private_inputs, public_inputs);
 }
@@ -533,7 +537,8 @@ TEST(private_kernel_tests, test_create_proof_cbinds)
 
     // first run actual simulation to get public inputs
     auto const& private_inputs = do_private_call_get_kernel_inputs(true, constructor, args_vec);
-    auto const& public_inputs = native_private_kernel_circuit(private_inputs);
+    DummyComposer composer;
+    auto const& public_inputs = native_private_kernel_circuit(composer, private_inputs);
 
     // serialize expected public inputs for later comparison
     std::vector<uint8_t> expected_public_inputs_vec;
