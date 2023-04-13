@@ -112,6 +112,18 @@ typename NCT::fr root_from_sibling_path(typename NCT::fr const& leaf,
     return node; // root
 }
 
+/**
+ * @brief Calculate the function tree root from the sibling path and leaf preimage.
+ *
+ * @tparam NCT (native or circuit)
+ * @param function_selector in leaf preimage
+ * @param is_private in leaf preimage
+ * @param vk_hash in leaf preimage
+ * @param acir_hash in leaf preimage
+ * @param function_leaf_index leaf index in the function tree
+ * @param function_leaf_sibling_path
+ * @return NCT::fr
+ */
 template <typename NCT>
 typename NCT::fr function_tree_root_from_siblings(
     typename NCT::fr const& function_selector,
@@ -135,6 +147,17 @@ typename NCT::fr function_tree_root_from_siblings(
     return function_tree_root;
 }
 
+/**
+ * @brief Calculate the contract tree root from the sibling path and leaf preimage.
+ *
+ * @tparam NCT (native or circuit)
+ * @param function_tree_root in leaf preimage
+ * @param storage_contract_address in leaf preimage
+ * @param portal_contract_address in leaf preimage
+ * @param contract_leaf_index leaf index in the function tree
+ * @param contract_leaf_sibling_path
+ * @return NCT::fr
+ */
 template <typename NCT>
 typename NCT::fr contract_tree_root_from_siblings(
     typename NCT::fr const& function_tree_root,
@@ -154,6 +177,14 @@ typename NCT::fr contract_tree_root_from_siblings(
     return computed_contract_tree_root;
 }
 
+/**
+ * @brief Compute sibling path for an empty tree.
+ *
+ * @tparam NCT (native or circuit)
+ * @tparam TREE_HEIGHT
+ * @param zero_leaf the leaf value that corresponds to a zero preimage
+ * @return std::array<typename NCT::fr, TREE_HEIGHT>
+ */
 template <typename NCT, size_t TREE_HEIGHT>
 std::array<typename NCT::fr, TREE_HEIGHT> compute_empty_sibling_path(typename NCT::fr const& zero_leaf)
 {
