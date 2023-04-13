@@ -92,9 +92,6 @@ void debugComposer(Composer const& composer)
     // info("witness: ", private_kernel_composer.witness);
     // info("constant variables: ", private_kernel_composer.constant_variables);
     // info("variables: ", composer.variables);
-
-    // TODO: this fails intermittently, with:
-    // bigfield multiply range check failed
     info("failed?: ", composer.failed());
     info("err: ", composer.err());
     info("n: ", composer.get_num_gates());
