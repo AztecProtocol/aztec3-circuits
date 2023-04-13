@@ -12,6 +12,5 @@
 
 namespace aztec3::circuits::rollup::native_merge_rollup {
 
-MergeRollupPublicInputs merge_rollup_circuit(MergeRollupInputs mergeRollupInputs);
-
+BaseOrMergeRollupPublicInputs merge_rollup_circuit(DummyComposer& composer, MergeRollupInputs const& mergeRollupInputs);
 } // namespace aztec3::circuits::rollup::native_merge_rollup

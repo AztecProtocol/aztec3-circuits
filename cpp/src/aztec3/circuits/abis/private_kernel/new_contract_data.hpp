@@ -16,9 +16,9 @@ template <typename NCT> struct NewContractData {
     typedef typename NCT::fr fr;
     typedef typename NCT::boolean boolean;
 
-    address contract_address;
-    address portal_contract_address;
-    fr function_tree_root;
+    address contract_address = 0;
+    address portal_contract_address = 0;
+    fr function_tree_root = 0;
 
     boolean operator==(NewContractData<NCT> const& other) const
     {
@@ -111,5 +111,7 @@ template <typename NCT> std::ostream& operator<<(std::ostream& os, NewContractDa
               << "portal_contract_address: " << new_contract_data.portal_contract_address << "\n"
               << "function_tree_root: " << new_contract_data.function_tree_root << "\n";
 }
+
+template <typename NCT> using ContractLeafPreimage = NewContractData<NCT>;
 
 } // namespace aztec3::circuits::abis::private_kernel

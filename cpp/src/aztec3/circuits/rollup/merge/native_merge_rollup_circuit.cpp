@@ -1,3 +1,4 @@
+#include "aztec3/circuits/abis/rollup/base/base_or_merge_rollup_public_inputs.hpp"
 #include "aztec3/constants.hpp"
 #include "barretenberg/crypto/pedersen_hash/pedersen.hpp"
 #include "barretenberg/crypto/sha256/sha256.hpp"
@@ -8,47 +9,51 @@
 #include "barretenberg/stdlib/merkle_tree/merkle_tree.hpp"
 #include "init.hpp"
 
+#include <aztec3/circuits/rollup/components/components.hpp>
+
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <tuple>
 #include <vector>
 
 namespace aztec3::circuits::rollup::native_merge_rollup {
 
-/**
- * @brief Create an aggregation object for the proofs that are provided
- *          - We add points P0 for each of our proofs
- *          - We add points P1 for each of our proofs
- *          - We concat our public inputs
- *
- * @param mergeRollupInputs
- * @return AggregationObject
- */
-AggregationObject aggregate_proofs(MergeRollupInputs mergeRollupInputs)
+BaseOrMergeRollupPublicInputs merge_rollup_circuit(DummyComposer& composer, MergeRollupInputs const& mergeRollupInputs)
 {
+    // TODO: Verify the previous rollup proofs
+    // TODO: Check both previous rollup vks (in previous_rollup_data) against the permitted set of kernel vks.
+    // we don't have a set of permitted kernel vks yet.
 
-    // TODO: NOTE: for now we simply return the aggregation object from the first proof
-    return mergeRollupInputs.previous_rollup_data[0].merge_rollup_public_inputs.end_aggregation_object;
-}
+    auto left = mergeRollupInputs.previous_rollup_data[0].base_or_merge_rollup_public_inputs;
+    auto right = mergeRollupInputs.previous_rollup_data[1].base_or_merge_rollup_public_inputs;
 
-/** TODO: implement
- * @brief Get the prover contribution hash object
- *
- * @return NT::fr
- */
-NT::fr get_prover_contribution_hash()
-{
-    return NT::fr(0);
-}
+    // check that both input proofs are either both "BASE" or "MERGE" and not a mix!
+    // this prevents having wonky commitment, nullifier and contract subtrees.
+    AggregationObject aggregation_object = components::aggregate_proofs(left, right);
+    components::assert_both_input_proofs_of_same_rollup_type(composer, left, right);
+    auto current_height = components::assert_both_input_proofs_of_same_height_and_return(composer, left, right);
+    components::assert_equal_constants(composer, left, right);
+    components::assert_prev_rollups_follow_on_from_each_other(composer, left, right);
 
-MergeRollupPublicInputs merge_rollup_circuit(MergeRollupInputs mergeRollupInputs)
-{
-    // Verify the previous rollup proofs
+    // compute calldata hash:
+    auto new_calldata_hash = components::compute_calldata_hash(mergeRollupInputs.previous_rollup_data);
 
-    AggregationObject aggregation_object = aggregate_proofs(mergeRollupInputs);
+    BaseOrMergeRollupPublicInputs public_inputs = {
+        .rollup_type = abis::MERGE_ROLLUP_TYPE,
+        .rollup_subtree_height = current_height + 1,
+        .end_aggregation_object = aggregation_object,
+        .constants = left.constants,
+        .start_private_data_tree_snapshot = left.start_private_data_tree_snapshot,
+        .end_private_data_tree_snapshot = right.end_private_data_tree_snapshot,
+        .start_nullifier_tree_snapshot = left.start_nullifier_tree_snapshot,
+        .end_nullifier_tree_snapshot = right.end_nullifier_tree_snapshot,
+        .start_contract_tree_snapshot = left.start_contract_tree_snapshot,
+        .end_contract_tree_snapshot = right.end_contract_tree_snapshot,
+        .calldata_hash = new_calldata_hash,
+    };
 
-    MergeRollupPublicInputs public_inputs = {};
     return public_inputs;
 }
 
