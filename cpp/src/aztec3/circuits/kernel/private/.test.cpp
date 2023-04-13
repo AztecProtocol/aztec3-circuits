@@ -59,15 +59,16 @@ using aztec3::circuits::abis::private_kernel::PublicInputs;
 using aztec3::circuits::apps::test_apps::basic_contract_deployment::constructor;
 using aztec3::circuits::apps::test_apps::escrow::deposit;
 
-// using aztec3::circuits::mock::mock_circuit;
 using aztec3::circuits::mock::mock_kernel_circuit;
 
+// A type representing any private circuit function
+// (for now it works for deposit and constructor)
 using private_function = std::function<OptionalPrivateCircuitPublicInputs<NT>(
     FunctionExecutionContext<aztec3::circuits::kernel::private_kernel::Composer>&,
     std::array<NT::fr, aztec3::ARGS_LENGTH> const&)>;
 
+// Some helper constants for trees
 constexpr size_t MAX_FUNCTION_LEAVES = 2 << (aztec3::FUNCTION_TREE_HEIGHT - 1);
-
 const NT::fr EMPTY_FUNCTION_LEAF = FunctionLeafPreimage<NT>{}.hash(); // hash of empty/0 preimage
 const NT::fr EMPTY_CONTRACT_LEAF = NewContractData<NT>{}.hash();      // hash of empty/0 preimage
 const auto& EMPTY_FUNCTION_SIBLINGS = compute_empty_sibling_path<NT, aztec3::FUNCTION_TREE_HEIGHT>(EMPTY_FUNCTION_LEAF);
@@ -77,6 +78,11 @@ const auto& EMPTY_CONTRACT_SIBLINGS = compute_empty_sibling_path<NT, aztec3::CON
 
 namespace aztec3::circuits::kernel::private_kernel {
 
+/**
+ * @brief Print some debug info about a composer if in DEBUG_PRINTS mode
+ *
+ * @param composer
+ */
 void debugComposer(Composer const& composer)
 {
 #ifdef DEBUG_PRINTS
@@ -95,31 +101,25 @@ void debugComposer(Composer const& composer)
 #endif
 }
 
+/**
+ * @brief Generate a verification key for a private circuit.
+ *
+ * @details Use some dummy inputs just to get the VK for a private circuit
+ *
+ * @param is_constructor Whether this private call is a constructor call
+ * @param func The private circuit call to generate a VK for
+ * @param num_args Number of args to that private circuit call
+ * @return std::shared_ptr<NT::VK> - the generated VK
+ */
 std::shared_ptr<NT::VK> gen_func_vk(bool is_constructor, private_function const& func, size_t const num_args)
 {
     // Some dummy inputs to get the circuit to compile and get a VK
-    // const NT::fr dummy_contract_address = 12345;
-    // const NT::fr dummy_portal_contract_address = 23456;
-    // const NT::fr dummy_sender_private_key = 123456789;
-    // const NT::address dummy_sender =
-    //    NT::fr(uint256_t(0x01071e9a23e0f7edULL, 0x5d77b35d1830fa3eULL, 0xc6ba3660bb1f0c0bULL, 0x2ef9f7f09867fd6eULL));
-    // const NT::fr dummy_contract_address = 0;
-    // const NT::fr dummy_portal_contract_address = 0;
-    // const NT::fr dummy_sender_private_key = 0;
-    // const NT::address dummy_sender = 0;
-
     FunctionData<NT> dummy_function_data{
-        //.function_selector = 1, // TODO: deduce this from the contract, somehow.
         .is_private = true,
         .is_constructor = is_constructor,
     };
 
     CallContext<NT> dummy_call_context{
-        //.msg_sender = dummy_sender,
-        //.storage_contract_address = dummy_contract_address,
-        //.portal_contract_address = dummy_portal_contract_address,
-        //.is_delegate_call = false,
-        //.is_static_call = false,
         .is_contract_deployment = is_constructor,
     };
 
@@ -130,11 +130,6 @@ std::shared_ptr<NT::VK> gen_func_vk(bool is_constructor, private_function const&
         NativeOracle dummy_oracle = is_constructor
                                         ? NativeOracle(dummy_db, 0, dummy_function_data, dummy_call_context, {}, 0)
                                         : NativeOracle(dummy_db, 0, dummy_function_data, dummy_call_context, 0);
-        //? NativeOracle(dummy_db, dummy_contract_address, dummy_function_data, dummy_call_context, {},
-        //dummy_sender_private_key) : NativeOracle(dummy_db, dummy_contract_address, dummy_function_data,
-        //dummy_call_context, dummy_sender_private_key);
-        // NativeOracle dummy_oracle = NativeOracle(dummy_db, dummy_contract_address, dummy_function_data,
-        // dummy_call_context, dummy_sender_private_key);
 
         OracleWrapper dummy_oracle_wrapper = OracleWrapper(dummy_composer, dummy_oracle);
 
@@ -153,25 +148,33 @@ std::shared_ptr<NT::VK> gen_func_vk(bool is_constructor, private_function const&
     return dummy_composer.compute_verification_key();
 }
 
-PrivateInputs<NT> do_private_call(bool const is_constructor,
-                                  private_function const& func,
-                                  std::vector<NT::fr> const& args_vec)
+/**
+ * @brief Perform a private circuit call and generate the inputs to private kernel
+ *
+ * @param is_constructor whether this private circuit call is a constructor
+ * @param func the private circuit call being validated by this kernel iteration
+ * @param args_vec the private call's args
+ * @return PrivateInputs<NT> - the inputs to the private call circuit
+ */
+PrivateInputs<NT> do_private_call_get_kernel_inputs(bool const is_constructor,
+                                                    private_function const& func,
+                                                    std::vector<NT::fr> const& args_vec)
 {
     //***************************************************************************
     // Initialize some inputs to private call and kernel circuits
     //***************************************************************************
+    // TODO randomize inputs
     NT::address contract_address = is_constructor ? 0 : 12345; // updated later if in constructor
     const NT::uint32 contract_leaf_index = 1;
     const NT::uint32 function_leaf_index = 1;
     const NT::fr portal_contract_address = 23456;
     const NT::fr contract_address_salt = 34567;
+    const NT::fr acir_hash = 12341234;
 
     const NT::fr msg_sender_private_key = 123456789;
     const NT::address msg_sender =
         NT::fr(uint256_t(0x01071e9a23e0f7edULL, 0x5d77b35d1830fa3eULL, 0xc6ba3660bb1f0c0bULL, 0x2ef9f7f09867fd6eULL));
     const NT::address tx_origin = msg_sender;
-
-    const NT::fr acir_hash = 12341234;
 
     FunctionData<NT> function_data{
         .function_selector = 1, // TODO: deduce this from the contract, somehow.
@@ -402,6 +405,14 @@ PrivateInputs<NT> do_private_call(bool const is_constructor,
     return kernel_private_inputs;
 }
 
+/**
+ * @brief Validate that the deployed contract address is correct.
+ *
+ * @details Compare the public inputs new contract address
+ * with one manually computed from private inputs.
+ * @param private_inputs to be used in manual computation
+ * @param public_inputs that contain the expected new contract address
+ */
 void validate_deployed_contract_address(PrivateInputs<NT> const& private_inputs, PublicInputs<NT> const& public_inputs)
 {
 
@@ -420,17 +431,16 @@ void validate_deployed_contract_address(PrivateInputs<NT> const& private_inputs,
     EXPECT_EQ(public_inputs.end.new_contracts[0].contract_address.to_field(), expected_contract_address);
 }
 
+/**
+ * @brief Some private circuit proof (`deposit`, in this case)
+ */
 TEST(private_kernel_tests, test_circuit_deposit)
 {
-    //***************************************************************************
-    // Some private circuit proof (`deposit`, in this case)
-    //***************************************************************************
-
     NT::fr const& amount = 5;
     NT::fr const& asset_id = 1;
     NT::fr const& memo = 999;
 
-    auto const& private_inputs = do_private_call(false, deposit, { amount, asset_id, memo });
+    auto const& private_inputs = do_private_call_get_kernel_inputs(false, deposit, { amount, asset_id, memo });
 
     // Execute and prove the first kernel iteration
     Composer private_kernel_composer("../barretenberg/cpp/srs_db/ignition");
@@ -450,34 +460,32 @@ TEST(private_kernel_tests, test_circuit_deposit)
     debugComposer(private_kernel_composer);
 }
 
+/**
+ * @brief Some private circuit simulation (`deposit`, in this case)
+ */
 TEST(private_kernel_tests, test_native_deposit)
 {
-    //***************************************************************************
-    // Some private circuit simulation (`deposit`, in this case)
-    //***************************************************************************
-
     NT::fr const& amount = 5;
     NT::fr const& asset_id = 1;
     NT::fr const& memo = 999;
 
-    auto const& private_inputs = do_private_call(false, deposit, { amount, asset_id, memo });
+    auto const& private_inputs = do_private_call_get_kernel_inputs(false, deposit, { amount, asset_id, memo });
 
     auto const& public_inputs = native_private_kernel_circuit(private_inputs);
     validate_deployed_contract_address(private_inputs, public_inputs);
 }
 
+/**
+ * @brief Some private circuit proof (`constructor`, in this case)
+ */
 TEST(private_kernel_tests, test_basic_contract_deployment)
 {
-    //***************************************************************************
-    // Some private circuit proof (`constructor`, in this case)
-    //***************************************************************************
-
     NT::fr const& arg0 = 5;
     NT::fr const& arg1 = 1;
     NT::fr const& arg2 = 999;
     std::vector<NT::fr> args_vec = { arg0, arg1, arg2 };
 
-    auto const& private_inputs = do_private_call(true, constructor, args_vec);
+    auto const& private_inputs = do_private_call_get_kernel_inputs(true, constructor, args_vec);
 
     // Execute and prove the first kernel iteration
     Composer private_kernel_composer("../barretenberg/cpp/srs_db/ignition");
@@ -497,35 +505,34 @@ TEST(private_kernel_tests, test_basic_contract_deployment)
     debugComposer(private_kernel_composer);
 }
 
+/**
+ * @brief Some private circuit simulation (`constructor`, in this case)
+ */
 TEST(private_kernel_tests, test_native_basic_contract_deployment)
 {
-    //***************************************************************************
-    // Some private circuit simulation (`constructor`, in this case)
-    //***************************************************************************
-
     NT::fr const& arg0 = 5;
     NT::fr const& arg1 = 1;
     NT::fr const& arg2 = 999;
     std::vector<NT::fr> args_vec = { arg0, arg1, arg2 };
 
-    auto const& private_inputs = do_private_call(true, constructor, args_vec);
+    auto const& private_inputs = do_private_call_get_kernel_inputs(true, constructor, args_vec);
     auto const& public_inputs = native_private_kernel_circuit(private_inputs);
 
     validate_deployed_contract_address(private_inputs, public_inputs);
 }
 
+/**
+ * @brief Some private circuit simulation checked against its results via cbinds
+ */
 TEST(private_kernel_tests, test_create_proof_cbinds)
 {
-    //***************************************************************************
-    // Some private circuit simulation checked against its results via cbinds
-    //***************************************************************************
     NT::fr const& arg0 = 5;
     NT::fr const& arg1 = 1;
     NT::fr const& arg2 = 999;
     std::vector<NT::fr> args_vec = { arg0, arg1, arg2 };
 
     // first run actual simulation to get public inputs
-    auto const& private_inputs = do_private_call(true, constructor, args_vec);
+    auto const& private_inputs = do_private_call_get_kernel_inputs(true, constructor, args_vec);
     auto const& public_inputs = native_private_kernel_circuit(private_inputs);
 
     // serialize expected public inputs for later comparison
@@ -535,7 +542,6 @@ TEST(private_kernel_tests, test_create_proof_cbinds)
     //***************************************************************************
     // Now run the simulate/prove cbinds to make sure their outputs match
     //***************************************************************************
-
     // TODO might be able to get rid of proving key buffer
     uint8_t const* pk_buf;
     private_kernel__init_proving_key(&pk_buf);
@@ -584,6 +590,9 @@ TEST(private_kernel_tests, test_create_proof_cbinds)
     free((void*)public_inputs_buf);
 }
 
+/**
+ * @brief Test this dummy cbind
+ */
 TEST(private_kernel_tests, test_dummy_previous_kernel_cbind)
 {
     uint8_t const* cbind_previous_kernel_buf;
