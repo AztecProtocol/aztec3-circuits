@@ -25,26 +25,22 @@ class merge_rollup_tests : public ::testing::Test {
         write(merge_rollup_inputs_vec, merge_rollup_inputs);
 
         uint8_t const* public_inputs_buf;
-        info("creating proof");
+        // info("simulating circuit via cbind");
         size_t public_inputs_size = merge_rollup__sim(merge_rollup_inputs_vec.data(), &public_inputs_buf);
-        info("PublicInputs size: ", public_inputs_size);
+        // info("PublicInputs size: ", public_inputs_size);
 
         if (compare_pubins) {
             BaseOrMergeRollupPublicInputs public_inputs;
-            info("about to read...");
             uint8_t const* public_inputs_buf_tmp = public_inputs_buf;
             read(public_inputs_buf_tmp, public_inputs);
-            info("about to assert...");
             ASSERT_EQ(public_inputs.calldata_hash.size(), expected_public_inputs.calldata_hash.size());
             for (size_t i = 0; i < public_inputs.calldata_hash.size(); i++) {
                 ASSERT_EQ(public_inputs.calldata_hash[i], expected_public_inputs.calldata_hash[i]);
             }
 
-            info("about to write expected...");
             std::vector<uint8_t> expected_public_inputs_vec;
             write(expected_public_inputs_vec, expected_public_inputs);
 
-            info("about to assert buffers eq...");
             ASSERT_EQ(public_inputs_size, expected_public_inputs_vec.size());
             // Just compare the first 10 bytes of the serialized public outputs
             if (public_inputs_size > 10) {
@@ -55,11 +51,10 @@ class merge_rollup_tests : public ::testing::Test {
             }
         }
         free((void*)public_inputs_buf);
-        info("finished retesting via cbinds...");
     }
 };
 
-TEST_F(merge_rollup_tests, test_different_rollup_type_fails)
+TEST_F(merge_rollup_tests, native_different_rollup_type_fails)
 {
     DummyComposer composer = DummyComposer();
     auto mergeInput = dummy_merge_rollup_inputs_with_vk_proof();
@@ -70,7 +65,7 @@ TEST_F(merge_rollup_tests, test_different_rollup_type_fails)
     ASSERT_EQ(composer.get_first_failure(), "input proofs are of different rollup types");
 }
 
-TEST_F(merge_rollup_tests, test_different_rollup_height_fails)
+TEST_F(merge_rollup_tests, native_different_rollup_height_fails)
 {
     DummyComposer composer = DummyComposer();
     auto mergeInput = dummy_merge_rollup_inputs_with_vk_proof();
@@ -81,7 +76,7 @@ TEST_F(merge_rollup_tests, test_different_rollup_height_fails)
     ASSERT_EQ(composer.get_first_failure(), "input proofs are of different rollup heights");
 }
 
-TEST_F(merge_rollup_tests, test_constants_different_failure)
+TEST_F(merge_rollup_tests, native_constants_different_failure)
 {
     DummyComposer composer = DummyComposer();
     MergeRollupInputs inputs = dummy_merge_rollup_inputs_with_vk_proof();
@@ -93,7 +88,7 @@ TEST_F(merge_rollup_tests, test_constants_different_failure)
     ASSERT_EQ(composer.get_first_failure(), "input proofs have different constants");
 }
 
-TEST_F(merge_rollup_tests, test_fail_if_previous_rollups_dont_follow_on)
+TEST_F(merge_rollup_tests, native_fail_if_previous_rollups_dont_follow_on)
 {
     DummyComposer composerA = DummyComposer();
     MergeRollupInputs dummyInputs = dummy_merge_rollup_inputs_with_vk_proof();
@@ -137,7 +132,7 @@ TEST_F(merge_rollup_tests, test_fail_if_previous_rollups_dont_follow_on)
     ASSERT_EQ(composerC.get_first_failure(), "input proofs have different contract tree snapshots");
 }
 
-TEST_F(merge_rollup_tests, test_rollup_fields_are_set_correctly)
+TEST_F(merge_rollup_tests, native_rollup_fields_are_set_correctly)
 {
     DummyComposer composer = DummyComposer();
     MergeRollupInputs inputs = dummy_merge_rollup_inputs_with_vk_proof();
@@ -160,7 +155,7 @@ TEST_F(merge_rollup_tests, test_rollup_fields_are_set_correctly)
     ASSERT_EQ(outputs.rollup_subtree_height, 2);
 }
 
-TEST_F(merge_rollup_tests, test_start_and_end_snapshots)
+TEST_F(merge_rollup_tests, native_start_and_end_snapshots)
 {
     DummyComposer composer = DummyComposer();
     MergeRollupInputs inputs = dummy_merge_rollup_inputs_with_vk_proof();
@@ -182,7 +177,7 @@ TEST_F(merge_rollup_tests, test_start_and_end_snapshots)
               inputs.previous_rollup_data[1].base_or_merge_rollup_public_inputs.end_contract_tree_snapshot);
 }
 
-TEST_F(merge_rollup_tests, test_calldata_hash)
+TEST_F(merge_rollup_tests, native_calldata_hash)
 {
     DummyComposer composer = DummyComposer();
     std::vector<uint8_t> zero_bytes_vec(704, 0);
@@ -214,7 +209,7 @@ TEST_F(merge_rollup_tests, test_calldata_hash)
     ASSERT_EQ(expected_calldata_hash, actual_calldata_hash);
 }
 
-TEST_F(merge_rollup_tests, test_constants_dont_change)
+TEST_F(merge_rollup_tests, native_constants_dont_change)
 {
     DummyComposer composer = DummyComposer();
     MergeRollupInputs inputs = dummy_merge_rollup_inputs_with_vk_proof();
@@ -223,7 +218,7 @@ TEST_F(merge_rollup_tests, test_constants_dont_change)
     ASSERT_EQ(inputs.previous_rollup_data[1].base_or_merge_rollup_public_inputs.constants, outputs.constants);
 }
 
-TEST_F(merge_rollup_tests, test_aggregate)
+TEST_F(merge_rollup_tests, native_aggregate)
 {
     // TODO: Fix this when aggregation works
     DummyComposer composer = DummyComposer();
@@ -233,7 +228,7 @@ TEST_F(merge_rollup_tests, test_aggregate)
               outputs.end_aggregation_object.public_inputs);
 }
 
-TEST_F(merge_rollup_tests, test_merge_cbind)
+TEST_F(merge_rollup_tests, native_merge_cbind)
 {
     MergeRollupInputs inputs = dummy_merge_rollup_inputs_with_vk_proof();
     BaseOrMergeRollupPublicInputs ignored_public_inputs;

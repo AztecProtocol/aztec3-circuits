@@ -111,12 +111,14 @@ class base_rollup_tests : public ::testing::Test {
         // TODO might be able to get rid of proving key buffer
         uint8_t const* pk_buf;
         size_t pk_size = base_rollup__init_proving_key(&pk_buf);
-        info("Proving key size: ", pk_size);
+        (void)pk_size;
+        // info("Proving key size: ", pk_size);
 
         // TODO might be able to get rid of verification key buffer
         uint8_t const* vk_buf;
         size_t vk_size = base_rollup__init_verification_key(pk_buf, &vk_buf);
-        info("Verification key size: ", vk_size);
+        (void)vk_size;
+        // info("Verification key size: ", vk_size);
 
         std::vector<uint8_t> base_rollup_inputs_vec;
         write(base_rollup_inputs_vec, base_rollup_inputs);
@@ -124,27 +126,23 @@ class base_rollup_tests : public ::testing::Test {
         // uint8_t const* proof_data;
         // size_t proof_data_size;
         uint8_t const* public_inputs_buf;
-        info("creating proof");
+        // info("simulating circuit via cbind");
         size_t public_inputs_size = base_rollup__sim(base_rollup_inputs_vec.data(), &public_inputs_buf);
         // info("Proof size: ", proof_data_size);
-        info("PublicInputs size: ", public_inputs_size);
+        // info("PublicInputs size: ", public_inputs_size);
 
         if (compare_pubins) {
             BaseOrMergeRollupPublicInputs public_inputs;
-            info("about to read...");
             uint8_t const* public_inputs_buf_tmp = public_inputs_buf;
             read(public_inputs_buf_tmp, public_inputs);
-            info("about to assert...");
             ASSERT_EQ(public_inputs.calldata_hash.size(), expected_public_inputs.calldata_hash.size());
             for (size_t i = 0; i < public_inputs.calldata_hash.size(); i++) {
                 ASSERT_EQ(public_inputs.calldata_hash[i], expected_public_inputs.calldata_hash[i]);
             }
 
-            info("about to write expected...");
             std::vector<uint8_t> expected_public_inputs_vec;
             write(expected_public_inputs_vec, expected_public_inputs);
 
-            info("about to assert buffers eq...");
             ASSERT_EQ(public_inputs_size, expected_public_inputs_vec.size());
             // Just compare the first 10 bytes of the serialized public outputs
             if (public_inputs_size > 10) {
@@ -154,14 +152,10 @@ class base_rollup_tests : public ::testing::Test {
                 }
             }
         }
-        (void)base_rollup_inputs;     // unused
-        (void)expected_public_inputs; // unused
-        (void)compare_pubins;         // unused
 
         free((void*)pk_buf);
         free((void*)vk_buf);
         // free((void*)proof_data);
-        // SCARY WARNING TODO FIXME why does this free cause issues
         free((void*)public_inputs_buf);
         info("finished retesting via cbinds...");
     }
@@ -186,7 +180,7 @@ std::array<fr, N> get_sibling_path(stdlib::merkle_tree::MemoryTree tree,
     return siblingPath;
 }
 
-TEST_F(base_rollup_tests, no_new_contract_leafs)
+TEST_F(base_rollup_tests, native_native_no_new_contract_leafs)
 {
     DummyComposer composer = DummyComposer();
     // When there are no contract deployments. The contract tree should be inserting 0 leafs, (not empty leafs);
@@ -213,7 +207,7 @@ TEST_F(base_rollup_tests, no_new_contract_leafs)
     run_cbind(emptyInputs, outputs);
 }
 
-TEST_F(base_rollup_tests, contract_leaf_inserted)
+TEST_F(base_rollup_tests, native_contract_leaf_inserted)
 {
     DummyComposer composer = DummyComposer();
     // When there is a contract deployment, the contract tree should be inserting 1 leaf.
@@ -253,7 +247,7 @@ TEST_F(base_rollup_tests, contract_leaf_inserted)
     run_cbind(inputs, outputs);
 }
 
-TEST_F(base_rollup_tests, contract_leaf_inserted_in_non_empty_snapshot_tree)
+TEST_F(base_rollup_tests, native_contract_leaf_inserted_in_non_empty_snapshot_tree)
 {
     DummyComposer composer = DummyComposer();
     // Same as before except our start_contract_snapshot_tree is not empty
@@ -302,7 +296,7 @@ TEST_F(base_rollup_tests, contract_leaf_inserted_in_non_empty_snapshot_tree)
     run_cbind(inputs, outputs);
 }
 
-TEST_F(base_rollup_tests, new_commitments_tree)
+TEST_F(base_rollup_tests, native_new_commitments_tree)
 {
     DummyComposer composer = DummyComposer();
     // Create 4 new mock commitments. Add them to kernel data.
@@ -354,7 +348,7 @@ template <size_t N> NT::fr calc_root(NT::fr leaf, NT::uint32 leafIndex, std::arr
     return leaf;
 }
 
-TEST_F(base_rollup_tests, new_nullifier_tree_empty)
+TEST_F(base_rollup_tests, native_new_nullifier_tree_empty)
 {
     /**
      * DESCRIPTION
@@ -396,7 +390,7 @@ TEST_F(base_rollup_tests, new_nullifier_tree_empty)
               outputs.start_nullifier_tree_snapshot.next_available_leaf_index + 8);
 }
 
-TEST_F(base_rollup_tests, new_nullifier_tree_all_larger)
+TEST_F(base_rollup_tests, native_new_nullifier_tree_all_larger)
 {
     /**
      * SETUP
@@ -428,7 +422,7 @@ TEST_F(base_rollup_tests, new_nullifier_tree_all_larger)
     ASSERT_EQ(outputs.end_nullifier_tree_snapshot, nullifier_tree_end_snapshot);
 }
 
-TEST_F(base_rollup_tests, new_nullifier_tree_sparse)
+TEST_F(base_rollup_tests, native_new_nullifier_tree_sparse)
 {
     /**
      * DESCRIPTION
@@ -461,7 +455,7 @@ TEST_F(base_rollup_tests, new_nullifier_tree_sparse)
     ASSERT_EQ(outputs.end_nullifier_tree_snapshot, nullifier_tree_end_snapshot);
 }
 
-TEST_F(base_rollup_tests, nullifier_tree_regression)
+TEST_F(base_rollup_tests, native_nullifier_tree_regression)
 {
     // Regression test caught when testing the typescript nullifier tree implementation
     DummyComposer composer = DummyComposer();
@@ -508,7 +502,7 @@ TEST_F(base_rollup_tests, nullifier_tree_regression)
 }
 
 // Note leaving this test here as there are no negative tests, even though it no longer passes
-TEST_F(base_rollup_tests, new_nullifier_tree_sparse_attack)
+TEST_F(base_rollup_tests, native_new_nullifier_tree_sparse_attack)
 {
     // @todo THIS SHOULD NOT BE PASSING. The circuit should fail with an assert as we are trying to double-spend.
     /**
@@ -530,7 +524,7 @@ TEST_F(base_rollup_tests, new_nullifier_tree_sparse_attack)
     EXPECT_EQ(composer.has_failed(), true);
 }
 
-TEST_F(base_rollup_tests, empty_block_calldata_hash)
+TEST_F(base_rollup_tests, native_empty_block_calldata_hash)
 {
     DummyComposer composer = DummyComposer();
     // calldata_hash should be computed from leafs of 704 0 bytes. (0x00)
@@ -555,7 +549,7 @@ TEST_F(base_rollup_tests, empty_block_calldata_hash)
     run_cbind(inputs, outputs);
 }
 
-TEST_F(base_rollup_tests, calldata_hash)
+TEST_F(base_rollup_tests, native_calldata_hash)
 {
     // Execute the base rollup circuit with nullifiers, commitments and a contract deployment. Then check the calldata
     // hash against the expected value.
@@ -628,7 +622,7 @@ TEST_F(base_rollup_tests, calldata_hash)
     run_cbind(inputs, outputs);
 }
 
-TEST_F(base_rollup_tests, test_compute_membership_historic_private_data)
+TEST_F(base_rollup_tests, native_compute_membership_historic_private_data)
 {
     // Test membership works for empty trees
     DummyComposer composer = DummyComposer();
@@ -656,7 +650,7 @@ TEST_F(base_rollup_tests, test_compute_membership_historic_private_data)
         aztec3::circuits::rollup::native_base_rollup::base_rollup_circuit(composer, inputs);
 }
 
-TEST_F(base_rollup_tests, test_constants_dont_change)
+TEST_F(base_rollup_tests, native_constants_dont_change)
 {
     DummyComposer composer = DummyComposer();
     BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
@@ -666,7 +660,7 @@ TEST_F(base_rollup_tests, test_constants_dont_change)
     run_cbind(inputs, outputs);
 }
 
-TEST_F(base_rollup_tests, test_aggregate)
+TEST_F(base_rollup_tests, native_aggregate)
 {
     // TODO: Fix this when aggregation works
     DummyComposer composer = DummyComposer();
@@ -677,7 +671,7 @@ TEST_F(base_rollup_tests, test_aggregate)
               outputs.end_aggregation_object.public_inputs);
 }
 
-TEST_F(base_rollup_tests, test_subtree_height_is_0)
+TEST_F(base_rollup_tests, native_subtree_height_is_0)
 {
     DummyComposer composer = DummyComposer();
     BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
@@ -686,9 +680,9 @@ TEST_F(base_rollup_tests, test_subtree_height_is_0)
     ASSERT_EQ(outputs.rollup_subtree_height, fr(0));
 }
 
-TEST_F(base_rollup_tests, test_proof_verification) {}
+TEST_F(base_rollup_tests, native_proof_verification) {}
 
-TEST_F(base_rollup_tests, test_cbind_0)
+TEST_F(base_rollup_tests, native_cbind_0)
 {
     BaseRollupInputs inputs = dummy_base_rollup_inputs_with_vk_proof();
     BaseOrMergeRollupPublicInputs ignored_public_inputs;
