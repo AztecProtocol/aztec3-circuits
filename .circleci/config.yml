@@ -143,7 +143,7 @@ jobs:
       - *setup_env
       - run:
           name: 'Test'
-          command: cond_spot_run_tests aztec3-circuits-wasm-linux-clang-assert 1 wasm scripts/a3-tests -*.skip*:-*.circuit*
+          command: cond_spot_run_tests aztec3-circuits-wasm-linux-clang-assert 1 wasm scripts/a3-tests -*.skip*:*.circuit*
       - *save_logs
 
   aztec3-circuits-tests:

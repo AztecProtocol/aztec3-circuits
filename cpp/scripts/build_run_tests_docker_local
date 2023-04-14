@@ -21,7 +21,7 @@ DOCKERFILE=dockerfiles/Dockerfile.${ARCH}-linux-clang-assert
 IMAGE_URI=local-testing/aztec3-circuits-${ARCH}-linux-clang-assert:latest
 
 # build docker image
-#time docker build -f $DOCKERFILE -t $IMAGE_URI .
+time docker build -f $DOCKERFILE -t $IMAGE_URI .
 
 # run tests in docker image
 RUN_ARGS="$@" # helper var necessary for some reason to pass all args to docker run
