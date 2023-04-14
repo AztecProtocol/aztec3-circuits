@@ -1,7 +1,6 @@
 #include "nullifier_tree_testing_harness.hpp"
 #include <barretenberg/stdlib/merkle_tree/nullifier_tree/nullifier_memory_tree.hpp>
 #include <barretenberg/stdlib/merkle_tree/nullifier_tree/nullifier_leaf.hpp>
-#include <cstddef>
 #include <cstdint>
 #include <tuple>
 
@@ -15,8 +14,6 @@ NullifierMemoryTreeTestingHarness::NullifierMemoryTreeTestingHarness(size_t dept
 // Check for a larger value in an array
 bool check_has_less_than(std::vector<fr> const& values, fr const& value)
 {
-    // info("\n");
-    // info(value);
 
     // Must perform comparisons on integers
     uint256_t value_as_uint = uint256_t(value);
