@@ -161,17 +161,6 @@ generate_nullifier_tree_testing_values(BaseRollupInputs<NT> rollupInputs,
         reference_tree.append_value(insertion_val);
     }
 
-    // TODO: remove this output
-    // Log out reference leaf values
-    info("reference leafs");
-    for (size_t i = 8; uint256_t(i) < uint256_t(reference_tree.size()); ++i) {
-        info("i");
-        auto leaf = reference_tree.get_leaf(i);
-        info("leaf val: ", leaf.value);
-        info("leaf index: ", leaf.nextIndex);
-        info("leaf next val:    ", leaf.nextValue);
-    }
-
     // Get the hash paths etc from the insertion values
     auto witnesses_and_preimages = nullifier_tree.circuit_prep_batch_insert(insertion_values);
 
