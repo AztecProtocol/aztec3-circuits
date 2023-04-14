@@ -25,7 +25,7 @@ IMAGE_URI=local-testing/aztec3-circuits-${ARCH}-linux-clang-assert:latest
 
 # run tests in docker image
 RUN_ARGS="$@" # helper var necessary for some reason to pass all args to docker run
-time docker run --rm -t $IMAGE_URI /bin/bash -c "\
+time docker run --rm -t $IMAGE_URI /bin/sh -c "\
   set -e; \
   cd /usr/src/aztec3-circuits/cpp/barretenberg/cpp/srs_db; \
   ln -sf /usr/src/aztec3-circuits/cpp/barretenberg/cpp/srs_db /usr/src/aztec3-circuits/cpp/srs_db; \
