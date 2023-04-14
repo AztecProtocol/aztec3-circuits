@@ -32,4 +32,4 @@ time docker run --rm -t $IMAGE_URI /bin/sh -c "\
   ./download_ignition.sh $NUM_TRANSCRIPTS; \
   cd /usr/src/aztec3-circuits/cpp; \
   export PATH=\$PATH:~/.wasmtime/bin/; \
-  ./scripts/run_tests $RUN_ARGS;"
+  ./scripts/run_tests_local $RUN_ARGS;"

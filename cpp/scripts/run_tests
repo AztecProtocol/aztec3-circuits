@@ -1,61 +1,35 @@
 #!/bin/bash
 set -e
 
-# Run from aztec3-circuits/cpp/
-# This is for running tests locally
-# Assumes ignition SRS transcripts have already been downloaded
+# Called from CI, not locally unless AWS credentials are set up
 
 ###############################################################################
 # ARGS
 ###############################################################################
-# ARCH: x86_64 or wasm (MUST BE LOWERCASE)
-ARCH=$1
-# TESTS:
-# 1. names of test executables to run
-#   - (like "aztec3_circuits_kernel_tests aztec3_circuits_abis_tests")
-# 2. or "glob" (LOWERCASE) to run all built tests
-# 3. or a file containing a list of test
-TESTS=$2
-# GTEST_FILTER: optional pattern like "*native*" to filter gtests
-GTEST_FILTER=$3
+echo "Args: $@"
+NUM_TRANSCRIPTS=$1 # integer (MANDATORY)
+ARCH=$2 # x86_64 or wasm (MUST BE LOWERCASE) (MANDATORY) used in `run_tests`
+# TESTS=$3 (MANDATORY) used in `run_tests`
+# GTEST_FILTER=$4 (optional) used in `run_tests`
+# *** See `run_tests` for the args forwarded to that script
 
-# Shift away the args
-shift
-shift
-if [ -n "$GTEST_FILTER" ]; then
-  shift
-fi
+shift # arg1 (num transcripts) is not forwarded to `run_tests`
+
 # END ARGS
 ###############################################################################
 
-# uppercase $ARCH and compare to WASM
-if [ "$ARCH" != "wasm" ]; then
-  # x86_64 / anything other than wasm
-  BUILD_DIR=build
-else
-  BUILD_DIR=build-wasm
-fi
+$(aws ecr get-login --region us-east-2 --no-include-email) 2> /dev/null
 
-# if TESTS is GLOB or empty, run all built tests
-# if TESTS is a file, assume it contains a list of tests to run
-# otherwise assume TESTS itself is a list of tests to run
-if [ "$TESTS" == "glob" ] || [ -z "$TESTS" ]; then
-  echo "    No test file specified. Globbing $BUILD_DIR/bin for tests."
-  TESTS=$(cd $BUILD_DIR/bin && find -type f -executable | grep "test" | tr '\n' ' ')
-elif [ -f "$TESTS" ]; then
-  TESTS=$(cat $TESTS | tr '\n' ' ')
-fi
+IMAGE_URI=278380418400.dkr.ecr.us-east-2.amazonaws.com/aztec3-circuits-$ARCH-linux-clang-assert:cache-$COMMIT_HASH
+docker pull $IMAGE_URI
 
-echo "*** Running $ARCH tests${GTEST_FILTER:+ (with filter: $GTEST_FILTER)}: $TESTS ***"
-
-cd $BUILD_DIR;
-for BIN in $TESTS; do
-  # if gtest filter is non-empty, use it
-  if [ "$ARCH" != "wasm" ]; then
-    # gtest filter is a command line arg to native executable
-    ./bin/$BIN ${GTEST_FILTER:+--gtest_filter=$GTEST_FILTER} $@
-  else
-    # gtest filter is an env var to wasmtime
-    wasmtime --dir .. ./bin/$BIN --env ${GTEST_FILTER:+--env GTEST_FILTER=$GTEST_FILTER} --env GTEST_COLOR=1
-  fi
-done
+# run tests in docker image
+RUN_ARGS="$@" # helper var necessary for some reason to pass all args to docker run
+time docker run --rm -t $IMAGE_URI /bin/sh -c "\
+  set -e; \
+  cd /usr/src/aztec3-circuits/cpp/barretenberg/cpp/srs_db; \
+  ln -sf /usr/src/aztec3-circuits/cpp/barretenberg/cpp/srs_db /usr/src/aztec3-circuits/cpp/srs_db; \
+  ./download_ignition.sh $NUM_TRANSCRIPTS; \
+  cd /usr/src/aztec3-circuits/cpp; \
+  export PATH=\$PATH:~/.wasmtime/bin/; \
+  ./scripts/run_tests_local $RUN_ARGS;"
