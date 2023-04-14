@@ -250,6 +250,13 @@ NT::fr create_nullifier_subtree(std::array<NullifierLeaf, KERNEL_NEW_NULLIFIERS_
     return nullifier_subtree.root();
 }
 
+void print_low_nullifier(NullifierLeaf leaf)
+{
+    info("leaf val: ", leaf.value);
+    info("leaf index: ", leaf.nextIndex);
+    info("leaf next val:    ", leaf.nextValue);
+}
+
 /**
  * @brief Check non membership of each of the generated nullifiers in the current tree
  *
@@ -315,10 +322,13 @@ AppendOnlySnapshot check_nullifier_tree_non_membership_and_insert_to_tree(DummyC
                     bool matched = false;
 
                     for (size_t k = 0; k < nullifier_index && !matched; k++) {
-                        if ((uint256_t(nullifier_insertion_subtree[k].nextValue) > uint256_t(nullifier) &&
-                             uint256_t(nullifier_insertion_subtree[k].value) < uint256_t(nullifier)) ||
-                            (nullifier_insertion_subtree[k].nextValue == 0 &&
-                             nullifier_insertion_subtree[k].nextIndex == 0)) {
+                        if (nullifier_insertion_subtree[k].value == 0) {
+                            continue;
+                        }
+
+                        if ((uint256_t(nullifier_insertion_subtree[k].value) < uint256_t(nullifier)) &&
+                            (uint256_t(nullifier_insertion_subtree[k].nextValue) > uint256_t(nullifier) ||
+                             nullifier_insertion_subtree[k].nextValue == 0)) {
 
                             matched = true;
                             // Update pointers
