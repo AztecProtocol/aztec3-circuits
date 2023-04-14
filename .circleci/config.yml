@@ -194,6 +194,6 @@ workflows:
       - wasm-linux-clang-assert: *defaults
       - x86_64-linux-clang: *defaults
       - x86_64-linux-clang-assert: *defaults
-      - aztec3-circuits-wasm-tests: *a3_wasm_test
+      - aztec3-circuits-wasm-tests-native: *a3_wasm_test
       - aztec3-circuits-tests: *a3_test
       #- aztec3-circuit-<individual>-tests: *a3_test
