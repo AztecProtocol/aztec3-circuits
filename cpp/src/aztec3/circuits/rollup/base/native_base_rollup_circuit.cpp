@@ -250,13 +250,6 @@ NT::fr create_nullifier_subtree(std::array<NullifierLeaf, KERNEL_NEW_NULLIFIERS_
     return nullifier_subtree.root();
 }
 
-void print_low_nullifier(NullifierLeaf leaf)
-{
-    info("leaf val: ", leaf.value);
-    info("leaf index: ", leaf.nextIndex);
-    info("leaf next val:    ", leaf.nextValue);
-}
-
 /**
  * @brief Check non membership of each of the generated nullifiers in the current tree
  *

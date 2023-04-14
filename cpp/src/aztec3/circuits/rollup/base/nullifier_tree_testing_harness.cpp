@@ -123,12 +123,9 @@ NullifierMemoryTreeTestingHarness::circuit_prep_batch_insert(std::vector<fr> con
 
         bool has_less_than = false;
         if (prev_nodes != touched_nodes.end()) {
-            // is_greater_value = true;
             // TODO: bring this back and fix
             has_less_than = check_has_less_than(prev_nodes->second, new_value);
         }
-        info("\n");
-        info("new value: ", new_value, " is greater value: ", has_less_than);
         // If there is a lower value in the tree, we need to check the current low nullifiers for one that can be used
         if (has_less_than) {
 
