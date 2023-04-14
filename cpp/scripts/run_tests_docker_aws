@@ -6,6 +6,7 @@ set -e
 ###############################################################################
 # ARGS
 ###############################################################################
+echo "Args: $@"
 NUM_TRANSCRIPTS=$1 # integer (MANDATORY)
 ARCH=$2 # x86_64 or wasm (MUST BE LOWERCASE) (MANDATORY) used in `run_tests`
 # TESTS=$3 (MANDATORY) used in `run_tests`
