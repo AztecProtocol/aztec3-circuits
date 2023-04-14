@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aztec3/constants.hpp"
+#include "aztec3/utils/array.hpp"
 #include "call_context_reconciliation_data.hpp"
 #include "../call_stack_item.hpp"
 #include "../membership_witness.hpp"
@@ -24,19 +25,20 @@ template <typename NCT> struct PrivateCallData {
     typedef typename NCT::boolean boolean;
     typedef typename NCT::VK VK;
 
-    CallStackItem<NCT, CallType::Private> call_stack_item;
+    CallStackItem<NCT, CallType::Private> call_stack_item{};
 
-    std::array<CallStackItem<NCT, CallType::Private>, PRIVATE_CALL_STACK_LENGTH> private_call_stack_preimages;
+    std::array<CallStackItem<NCT, CallType::Private>, PRIVATE_CALL_STACK_LENGTH> private_call_stack_preimages{};
 
     // std::array<CallStackItem<NCT, CallType::Public>, PUBLIC_CALL_STACK_LENGTH> public_call_stack_preimages;
 
-    NativeTypes::Proof proof; // TODO: how to express proof as native/circuit type when it gets used as a buffer?
+    NativeTypes::Proof proof{}; // TODO: how to express proof as native/circuit type when it gets used as a buffer?
     std::shared_ptr<VK> vk;
 
-    MembershipWitness<NCT, FUNCTION_TREE_HEIGHT> function_leaf_membership_witness;
-    MembershipWitness<NCT, CONTRACT_TREE_HEIGHT> contract_leaf_membership_witness;
+    MembershipWitness<NCT, FUNCTION_TREE_HEIGHT> function_leaf_membership_witness{};
+    MembershipWitness<NCT, CONTRACT_TREE_HEIGHT> contract_leaf_membership_witness{};
 
-    fr portal_contract_address; // an ETH address
+    fr portal_contract_address = 0; // an ETH address
+    fr acir_hash = 0;
 
     boolean operator==(PrivateCallData<NCT> const& other) const
     {
@@ -45,7 +47,7 @@ template <typename NCT> struct PrivateCallData {
                private_call_stack_preimages == other.private_call_stack_preimages && vk == other.vk &&
                function_leaf_membership_witness == other.function_leaf_membership_witness &&
                contract_leaf_membership_witness == other.contract_leaf_membership_witness &&
-               portal_contract_address == other.portal_contract_address;
+               portal_contract_address == other.portal_contract_address && acir_hash == other.acir_hash;
     };
 
     // WARNING: the `proof` does NOT get converted! (because the current implementation of `verify_proof` takes a proof
@@ -72,6 +74,7 @@ template <typename NCT> struct PrivateCallData {
             to_circuit_type(contract_leaf_membership_witness),
 
             to_ct(portal_contract_address),
+            to_ct(acir_hash),
         };
 
         return data;
@@ -89,6 +92,7 @@ template <typename NCT> void read(uint8_t const*& it, PrivateCallData<NCT>& obj)
     read(it, obj.function_leaf_membership_witness);
     read(it, obj.contract_leaf_membership_witness);
     read(it, obj.portal_contract_address);
+    read(it, obj.acir_hash);
 };
 
 template <typename NCT> void write(std::vector<uint8_t>& buf, PrivateCallData<NCT> const& obj)
@@ -102,6 +106,7 @@ template <typename NCT> void write(std::vector<uint8_t>& buf, PrivateCallData<NC
     write(buf, obj.function_leaf_membership_witness);
     write(buf, obj.contract_leaf_membership_witness);
     write(buf, obj.portal_contract_address);
+    write(buf, obj.acir_hash);
 };
 
 template <typename NCT> std::ostream& operator<<(std::ostream& os, PrivateCallData<NCT> const& obj)
@@ -118,7 +123,8 @@ template <typename NCT> std::ostream& operator<<(std::ostream& os, PrivateCallDa
               << obj.function_leaf_membership_witness << "\n"
               << "contract_leaf_membership_witness:\n"
               << obj.contract_leaf_membership_witness << "\n"
-              << "portal_contract_address: " << obj.portal_contract_address << "\n";
+              << "portal_contract_address: " << obj.portal_contract_address << "\n"
+              << "acir_hash: " << obj.acir_hash << "\n";
 }
 
 } // namespace aztec3::circuits::abis::private_kernel
