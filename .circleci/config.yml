@@ -134,7 +134,7 @@ jobs:
           name: 'Build'
           command: cond_spot_run_build aztec3-circuits-x86_64-linux-clang-assert 64
 
-  aztec3-circuits-wasm-tests:
+  aztec3-circuits-wasm-tests-native:
     docker:
       - image: aztecprotocol/alpine-build-image
     resource_class: small
@@ -143,7 +143,7 @@ jobs:
       - *setup_env
       - run:
           name: 'Test'
-          command: cond_spot_run_tests aztec3-circuits-wasm-linux-clang-assert 1 a3-tests USE_WASM_TIME
+          command: cond_spot_run_tests aztec3-circuits-wasm-linux-clang-assert 1 wasm a3-tests -.skip*:-.circuit*
       - *save_logs
 
   aztec3-circuits-tests:
@@ -155,7 +155,7 @@ jobs:
       - *setup_env
       - run:
           name: 'Test'
-          command: cond_spot_run_tests aztec3-circuits-x86_64-linux-clang-assert 1 a3-tests
+          command: cond_spot_run_tests aztec3-circuits-x86_64-linux-clang-assert 1 x86_64 a3-tests
       - *save_logs
 
   #aztec3-circuits-<individual>-tests:
@@ -167,7 +167,7 @@ jobs:
   #    - *setup_env
   #    - run:
   #        name: 'Test'
-  #        command: cond_spot_run_tests aztec3-circuits-x86_64-linux-clang-assert 1 <individual>_tests
+  #        command: cond_spot_run_tests aztec3-circuits-x86_64-linux-clang-assert 1 x86_64 <individual>_tests
   #    - *save_logs
 
 # Repeatable config for defining the workflow below.
