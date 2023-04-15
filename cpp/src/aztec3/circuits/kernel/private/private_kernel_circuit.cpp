@@ -188,39 +188,6 @@ void update_end_values(PrivateInputs<CT> const& private_inputs, PublicInputs<CT>
         push_array_to_array<Composer>(this_private_call_stack, public_inputs.end.private_call_stack);
     }
 
-    { // verify public key hash matches ethereum address of the sender
-        CT::address sender_address = private_inputs.signed_tx_request.tx_request.from;
-        CT::secp256k1_point sender_public_key = private_inputs.signed_tx_request.tx_request.from_public_key;
-
-        CT::byte_array sender_public_key_bytes = sender_public_key.to_byte_array();
-        CT::byte_array sender_public_key_hash = stdlib::keccak<Composer>::hash(sender_public_key_bytes);
-        CT::byte_array sender_address_bytes = CT::byte_array(sender_address.to_field());
-
-        // Check if the sender address matches the keccak hash of the public key
-        // Specifically, first 12 bytes must be 0, remaining 20 bytes must match.
-        for (size_t i = 0; i < 12; i++) {
-            sender_address_bytes[i].assert_is_zero(format("sender address at index ", i, " is non-zero"));
-        }
-        for (size_t i = 12; i < 32; i++) {
-            sender_address_bytes[i].assert_equal(
-                sender_public_key_hash[i], format("hash of public key does not match the sender address at index ", i));
-        }
-    }
-
-    { // verify signature
-        CT::byte_array message = private_inputs.signed_tx_request.compute_signing_message();
-        auto sig_result = stdlib::ecdsa::verify_signature<Composer,
-                                                          stdlib::secp256k1<Composer>,
-                                                          stdlib::secp256k1<Composer>::fq_ct,
-                                                          stdlib::secp256k1<Composer>::bigfr_ct,
-                                                          stdlib::secp256k1<Composer>::g1_bigfr_ct>(
-            message,
-            private_inputs.signed_tx_request.tx_request.from_public_key,
-            private_inputs.signed_tx_request.signature);
-
-        sig_result.assert_equal(true, "signature verification failed");
-    }
-
     // {
     //     const auto& l1_msg_stack = private_call_public_inputs.l1_msg_stack;
     //     std::array<CT::fr, L1_MSG_STACK_LENGTH> l1_call_stack;
@@ -297,6 +264,40 @@ void validate_inputs(PrivateInputs<CT> const& private_inputs)
     CT::fr start_public_call_stack_length = array_length<Composer>(start.public_call_stack);
     CT::fr start_l1_msg_stack_length = array_length<Composer>(start.l1_msg_stack);
 
+    {
+        // Verify public key hash matches ethereum address of the sender
+        // TODO(Suyash): Do we want to perform this check only for base case?
+        // TODO(Suyash): I think its okay to check this for each kernel iteration.
+        CT::address sender_address = private_inputs.signed_tx_request.tx_request.from;
+        CT::secp256k1_point sender_public_key = private_inputs.signed_tx_request.tx_request.from_public_key;
+
+        CT::byte_array sender_public_key_bytes = sender_public_key.to_byte_array();
+        CT::byte_array sender_public_key_hash = stdlib::keccak<Composer>::hash(sender_public_key_bytes);
+        CT::byte_array sender_address_bytes = CT::byte_array(sender_address.to_field());
+
+        // Check if the sender address matches the keccak hash of the public key
+        // Specifically, first 12 bytes must be 0, remaining 20 bytes must match.
+        for (size_t i = 0; i < 12; i++) {
+            sender_address_bytes[i].assert_is_zero(format("sender address at index ", i, " is non-zero"));
+        }
+        for (size_t i = 12; i < 32; i++) {
+            sender_address_bytes[i].assert_equal(
+                sender_public_key_hash[i], format("hash of public key does not match the sender address at index ", i));
+        }
+    }
+
+    // Verify signature against the first function being called (subsequent function calls do not
+    // need to be signed over by the sender, the sender only signs the inputs to the very first function)
+    CT::byte_array message = private_inputs.signed_tx_request.compute_signing_message();
+    auto sig_verification_result = stdlib::ecdsa::verify_signature<Composer,
+                                                                   stdlib::secp256k1<Composer>,
+                                                                   stdlib::secp256k1<Composer>::fq_ct,
+                                                                   stdlib::secp256k1<Composer>::bigfr_ct,
+                                                                   stdlib::secp256k1<Composer>::g1_bigfr_ct>(
+        message,
+        private_inputs.signed_tx_request.tx_request.from_public_key,
+        private_inputs.signed_tx_request.signature);
+
     // Recall: we can't do traditional `if` statements in a circuit; all code paths are always executed. The below is
     // some syntactic sugar, which seeks readability similar to an `if` statement.
 
@@ -318,7 +319,7 @@ void validate_inputs(PrivateInputs<CT> const& private_inputs)
           "Storage contract address must be that of the called contract" },
 
         { private_inputs.previous_kernel.vk->contains_recursive_proof == false,
-          "Mock kernel proof must not contain a recursive proof" }
+          "Mock kernel proof must not contain a recursive proof" },
 
         // TODO: Assert that the previous kernel data is empty. (Or rather, the verify_proof() function needs a valid
         // dummy proof and vk to complete execution, so actually what we want is for that mockvk to be
@@ -327,7 +328,8 @@ void validate_inputs(PrivateInputs<CT> const& private_inputs)
         // number of public inputs each of them spits out.
         // TODO (later): merkle membership check that the vk from the previous data is present at leaf 0.
 
-        // TODO: verify signed tx request against current function being called
+        // Verify signed tx request against current function being called
+        { sig_verification_result == true, "Signature verification failed for the entry function" }
     };
     is_base_case.must_imply(base_case_conditions);
 
