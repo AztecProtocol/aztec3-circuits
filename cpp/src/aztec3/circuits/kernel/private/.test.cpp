@@ -30,6 +30,7 @@
 #include <barretenberg/common/map.hpp>
 #include <barretenberg/common/test.hpp>
 #include <barretenberg/stdlib/merkle_tree/membership.hpp>
+#include <barretenberg/stdlib/hash/keccak/keccak.hpp>
 #include <gtest/gtest.h>
 
 namespace {
@@ -75,6 +76,22 @@ const NT::fr EMPTY_FUNCTION_LEAF = FunctionLeafPreimage<NT>{}.hash(); // hash of
 const NT::fr EMPTY_CONTRACT_LEAF = NewContractData<NT>{}.hash();      // hash of empty/0 preimage
 const auto& EMPTY_FUNCTION_SIBLINGS = compute_empty_sibling_path<NT, aztec3::FUNCTION_TREE_HEIGHT>(EMPTY_FUNCTION_LEAF);
 const auto& EMPTY_CONTRACT_SIBLINGS = compute_empty_sibling_path<NT, aztec3::CONTRACT_TREE_HEIGHT>(EMPTY_CONTRACT_LEAF);
+
+/**
+ * @brief Computes the ethereum address from a public key.
+ *
+ * @param public_key
+ * @return NT::address 20-byte ethereum address
+ */
+NT::address compute_ethereum_address(const NT::secp256k1_point& public_key)
+{
+    std::vector<uint8_t> public_key_hash = stdlib::keccak<UltraComposer>::hash_native(public_key.to_buffer());
+    std::vector<uint8_t> chopped_public_key_hash(public_key_hash.size(), 0);
+    for (size_t i = 12; i < 32; i++) {
+        chopped_public_key_hash[i] = public_key_hash[i];
+    }
+    return NT::fr::serialize_from_buffer(&chopped_public_key_hash[0]);
+}
 
 } // namespace
 
@@ -272,9 +289,13 @@ PrivateInputs<NT> do_private_call_get_kernel_inputs(bool const is_constructor,
     DB db;
     NativeOracle oracle =
         is_constructor
-            ? NativeOracle(
-                  db, contract_address, function_data, call_context, contract_deployment_data, msg_sender_private_key)
-            : NativeOracle(db, contract_address, function_data, call_context, msg_sender_private_key);
+            ? NativeOracle(db,
+                           contract_address,
+                           function_data,
+                           call_context,
+                           contract_deployment_data,
+                           NT::fr(msg_sender_private_key))
+            : NativeOracle(db, contract_address, function_data, call_context, NT::fr(msg_sender_private_key));
 
     OracleWrapper oracle_wrapper = OracleWrapper(private_circuit_composer, oracle);
 
