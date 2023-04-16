@@ -57,6 +57,8 @@ using aztec3::circuits::abis::private_kernel::PrivateCallData;
 using aztec3::circuits::abis::private_kernel::PrivateInputs;
 using aztec3::circuits::abis::private_kernel::PublicInputs;
 
+using aztec3::circuits::kernel::private_kernel::utils::compute_ethereum_address_from_public_key;
+
 using aztec3::circuits::apps::test_apps::basic_contract_deployment::constructor;
 using aztec3::circuits::apps::test_apps::escrow::deposit;
 
@@ -76,22 +78,6 @@ const NT::fr EMPTY_FUNCTION_LEAF = FunctionLeafPreimage<NT>{}.hash(); // hash of
 const NT::fr EMPTY_CONTRACT_LEAF = NewContractData<NT>{}.hash();      // hash of empty/0 preimage
 const auto& EMPTY_FUNCTION_SIBLINGS = compute_empty_sibling_path<NT, aztec3::FUNCTION_TREE_HEIGHT>(EMPTY_FUNCTION_LEAF);
 const auto& EMPTY_CONTRACT_SIBLINGS = compute_empty_sibling_path<NT, aztec3::CONTRACT_TREE_HEIGHT>(EMPTY_CONTRACT_LEAF);
-
-/**
- * @brief Computes the ethereum address from a public key.
- *
- * @param public_key
- * @return NT::address 20-byte ethereum address
- */
-NT::address compute_ethereum_address(const NT::secp256k1_point& public_key)
-{
-    std::vector<uint8_t> public_key_hash = stdlib::keccak<UltraComposer>::hash_native(public_key.to_buffer());
-    std::vector<uint8_t> chopped_public_key_hash(public_key_hash.size(), 0);
-    for (size_t i = 12; i < 32; i++) {
-        chopped_public_key_hash[i] = public_key_hash[i];
-    }
-    return NT::fr::serialize_from_buffer(&chopped_public_key_hash[0]);
-}
 
 } // namespace
 
@@ -189,7 +175,7 @@ PrivateInputs<NT> do_private_call_get_kernel_inputs(bool const is_constructor,
 
     const NT::secp256k1_fr msg_sender_private_key = NT::secp256k1_fr::random_element();
     const NT::secp256k1_point msg_sender_public_key = NT::secp256k1_group::one * msg_sender_private_key;
-    const NT::address msg_sender = compute_ethereum_address(msg_sender_public_key);
+    const NT::address msg_sender = compute_ethereum_address_from_public_key(msg_sender_public_key);
     const NT::address tx_origin = msg_sender;
 
     FunctionData<NT> function_data{

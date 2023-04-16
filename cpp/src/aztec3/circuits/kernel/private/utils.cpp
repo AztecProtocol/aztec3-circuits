@@ -4,6 +4,8 @@
 #include <aztec3/circuits/mock/mock_kernel_circuit.hpp>
 #include "aztec3/circuits/abis/private_kernel/new_contract_data.hpp"
 
+#include <barretenberg/stdlib/hash/keccak/keccak.hpp>
+
 namespace {
 using NT = aztec3::utils::types::NativeTypes;
 using AggregationObject = aztec3::utils::types::NativeTypes::AggregationObject;
@@ -33,6 +35,16 @@ PreviousKernelData<NT> dummy_previous_kernel_with_vk_proof()
         .vk = mock_kernel_vk,
     };
     return previous_kernel;
+}
+
+NT::address compute_ethereum_address_from_public_key(const NT::secp256k1_point& public_key)
+{
+    std::vector<uint8_t> public_key_hash = stdlib::keccak<UltraComposer>::hash_native(public_key.to_buffer());
+    std::vector<uint8_t> chopped_public_key_hash(public_key_hash.size(), 0);
+    for (size_t i = 12; i < 32; i++) {
+        chopped_public_key_hash[i] = public_key_hash[i];
+    }
+    return NT::fr::serialize_from_buffer(&chopped_public_key_hash[0]);
 }
 
 } // namespace aztec3::circuits::kernel::private_kernel::utils
