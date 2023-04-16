@@ -46,8 +46,9 @@ template <typename Composer> struct CircuitTypes {
     typedef stdlib::bn254<Composer> bn254;
     // typedef bn254::g1_ct bn254_point;
     typedef stdlib::element<Composer, fq, fr, barretenberg::g1> bn254_point; // affine
-    typedef stdlib::secp256k1<Composer> secp256k1;
 
+    typedef stdlib::secp256k1<Composer> secp256k1;
+    typedef typename secp256k1::bigfr_ct secp256k1_fr;
     typedef typename secp256k1::g1_bigfr_ct secp256k1_point;
 
     typedef stdlib::bit_array<Composer> bit_array;

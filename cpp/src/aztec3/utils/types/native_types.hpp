@@ -43,7 +43,6 @@ struct NativeTypes {
 
     typedef secp256k1::g1 secp256k1_group;
     typedef secp256k1::g1::Fr secp256k1_fr;
-    typedef secp256k1::g1::element secp256k1_jac_point;
     typedef secp256k1::g1::affine_element secp256k1_point;
 
     typedef std::vector<bool> bit_array;
