@@ -1,9 +1,18 @@
 #!/bin/bash
 set -e
 
+# To be called LOCALLY for testing WITHOUT docker.
+# Also serves as a core/helper script called by
+# `run_tests` and `build_run_tests_docker_local`
+# when testing WITH docker.
+#
+# Contains core logic for running tests in the current environment.
+#
 # Run from aztec3-circuits/cpp/
-# This is for running tests locally
-# Assumes ignition SRS transcripts have already been downloaded
+# Example:
+# ./scripts/run_tests_local x86_64 glob -*.circuit*
+#
+# Note: Assumes ignition SRS transcripts have already been downloaded
 
 ###############################################################################
 # ARGS

@@ -1,7 +1,13 @@
 #!/bin/bash
 set -e
 
-# Called from CI, not locally unless AWS credentials are set up
+# To be called from CI for testing with docker and AWS.
+# Can't be called locally unless AWS credentials are set up.
+#
+# Call from config.yml
+# Example:
+#   command: cond_spot_run_tests circuits-wasm-linux-clang-assert 1 wasm scripts/a3-tests -*.skip*:*.circuit*
+
 
 ###############################################################################
 # ARGS

@@ -1,7 +1,12 @@
 #!/bin/bash
 set -e
 
-# To be called LOCALLY only
+# To be called only LOCALLY for testing WITH docker.
+# Builds a docker image and runs tests in it.
+#
+# Run from aztec3-circuits/cpp/
+# Example
+# ./scripts/build_run_tests_docker_local 1 x86_64 glob -*.circuit*
 
 ###############################################################################
 # ARGS
