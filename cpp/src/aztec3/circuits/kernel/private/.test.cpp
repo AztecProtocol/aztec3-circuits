@@ -602,7 +602,7 @@ TEST(private_kernel_tests, skipinwasm_native_dummy_previous_kernel_cbind)
     uint8_t const* cbind_previous_kernel_buf;
     size_t const cbind_buf_size = private_kernel__dummy_previous_kernel(&cbind_previous_kernel_buf);
 
-    auto const& previous_kernel = utils::dummy_previous_kernel_with_vk_proof();
+    auto const& previous_kernel = utils::dummy_previous_kernel_with_vk();
     std::vector<uint8_t> expected_vec;
     write(expected_vec, previous_kernel);
 

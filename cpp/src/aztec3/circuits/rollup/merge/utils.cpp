@@ -24,7 +24,7 @@ using aztec3::circuits::abis::MembershipWitness;
 using aztec3::circuits::abis::MergeRollupInputs;
 using aztec3::circuits::abis::PreviousRollupData;
 
-using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel_with_vk_proof;
+using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel_with_vk;
 
 } // namespace
 
@@ -46,7 +46,7 @@ std::array<PreviousRollupData<NT>, 2> previous_rollups_with_vk_proof_that_follow
 
     // just for mocked vk and proof
     // Need a way to extract a proof from Base Rollup Circuit. Until then use kernel as a hack.
-    PreviousKernelData<NT> mocked_kernel = dummy_previous_kernel_with_vk_proof();
+    PreviousKernelData<NT> mocked_kernel = dummy_previous_kernel_with_vk();
 
     PreviousRollupData<NT> previous_rollup1 = {
         .base_or_merge_rollup_public_inputs = base_public_input1,

@@ -73,7 +73,7 @@ using aztec3::circuits::apps::test_apps::basic_contract_deployment::constructor;
 using aztec3::circuits::apps::test_apps::escrow::deposit;
 
 // using aztec3::circuits::mock::mock_circuit;
-using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel_with_vk_proof;
+using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel_with_vk;
 using aztec3::circuits::mock::mock_kernel_circuit;
 using aztec3::circuits::rollup::base::utils::dummy_base_rollup_inputs_with_vk_proof;
 using aztec3::circuits::rollup::merge::utils::previous_rollups_with_vk_proof_that_follow_on;

@@ -79,7 +79,7 @@ using aztec3::circuits::apps::test_apps::basic_contract_deployment::constructor;
 using aztec3::circuits::apps::test_apps::escrow::deposit;
 
 // using aztec3::circuits::mock::mock_circuit;
-using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel_with_vk_proof;
+using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel_with_vk;
 using aztec3::circuits::mock::mock_kernel_circuit;
 using aztec3::circuits::rollup::base::utils::dummy_base_rollup_inputs_with_vk_proof;
 // using aztec3::circuits::mock::mock_kernel_inputs;
@@ -108,6 +108,7 @@ class base_rollup_tests : public ::testing::Test {
                    BaseOrMergeRollupPublicInputs& expected_public_inputs,
                    bool compare_pubins = true)
     {
+        info("Retesting via cbinds....");
         // TODO might be able to get rid of proving key buffer
         uint8_t const* pk_buf;
         size_t pk_size = base_rollup__init_proving_key(&pk_buf);
@@ -157,7 +158,7 @@ class base_rollup_tests : public ::testing::Test {
         free((void*)vk_buf);
         // free((void*)proof_data);
         free((void*)public_inputs_buf);
-        info("finished retesting via cbinds...");
+        // info("finished retesting via cbinds...");
     }
 };
 
@@ -180,7 +181,7 @@ std::array<fr, N> get_sibling_path(stdlib::merkle_tree::MemoryTree tree,
     return siblingPath;
 }
 
-TEST_F(base_rollup_tests, native_native_no_new_contract_leafs)
+TEST_F(base_rollup_tests, native_no_new_contract_leafs)
 {
     DummyComposer composer = DummyComposer();
     // When there are no contract deployments. The contract tree should be inserting 0 leafs, (not empty leafs);

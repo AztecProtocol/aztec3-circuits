@@ -14,7 +14,7 @@ using aztec3::circuits::mock::mock_kernel_circuit;
 
 namespace aztec3::circuits::kernel::private_kernel::utils {
 
-PreviousKernelData<NT> dummy_previous_kernel_with_vk_proof()
+PreviousKernelData<NT> dummy_previous_kernel_with_vk(bool and_proof = false)
 {
     PreviousKernelData<NT> init_previous_kernel{};
 
@@ -23,7 +23,7 @@ PreviousKernelData<NT> dummy_previous_kernel_with_vk_proof()
     auto mock_kernel_public_inputs = mock_kernel_circuit(mock_kernel_composer, init_previous_kernel.public_inputs);
 
     plonk::stdlib::types::Prover mock_kernel_prover = mock_kernel_composer.create_prover();
-    NT::Proof mock_kernel_proof = mock_kernel_prover.construct_proof();
+    NT::Proof mock_kernel_proof = and_proof ? mock_kernel_prover.construct_proof() : NT::Proof{};
 
     std::shared_ptr<NT::VK> mock_kernel_vk = mock_kernel_composer.compute_verification_key();
 
