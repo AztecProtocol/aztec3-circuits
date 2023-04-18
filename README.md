@@ -1,3 +1,5 @@
+NOTE: This repository is now in read-only mode. Please use the circuits folder in https://github.com/AztecProtocol/aztec3-packages/ instead.
+
 # Aztec 3 Circuit Onboarding
 
 ###### tags: `aztec-3, circuits`
