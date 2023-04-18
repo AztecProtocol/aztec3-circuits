@@ -157,7 +157,8 @@ std::shared_ptr<NT::VK> gen_func_vk(bool is_constructor, private_function const&
  */
 PrivateInputs<NT> do_private_call_get_kernel_inputs(bool const is_constructor,
                                                     private_function const& func,
-                                                    std::vector<NT::fr> const& args_vec)
+                                                    std::vector<NT::fr> const& args_vec,
+                                                    bool real_kernel_circuit = false)
 {
     //***************************************************************************
     // Initialize some inputs to private call and kernel circuits
@@ -309,15 +310,13 @@ PrivateInputs<NT> do_private_call_get_kernel_inputs(bool const is_constructor,
     SignedTxRequest<NT> signed_tx_request = SignedTxRequest<NT>{
         .tx_request = tx_request,
 
-        //     .signature = TODO: need a method for signing a TxRequest.
+        //.signature = TODO: need a method for signing a TxRequest.
     };
 
     //***************************************************************************
     // We mock a kernel circuit proof for the base case of kernel recursion (because even the first iteration of the
     // kernel circuit expects to verify some previous kernel circuit).
     //***************************************************************************
-    Composer mock_kernel_composer = Composer("../barretenberg/cpp/srs_db/ignition");
-
     // TODO: we have a choice to make:
     // Either the `end` state of the mock kernel's public inputs can be set equal to the public call we _want_ to
     // verify in the first round of recursion, OR, we have some fiddly conditional logic in the circuit to ignore
@@ -332,38 +331,21 @@ PrivateInputs<NT> do_private_call_get_kernel_inputs(bool const is_constructor,
     std::array<NT::fr, KERNEL_PRIVATE_CALL_STACK_LENGTH> initial_kernel_private_call_stack{};
     initial_kernel_private_call_stack[0] = call_stack_item.hash();
 
-    // Some test data:
-    auto mock_kernel_public_inputs = PublicInputs<NT>{
-        .end =
-            AccumulatedData<NT>{
-                .private_call_stack = initial_kernel_private_call_stack,
+    // Get dummy previous kernel
+    auto mock_previous_kernel = utils::dummy_previous_kernel(real_kernel_circuit);
+    // Fill in some important fields in public inputs
+    mock_previous_kernel.public_inputs.end.private_call_stack = initial_kernel_private_call_stack;
+    mock_previous_kernel.public_inputs.constants = ConstantData<NT>{
+        .old_tree_roots =
+            OldTreeRoots<NT>{
+                .private_data_tree_root = private_circuit_public_inputs.historic_private_data_tree_root,
+                // .nullifier_tree_root =
+                .contract_tree_root = private_circuit_public_inputs.historic_contract_tree_root,
+                // .private_kernel_vk_tree_root =
             },
-
-        // These will be constant throughout all recursions, so can be set to those of the first function call - the tx.
-        .constants =
-            ConstantData<NT>{
-                .old_tree_roots =
-                    OldTreeRoots<NT>{
-                        .private_data_tree_root = private_circuit_public_inputs.historic_private_data_tree_root,
-                        // .nullifier_tree_root =
-                        .contract_tree_root = private_circuit_public_inputs.historic_contract_tree_root,
-                        // .private_kernel_vk_tree_root =
-                    },
-                .tx_context = tx_request.tx_context,
-            },
-
-        .is_private = true,
-        // .is_public = false,
-        // .is_contract_deployment = false,
+        .tx_context = tx_request.tx_context,
     };
-
-    mock_kernel_circuit(mock_kernel_composer, mock_kernel_public_inputs);
-
-    Prover mock_kernel_prover = mock_kernel_composer.create_prover();
-    NT::Proof mock_kernel_proof = mock_kernel_prover.construct_proof();
-    // info("\nmock_kernel_proof: ", mock_kernel_proof.proof_data);
-
-    std::shared_ptr<NT::VK> mock_kernel_vk = mock_kernel_composer.compute_verification_key();
+    mock_previous_kernel.public_inputs.is_private = true;
 
     //***************************************************************************
     // Now we can construct the full private inputs to the kernel circuit
@@ -371,12 +353,7 @@ PrivateInputs<NT> do_private_call_get_kernel_inputs(bool const is_constructor,
     PrivateInputs<NT> kernel_private_inputs = PrivateInputs<NT>{
         .signed_tx_request = signed_tx_request,
 
-        .previous_kernel =
-            PreviousKernelData<NT>{
-                .public_inputs = mock_kernel_public_inputs,
-                .proof = mock_kernel_proof,
-                .vk = mock_kernel_vk,
-            },
+        .previous_kernel = mock_previous_kernel,
 
         .private_call =
             PrivateCallData<NT>{
@@ -439,7 +416,7 @@ TEST(private_kernel_tests, circuit_deposit)
     NT::fr const& asset_id = 1;
     NT::fr const& memo = 999;
 
-    auto const& private_inputs = do_private_call_get_kernel_inputs(false, deposit, { amount, asset_id, memo });
+    auto const& private_inputs = do_private_call_get_kernel_inputs(false, deposit, { amount, asset_id, memo }, true);
 
     // Execute and prove the first kernel iteration
     Composer private_kernel_composer("../barretenberg/cpp/srs_db/ignition");
@@ -483,9 +460,8 @@ TEST(private_kernel_tests, circuit_basic_contract_deployment)
     NT::fr const& arg0 = 5;
     NT::fr const& arg1 = 1;
     NT::fr const& arg2 = 999;
-    std::vector<NT::fr> args_vec = { arg0, arg1, arg2 };
 
-    auto const& private_inputs = do_private_call_get_kernel_inputs(true, constructor, args_vec);
+    auto const& private_inputs = do_private_call_get_kernel_inputs(true, constructor, { arg0, arg1, arg2 }, true);
 
     // Execute and prove the first kernel iteration
     Composer private_kernel_composer("../barretenberg/cpp/srs_db/ignition");
@@ -513,9 +489,8 @@ TEST(private_kernel_tests, native_basic_contract_deployment)
     NT::fr const& arg0 = 5;
     NT::fr const& arg1 = 1;
     NT::fr const& arg2 = 999;
-    std::vector<NT::fr> args_vec = { arg0, arg1, arg2 };
 
-    auto const& private_inputs = do_private_call_get_kernel_inputs(true, constructor, args_vec);
+    auto const& private_inputs = do_private_call_get_kernel_inputs(true, constructor, { arg0, arg1, arg2 });
     DummyComposer composer;
     auto const& public_inputs = native_private_kernel_circuit(composer, private_inputs);
 
@@ -530,10 +505,9 @@ TEST(private_kernel_tests, circuit_create_proof_cbinds)
     NT::fr const& arg0 = 5;
     NT::fr const& arg1 = 1;
     NT::fr const& arg2 = 999;
-    std::vector<NT::fr> args_vec = { arg0, arg1, arg2 };
 
     // first run actual simulation to get public inputs
-    auto const& private_inputs = do_private_call_get_kernel_inputs(true, constructor, args_vec);
+    auto const& private_inputs = do_private_call_get_kernel_inputs(true, constructor, { arg0, arg1, arg2 }, true);
     DummyComposer composer;
     auto const& public_inputs = native_private_kernel_circuit(composer, private_inputs);
 
@@ -595,14 +569,12 @@ TEST(private_kernel_tests, circuit_create_proof_cbinds)
 /**
  * @brief Test this dummy cbind
  */
-// FIXME: this is skipped by CI in wasm until as it fails to create prover
-// (this really is doing circuit/proving behind the scenes and it shouldn't)
-TEST(private_kernel_tests, skipinwasm_native_dummy_previous_kernel_cbind)
+TEST(private_kernel_tests, native_dummy_previous_kernel_cbind)
 {
     uint8_t const* cbind_previous_kernel_buf;
     size_t const cbind_buf_size = private_kernel__dummy_previous_kernel(&cbind_previous_kernel_buf);
 
-    auto const& previous_kernel = utils::dummy_previous_kernel_with_vk();
+    auto const& previous_kernel = utils::dummy_previous_kernel();
     std::vector<uint8_t> expected_vec;
     write(expected_vec, previous_kernel);
 

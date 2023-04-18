@@ -73,10 +73,10 @@ using aztec3::circuits::apps::test_apps::basic_contract_deployment::constructor;
 using aztec3::circuits::apps::test_apps::escrow::deposit;
 
 // using aztec3::circuits::mock::mock_circuit;
-using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel_with_vk;
+using aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel;
 using aztec3::circuits::mock::mock_kernel_circuit;
-using aztec3::circuits::rollup::base::utils::dummy_base_rollup_inputs_with_vk_proof;
-using aztec3::circuits::rollup::merge::utils::previous_rollups_with_vk_proof_that_follow_on;
+using aztec3::circuits::rollup::base::utils::dummy_base_rollup_inputs;
+using aztec3::circuits::rollup::merge::utils::previous_rollup_datas;
 // using aztec3::circuits::mock::mock_kernel_inputs;
 
 using aztec3::circuits::abis::AppendOnlyTreeSnapshot;
@@ -184,7 +184,7 @@ class root_rollup_tests : public ::testing::Test {
             get_subtree_sibling_path<CONTRACT_TREE_ROOTS_TREE_HEIGHT>(historic_contract_tree, 0, 0);
 
         RootRollupInputs rootRollupInputs = {
-            .previous_rollup_data = previous_rollups_with_vk_proof_that_follow_on(),
+            .previous_rollup_data = previous_rollup_datas(),
             .new_historic_private_data_tree_root_sibling_path = historic_data_sibling_path,
             .new_historic_contract_tree_root_sibling_path = historic_contract_sibling_path,
         };
@@ -237,8 +237,7 @@ TEST_F(root_rollup_tests, native_root_missing_nullifier_logic)
     MemoryTree historic_data_tree = MemoryTree(PRIVATE_DATA_TREE_ROOTS_TREE_HEIGHT);
     MemoryTree historic_contract_tree = MemoryTree(CONTRACT_TREE_ROOTS_TREE_HEIGHT);
 
-    std::array<BaseRollupInputs, 2> base_inputs = { dummy_base_rollup_inputs_with_vk_proof(),
-                                                    dummy_base_rollup_inputs_with_vk_proof() };
+    std::array<BaseRollupInputs, 2> base_inputs = { dummy_base_rollup_inputs(), dummy_base_rollup_inputs() };
     // Insert commitments into base rollups
     for (uint8_t rollup_i = 0; rollup_i < 2; rollup_i++) {
         for (uint8_t kernel_j = 0; kernel_j < 2; kernel_j++) {
