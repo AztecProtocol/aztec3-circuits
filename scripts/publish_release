@@ -1,0 +1,47 @@
+#!/bin/bash
+set -euo pipefail
+
+# Publishes a release to github (depends on build-system)
+
+REPOSITORY=$1
+PROJECT_DIR=$(query_manifest projectDir $REPOSITORY)
+EXTRACT_DIR=../extracted/$REPOSITORY
+ARTIFACTS_DIR=../artifacts
+
+echo "publish_release: Repository: $REPOSITORY"
+echo "publish_release: Project Dir: $PROJECT_DIR"
+echo "publish_release: Working directory: $PWD"
+echo "publish_release: Extract dir: $EXTRACT_DIR"
+echo "publish_release: Artifacts dir: $ARTIFACTS_DIR"
+
+# Get the contents of the build
+# extract_repo $REPOSITORY /usr/src/$PROJECT_DIR $EXTRACT_DIR
+IMAGE_COMMIT_URI=$ECR_DEPLOY_URL/$REPOSITORY:$COMMIT_HASH
+EXTRACT_FROM=/usr/src/$PROJECT_DIR
+EXTRACT_TO=$EXTRACT_DIR
+
+echo "Pulling $IMAGE_COMMIT_URI..."
+docker pull $IMAGE_COMMIT_URI
+TEMP_CONTAINER=$(docker create $IMAGE_COMMIT_URI)
+
+echo "Extracting $EXTRACT_FROM from $REPOSITORY to $EXTRACT_TO..."
+mkdir -p $EXTRACT_TO
+docker cp $TEMP_CONTAINER:$EXTRACT_FROM $EXTRACT_TO
+docker rm -v $TEMP_CONTAINER > /dev/null
+
+echo "Extracted contents:"
+ls -al $EXTRACT_TO
+
+# Prepare the artifacts to push
+mkdir -p $ARTIFACTS_DIR
+# TODO: Make these params of the script and not hardcode them here
+cp $EXTRACT_DIR/build-wasm/bin/aztec3-circuits.wasm $EXTRACT_DIR/barretenberg/cpp/build-wasm/bin/primitives.wasm $ARTIFACTS_DIR/
+
+# Version to use for the release 
+# TODO: if this is a tagged release, just use the tag and drop the commit hash
+VERSION=$(cat VERSION)-$COMMIT_HASH
+
+# Get ghr to make the release and create it
+echo "publish_release: Publishing $VERSION"
+echo "publish_release: $(ls $ARTIFACTS_DIR/)"
+~/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${COMMIT_HASH} -delete ${VERSION} $ARTIFACTS_DIR/

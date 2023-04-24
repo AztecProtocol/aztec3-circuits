@@ -92,14 +92,22 @@ save_logs: &save_logs
 jobs:
   wasm-linux-clang:
     docker:
-      - image: aztecprotocol/alpine-build-image
+      - image: cimg/aws:2023.04
     resource_class: small
     steps:
+      - run:
+          name: Install deps
+          command: sudo apt update && sudo apt install golang-go && go install github.com/tcnksm/ghr@latest
       - *checkout
       - *setup_env
       - run:
           name: 'Build'
           command: cond_spot_run_build aztec3-circuits-wasm-linux-clang 64
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: 'Publish'
+          command: ./scripts/publish_release aztec3-circuits-wasm-linux-clang
 
   wasm-linux-clang-assert:
     docker:
@@ -116,7 +124,7 @@ jobs:
     docker:
       - image: aztecprotocol/alpine-build-image
     resource_class: small
-    steps:
+    steps:  
       - *checkout
       - *setup_env
       - run:
